@@ -1136,7 +1136,7 @@ function renderDonut(genres) {
     const seg = `<circle cx="60" cy="60" r="${r}" fill="none" stroke="${GENRE_PALETTE[i%GENRE_PALETTE.length]}" stroke-width="16" stroke-dasharray="${dash.toFixed(1)} ${(C-dash).toFixed(1)}" stroke-dashoffset="${(-C*acc).toFixed(1)}" transform="rotate(-90 60 60)"/>`;
     acc += frac; return seg;
   }).join('');
-  const legend = genres.map(([name,v], i) => `<div class="dl-row"><span class="dl-dot" style="background:${GENRE_PALETTE[i%GENRE_PALETTE.length]}"></span><span class="dl-name">${escapeHtml(translateGenre(name))}</span><span class="dl-val">${v}</span></div>`).join('');
+  const legend = genres.map(([name,v], i) => `<div class="dl-row"><span class="dl-dot" style="background:${GENRE_PALETTE[i%GENRE_PALETTE.length]}"></span><span class="dl-name">${escapeHtml(name)}</span><span class="dl-val">${v}</span></div>`).join('');
   return `<div class="donut-wrap"><svg width="120" height="120" viewBox="0 0 120 120">${segs}</svg><div class="donut-legend">${legend}</div></div>`;
 }
 
@@ -1145,7 +1145,7 @@ function renderGenreStats(genres, genreHours) {
     const h = genreHours[name] || 0;
     return `<div class="gs-row">
       <span class="dl-dot" style="background:${GENRE_PALETTE[i%GENRE_PALETTE.length]}"></span>
-      <span class="gs-name">${escapeHtml(translateGenre(name))}</span>
+      <span class="gs-name">${escapeHtml(name)}</span>
       <span class="gs-val">${h} h</span>
     </div>`;
   }).join('');
