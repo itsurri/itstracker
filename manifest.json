@@ -1,0 +1,25 @@
+{
+  "name": "its tracker",
+  "short_name": "its tracker",
+  "description": "Tracker per serie TV e film",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "Gemini_Generated_Image_b4rhzab4rhzab4rh.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "Gemini_Generated_Image_b4rhzab4rhzab4rh.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

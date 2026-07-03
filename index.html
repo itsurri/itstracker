@@ -6,6 +6,8 @@
 <title>Serie e Film</title>
 <link rel="icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
 <link rel="apple-touch-icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="its tracker">
@@ -142,6 +144,24 @@
   .card .progress i { display: block; height: 100%; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
   .badge-green { background: rgba(48,209,88,0.85) !important; }
   .badge-blue  { background: rgba(10,132,255,0.85) !important; }
+
+  /* RESUME (prossimo episodio) */
+  .resume {
+    display: flex; align-items: center; gap: 14px; padding: 12px; margin-bottom: 18px; cursor: pointer;
+  }
+  .resume > img { width: 52px; height: 74px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+  .resume-info { flex: 1; min-width: 0; }
+  .resume-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: #0A84FF; margin-bottom: 3px;
+  }
+  .resume-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .resume-ep { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .resume-btn {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; border: none;
+    background: rgba(10,132,255,0.9); color: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .resume-btn:active { background: rgba(10,132,255,0.7); }
 
   /* LIST */
   .list-item {
@@ -505,7 +525,6 @@
 <script>
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMG = 'https://image.tmdb.org/t/p';
-const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
 
 // ---------- Firebase (accesso Google + sync libreria) ----------
 const firebaseConfig = {
@@ -537,10 +556,27 @@ function scheduleCloudSync() {
   }, 800);
 }
 
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
 async function signInGoogle() {
   if (!fbAuth) { showToast('Accesso non disponibile'); return; }
+  // In PWA installata (soprattutto iOS) i popup vengono bloccati: usa il redirect.
+  if (isStandalone()) {
+    try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
+    catch(e) { showToast('Accesso non riuscito'); }
+    return;
+  }
   try { await fbAuth.signInWithPopup(fbGoogleProvider); }
-  catch(e) { showToast('Accesso non riuscito'); }
+  catch(e) {
+    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/operation-not-supported-in-this-environment')) {
+      try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
+      catch(_) { showToast('Accesso non riuscito'); }
+    } else if (e && e.code !== 'auth/popup-closed-by-user') {
+      showToast('Accesso non riuscito');
+    }
+  }
 }
 
 function signOutGoogle() { if (fbAuth) fbAuth.signOut(); }
@@ -564,6 +600,8 @@ function renderProfileAuth() {
 }
 
 if (fbAuth) {
+  // Completa un eventuale accesso avviato via redirect (PWA/iOS).
+  fbAuth.getRedirectResult().catch(() => {});
   fbAuth.onAuthStateChanged((user) => {
     currentUser = user;
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
@@ -595,7 +633,7 @@ function hasTmdbKey() {
   return has;
 }
 function tmdbUrl(path, params) {
-  const qs = new URLSearchParams(Object.assign({ api_key: getTmdbKey() }, params||{}));
+  const qs = new URLSearchParams(Object.assign({ api_key: getTmdbKey(), language: 'it-IT' }, params||{}));
   return `${TMDB_API}${path}?${qs.toString()}`;
 }
 function tmdbImg(path, size) { return path ? `${TMDB_IMG}/${size||'w500'}${path}` : null; }
@@ -610,39 +648,14 @@ let currentTab = 'tv';
 let viewMode = 'grid'; // 'grid' | 'list'
 let tvCategory = 'continua'; // 'continua' | 'inpari' | 'davedere'
 let filmCategory = 'visti'; // 'visti' | 'davedere'
-const translationCache = {};
 
-const GENRE_IT = {
-  'Drama':'Drammatico','Comedy':'Commedia','Action':'Azione','Adventure':'Avventura','Crime':'Poliziesco',
-  'Thriller':'Thriller','Horror':'Horror','Science-Fiction':'Fantascienza','Science Fiction':'Fantascienza','Sci-Fi':'Fantascienza','Fantasy':'Fantasy',
-  'Romance':'Romantico','Mystery':'Mistero','Family':'Famiglia','Anime':'Anime','Children':'Bambini','Kids':'Bambini','War':'Guerra',
-  'Music':'Musica','Sports':'Sport','Legal':'Legale','Medical':'Medico','History':'Storico','Nature':'Natura',
-  'Food':'Cibo','Travel':'Viaggi','Supernatural':'Soprannaturale','Espionage':'Spionaggio','Western':'Western',
-  'Documentary':'Documentario','Animation':'Animazione','Biography':'Biografico','Musical':'Musical',
-  'Action & Adventure':'Azione e Avventura','Sci-Fi & Fantasy':'Fantascienza e Fantasy','War & Politics':'Guerra e Politica',
-  'News':'Notizie','Reality':'Reality','Soap':'Soap Opera','Talk':'Talk Show','TV Movie':'Film TV'
-};
+// TMDB restituisce trame e generi già in italiano (language=it-IT).
+// Lo stato della serie invece non è localizzato, quindi lo mappiamo qui.
 const STATUS_IT = {
   'Running':'In corso','Ended':'Terminata','To Be Determined':'Da determinare','In Development':'In sviluppo',
   'Returning Series':'In corso','Planned':'Pianificata','In Production':'In produzione','Canceled':'Cancellata','Pilot':'Pilot'
 };
-
-function translateGenre(g) { return GENRE_IT[g] || g; }
 function translateStatus(s) { return STATUS_IT[s] || s; }
-
-async function translateText(text) {
-  if (!text) return '';
-  const clean = text.replace(/<[^>]+>/g, '').trim();
-  if (!clean) return '';
-  if (translationCache[clean]) return translationCache[clean];
-  try {
-    const res = await fetch(`${TRANSLATE_API}?q=${encodeURIComponent(clean.slice(0,480))}&langpair=en|it`);
-    const data = await res.json();
-    const t = data && data.responseData && data.responseData.translatedText ? data.responseData.translatedText : clean;
-    translationCache[clean] = t;
-    return t;
-  } catch(e) { return clean; }
-}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -737,11 +750,33 @@ function renderLibrary() {
 
   const items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
   container.innerHTML = `<div class="section">
+    ${tvCategory === 'continua' ? renderResumeBanner(items) : ''}
     ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
         : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
     }
+  </div>`;
+}
+
+function renderResumeBanner(items) {
+  const candidate = items
+    .filter(([k, s]) => s.next)
+    .sort((a, b) => (b[1].lastWatchedAt || 0) - (a[1].lastWatchedAt || 0))[0];
+  if (!candidate) return '';
+  const [key, s] = candidate;
+  const id = validId(s, key);
+  const n = s.next;
+  return `<div class="resume glass" onclick="openShow(${id})">
+    ${s.image ? `<img src="${s.image}" alt="">` : ''}
+    <div class="resume-info">
+      <div class="resume-label">Riprendi</div>
+      <div class="resume-name">${escapeHtml(s.name || '')}</div>
+      <div class="resume-ep">S${n.season}E${n.number}${n.name ? ' · ' + escapeHtml(n.name) : ''}</div>
+    </div>
+    <button class="resume-btn" onclick="event.stopPropagation();markNext(${id})" title="Segna come visto">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+    </button>
   </div>`;
 }
 
@@ -818,7 +853,7 @@ function renderListFilm(key, f) {
     ${f.image ? `<img src="${f.image}" alt="">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
-      <div class="li-meta">${f.year||'—'} · ${escapeHtml(translateGenre(f.genre||''))}</div>
+      <div class="li-meta">${f.year||'—'}${f.genre?' · '+escapeHtml(f.genre):''}</div>
     </div>
     <div class="list-badge ${badgeClass}">${f.watched ? 'Visto' : 'Da vedere'}</div>
   </div>`;
@@ -954,6 +989,14 @@ async function quickAddFilm(id) {
 }
 
 // ---------- open show ----------
+function computeNextEp(episodes, watched) {
+  const sorted = episodes.slice().sort((a,b) => a.season - b.season || a.number - b.number);
+  for (const e of sorted) {
+    if (!watched[`${e.season}x${e.number}`]) return { season: e.season, number: e.number, name: e.name || '' };
+  }
+  return null;
+}
+
 function pickResumeSeason(seasons, episodes, watched) {
   if (!seasons.length) return null;
   for (const s of seasons) {
@@ -1002,6 +1045,7 @@ async function openShow(id) {
     library[id].totalEpisodes = episodes.length;
     library[id].image = tmdbImg(show.poster_path, 'original') || library[id].image;
     library[id].name = show.name;
+    library[id].next = computeNextEp(episodes, library[id].watched || {});
     saveLibrary(); renderLibrary();
   }
 
@@ -1016,7 +1060,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const watched = (library[show.id]&&library[show.id].watched)||{};
   const watchedCount = Object.keys(watched).length;
   const total = episodes.length;
-  const genres = (show.genres||[]).slice(0,3).map(g => translateGenre(g.name));
+  const genres = (show.genres||[]).slice(0,3).map(g => g.name);
   const rating = show.vote_average ? Math.round(show.vote_average*10)/10 : null;
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
@@ -1035,7 +1079,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
         ${genres.map(g=>`<span class="pill">${escapeHtml(g)}</span>`).join('')}
         ${rating?`<span class="pill">★ ${rating}</span>`:''}
       </div>
-      <div class="summary" id="showSummary">${rawSummary?'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Traduzione in corso…</span>':''}</div>
+      <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <div class="statrow">
         <div class="stat glass"><div class="v" id="statW">${watchedCount}</div><div class="l">visti</div></div>
         <div class="stat glass"><div class="v">${total}</div><div class="l">totali</div></div>
@@ -1048,11 +1092,6 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (rawSummary) {
-    const tr = await translateText(rawSummary);
-    const el = document.getElementById('showSummary');
-    if (el) el.textContent = tr;
-  }
 }
 
 function selectSeason(showId, season) {
@@ -1082,22 +1121,15 @@ function renderEpisodeList(showId, episodes, season) {
           ${isW?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
         </button>
       </div>
-      <div class="epdesc" id="epdesc-${key}" data-raw="${escapeHtml(rawDesc)}">${rawDesc?'':'Nessuna descrizione disponibile.'}</div>
+      <div class="epdesc" id="epdesc-${key}">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
     </div>`;
   }).join('');
 }
 
-async function toggleDesc(key) {
+function toggleDesc(key) {
   const el = document.getElementById('epdesc-'+key);
   if (!el) return;
-  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
-  el.classList.add('open');
-  const raw = el.getAttribute('data-raw');
-  if (raw && !el.getAttribute('data-translated')) {
-    el.innerHTML = '<span class="loading">Traduzione in corso…</span>';
-    el.textContent = await translateText(raw);
-    el.setAttribute('data-translated','1');
-  }
+  el.classList.toggle('open');
 }
 
 async function toggleEpisode(showId, season, number) {
@@ -1106,6 +1138,8 @@ async function toggleEpisode(showId, season, number) {
   if (!library[showId].watched) library[showId].watched = {};
   if (library[showId].watched[key]) delete library[showId].watched[key];
   else library[showId].watched[key] = true;
+  library[showId].lastWatchedAt = Date.now();
+  if (episodesCache[showId]) library[showId].next = computeNextEp(episodesCache[showId], library[showId].watched);
   saveLibrary();
   renderEpisodeList(showId, episodesCache[showId], currentSeason);
   renderLibrary();
@@ -1113,6 +1147,33 @@ async function toggleEpisode(showId, season, number) {
   const tot = episodesCache[showId] ? episodesCache[showId].length : 0;
   const sw = document.getElementById('statW'); if(sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if(sp) sp.textContent = (tot?Math.round(wc/tot*100):0)+'%';
+}
+
+// Carica (una volta) la lista episodi di una serie, popolando la cache.
+async function ensureEpisodes(id) {
+  if (episodesCache[id]) return episodesCache[id];
+  if (!hasTmdbKey()) return null;
+  try {
+    const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
+    const show = await r.json();
+    const seasons = (show.seasons||[]).map(x => x.season_number).sort((a,b)=>a-b);
+    episodesCache[id] = await fetchTvEpisodes(id, seasons);
+    return episodesCache[id];
+  } catch(e) { return null; }
+}
+
+// Segna visto il "prossimo episodio" dalla schermata Continua, avanzando al successivo.
+async function markNext(id) {
+  const s = library[id];
+  if (!s || !s.next) return;
+  const key = `${s.next.season}x${s.next.number}`;
+  if (!s.watched) s.watched = {};
+  s.watched[key] = true;
+  s.lastWatchedAt = Date.now();
+  if (!episodesCache[id]) await ensureEpisodes(id);
+  s.next = episodesCache[id] ? computeNextEp(episodesCache[id], s.watched) : null;
+  saveLibrary();
+  renderLibrary();
 }
 
 async function quickAddSilent(id) {
@@ -1158,10 +1219,10 @@ async function renderFilmSheet(f, inLib) {
       <h2>${escapeHtml(f.title)}</h2>
       <div class="metarow">
         <span class="pill">${f.year||'—'}</span>
-        ${f.genre?`<span class="pill">${escapeHtml(translateGenre(f.genre))}</span>`:''}
+        ${f.genre?`<span class="pill">${escapeHtml(f.genre)}</span>`:''}
         ${f.rating?`<span class="pill">★ ${f.rating}</span>`:''}
       </div>
-      <div class="summary" id="filmSummary">${rawDesc?'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Traduzione in corso…</span>':'Nessuna descrizione disponibile.'}</div>
+      <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <div class="statrow">
         <div class="stat glass"><div class="v">${f.watched?'Visto':'Da vedere'}</div><div class="l">stato</div></div>
       </div>
@@ -1170,12 +1231,6 @@ async function renderFilmSheet(f, inLib) {
         : `<button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button>`}
     </div>`;
-
-  if (rawDesc) {
-    const tr = await translateText(rawDesc);
-    const el = document.getElementById('filmSummary');
-    if (el) el.textContent = tr;
-  }
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -1222,6 +1277,7 @@ async function enrichImportedLibrary() {
         entry.totalEpisodes = eps.length;
       }
       entry.watched = entry.watched||{};
+      if (episodesCache[id]) entry.next = computeNextEp(episodesCache[id], entry.watched);
       updated++; renderLibrary();
     } catch(err){}
   }
