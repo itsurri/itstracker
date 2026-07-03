@@ -1294,7 +1294,13 @@ function initListSwipe(container) {
     item.style.transition = 'none';
     window.addEventListener('pointermove', onListSwipeMove);
     window.addEventListener('pointerup', onListSwipeEnd);
+    window.addEventListener('pointercancel', onListSwipeEnd);
   });
+}
+
+function resetSwipeItem(item) {
+  item.style.transition = 'transform 0.2s ease';
+  item.style.transform = 'translateX(0)';
 }
 
 function onListSwipeMove(e) {
@@ -1305,6 +1311,11 @@ function onListSwipeMove(e) {
     if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
     if (Math.abs(dy) > Math.abs(dx)) { swipeState = null; return; }
     swipeState.dragging = true;
+  } else if (Math.abs(dy) > Math.abs(dx) + 10) {
+    // il gesto è diventato uno scroll verticale: annulla lo swipe
+    resetSwipeItem(swipeState.item);
+    swipeState = null;
+    return;
   }
   const clamped = Math.max(0, Math.min(SWIPE_REVEAL, dx));
   swipeState.dx = clamped;
@@ -1314,6 +1325,7 @@ function onListSwipeMove(e) {
 function onListSwipeEnd() {
   window.removeEventListener('pointermove', onListSwipeMove);
   window.removeEventListener('pointerup', onListSwipeEnd);
+  window.removeEventListener('pointercancel', onListSwipeEnd);
   if (!swipeState) return;
   const { item, dx, dragging, showId } = swipeState;
   item.style.transition = 'transform 0.25s ease';
