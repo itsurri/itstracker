@@ -261,7 +261,7 @@
   .btnrow { display: flex; gap: 10px; margin-bottom: 14px; }
   .btnrow button { width: auto; flex: 1; margin: 0; }
 
-  .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; }
+  .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; touch-action: pan-x; }
   .seasontabs::-webkit-scrollbar { display: none; }
   .seasontab {
     flex-shrink: 0; padding: 7px 16px; border-radius: 18px; font-size: 13px; font-weight: 600;
@@ -389,7 +389,7 @@
   /* ===== resume carousel ===== */
   .resume-rail {
     display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 8px;
-    padding: 8px 8px 20px; scrollbar-width: none;
+    padding: 8px 8px 20px; scrollbar-width: none; touch-action: pan-x;
   }
   .resume-rail::-webkit-scrollbar { display: none; }
   .resume-card {
@@ -1287,18 +1287,53 @@ let ptrState = null;
 const PTR_THRESHOLD = 70;
 const PTR_MAX = 100;
 
+// Usiamo touch events "grezzi" (non Pointer Events) perché appena il browser
+// riconosce uno scroll nativo su un contenuto lungo smette di consegnare eventi
+// di movimento a JS a piena frequenza: serve poter chiamare preventDefault()
+// per tenere noi il controllo del gesto, cosa che i listener passivi non permettono.
 function initPullToRefresh() {
-  document.addEventListener('pointerdown', e => {
+  document.addEventListener('touchstart', e => {
     if (document.getElementById('sheetBg').classList.contains('open')) return;
     if (document.getElementById('confirmBg').classList.contains('open')) return;
+    const t = e.touches[0];
     // baseY è il riferimento verticale da cui misurare il "pull": se siamo già in
     // cima lo prendiamo subito, altrimenti aspettiamo di arrivarci durante lo scroll
     // (per gesti continui: scroll-up fino in cima + tira giù, senza staccare il dito).
-    ptrState = { startX: e.clientX, baseY: window.scrollY <= 0 ? e.clientY : null, dy: 0, dragging: false, refreshing: false };
-    window.addEventListener('pointermove', onPtrMove);
-    window.addEventListener('pointerup', onPtrEnd);
-    window.addEventListener('pointercancel', onPtrEnd);
-  });
+    ptrState = { startX: t.clientX, baseY: window.scrollY <= 0 ? t.clientY : null, dy: 0, dragging: false, refreshing: false };
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!ptrState || ptrState.refreshing) return;
+    const t = e.touches[0];
+    if (window.scrollY > 0) {
+      // non (ancora, o non più) in cima: azzera il riferimento e aspetta
+      if (ptrState.dragging) { hidePtrIndicator(); ptrState.dragging = false; }
+      ptrState.baseY = null;
+      return;
+    }
+    if (ptrState.baseY === null) ptrState.baseY = t.clientY;
+    const dy = t.clientY - ptrState.baseY;
+    if (!ptrState.dragging) {
+      if (dy < 10) return;
+      const dx = t.clientX - ptrState.startX;
+      if (Math.abs(dx) > dy) { ptrState.baseY = null; return; }
+      ptrState.dragging = true;
+    }
+    if (dy <= 0) { hidePtrIndicator(); ptrState.dragging = false; ptrState.baseY = t.clientY; return; }
+    // Siamo in cima e stiamo tirando giù apposta: blocchiamo lo scroll nativo,
+    // altrimenti il browser prende il controllo e non riceviamo più eventi fluidi.
+    e.preventDefault();
+    const clamped = Math.min(PTR_MAX, dy * 0.5);
+    ptrState.dy = clamped;
+    const progress = Math.min(1, clamped / PTR_THRESHOLD);
+    const indicator = document.getElementById('ptrIndicator');
+    indicator.classList.add('visible');
+    indicator.style.transform = `translateX(-50%) translateY(${-60 + 90*progress}px) scale(${0.8+0.2*progress})`;
+    indicator.querySelector('svg').style.transform = `rotate(${progress*360}deg)`;
+  }, { passive: false });
+
+  document.addEventListener('touchend', onPtrEnd);
+  document.addEventListener('touchcancel', onPtrEnd);
 }
 
 function hidePtrIndicator() {
@@ -1308,41 +1343,12 @@ function hidePtrIndicator() {
   indicator.querySelector('svg').style.transform = '';
 }
 
-function onPtrMove(e) {
-  if (!ptrState || ptrState.refreshing) return;
-  if (window.scrollY > 0) {
-    // non (ancora, o non più) in cima: azzera il riferimento e aspetta
-    if (ptrState.dragging) { hidePtrIndicator(); ptrState.dragging = false; }
-    ptrState.baseY = null;
-    return;
-  }
-  if (ptrState.baseY === null) ptrState.baseY = e.clientY;
-  const dy = e.clientY - ptrState.baseY;
-  if (!ptrState.dragging) {
-    if (dy < 10) return;
-    const dx = e.clientX - ptrState.startX;
-    if (Math.abs(dx) > dy) { ptrState.baseY = null; return; }
-    ptrState.dragging = true;
-  }
-  if (dy <= 0) { hidePtrIndicator(); ptrState.dragging = false; ptrState.baseY = e.clientY; return; }
-  const clamped = Math.min(PTR_MAX, dy * 0.5);
-  ptrState.dy = clamped;
-  const progress = Math.min(1, clamped / PTR_THRESHOLD);
-  const indicator = document.getElementById('ptrIndicator');
-  indicator.classList.add('visible');
-  indicator.style.transform = `translateX(-50%) translateY(${-60 + 90*progress}px) scale(${0.8+0.2*progress})`;
-  indicator.querySelector('svg').style.transform = `rotate(${progress*360}deg)`;
-}
-
 function resetPtr() {
   hidePtrIndicator();
   ptrState = null;
 }
 
 async function onPtrEnd() {
-  window.removeEventListener('pointermove', onPtrMove);
-  window.removeEventListener('pointerup', onPtrEnd);
-  window.removeEventListener('pointercancel', onPtrEnd);
   if (!ptrState || ptrState.refreshing) return;
   const indicator = document.getElementById('ptrIndicator');
   if (ptrState.dragging && ptrState.dy >= PTR_THRESHOLD) {
