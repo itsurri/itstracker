@@ -736,6 +736,11 @@ function showToast(msg) {
   showToast._t = setTimeout(() => t.classList.remove('show'), 1900);
 }
 function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function formatVotes(n) {
+  if (!n) return '';
+  if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return String(n);
+}
 
 // ---------- storage ----------
 function loadLibrary() {
@@ -1218,9 +1223,10 @@ function renderTvResults(results) {
     const inLib = !!library[s.id];
     const poster = tmdbImg(s.poster_path, 'w342');
     const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
+    const votes = formatVotes(s.vote_count);
     return `<div class="searchcard" onclick="openShow(${s.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-      ${rating ? `<div class="scrating">★ ${rating}</div>` : ''}
+      ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
       <button class="scadd" onclick="event.stopPropagation();quickAdd(${s.id})">
         ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
@@ -1255,9 +1261,10 @@ function renderFilmResults(results) {
     const inLib = !!filmLibrary[f.id];
     const poster = tmdbImg(f.poster_path, 'w342');
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
+    const votes = formatVotes(f.vote_count);
     return `<div class="searchcard" onclick="openFilm(${f.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
-      ${rating ? `<div class="scrating">★ ${rating}</div>` : ''}
+      ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
       <button class="scadd" onclick="event.stopPropagation();quickAddFilm(${f.id})">
         ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
@@ -1288,7 +1295,7 @@ async function quickAddFilm(id) {
   try {
     const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
     const f = await res.json();
-    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, runtime: f.runtime||0, watched:false };
+    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
@@ -1386,6 +1393,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const total = episodes.length;
   const genres = (show.genres||[]).slice(0,3).map(g => g.name);
   const rating = show.vote_average ? Math.round(show.vote_average*10)/10 : null;
+  const votes = formatVotes(show.vote_count);
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
   sheet.innerHTML = `
@@ -1402,7 +1410,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="metarow">
         <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
         ${genres.map(g=>`<span class="pill">${escapeHtml(g)}</span>`).join('')}
-        ${rating?`<span class="pill">★ ${rating}</span>`:''}
+        ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <div class="statrow">
@@ -1532,7 +1540,7 @@ async function openFilm(id) {
     try {
       const r = await fetch(tmdbUrl(`/movie/${id}`, {}));
       const rec = await r.json();
-      f = { id:rec.id, title:rec.title, image: tmdbImg(rec.poster_path, 'original'), year:rec.release_date?rec.release_date.slice(0,4):'', genre:(rec.genres&&rec.genres[0]&&rec.genres[0].name)||'', genres:showGenres(rec), description:rec.overview||'', rating: rec.vote_average?Math.round(rec.vote_average*10)/10:null, runtime: rec.runtime||0, watched:false };
+      f = { id:rec.id, title:rec.title, image: tmdbImg(rec.poster_path, 'original'), year:rec.release_date?rec.release_date.slice(0,4):'', genre:(rec.genres&&rec.genres[0]&&rec.genres[0].name)||'', genres:showGenres(rec), description:rec.overview||'', rating: rec.vote_average?Math.round(rec.vote_average*10)/10:null, voteCount: rec.vote_count||0, runtime: rec.runtime||0, watched:false };
     } catch(e) { showToast('Errore di connessione'); closeSheet(); return; }
   }
   renderFilmSheet(f, !!filmLibrary[id]);
@@ -1553,7 +1561,7 @@ async function renderFilmSheet(f, inLib) {
       <div class="metarow">
         <span class="pill">${f.year||'—'}</span>
         ${f.genre?`<span class="pill">${escapeHtml(f.genre)}</span>`:''}
-        ${f.rating?`<span class="pill">★ ${f.rating}</span>`:''}
+        ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <div class="statrow">
