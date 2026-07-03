@@ -1262,7 +1262,7 @@ function renderListTv(key, s) {
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
   const badgeTxt = cat === 'inpari' ? 'In Pari' : cat === 'continua' ? `${pct}%` : 'In Lista';
   return `<div class="list-item-wrap" data-show-id="${id}">
-    <div class="swipe-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg><span>Segna visto</span></div>
+    <div class="swipe-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg><span>Visto</span></div>
     <div class="list-item" onclick="openShow(${id})">
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
@@ -1282,8 +1282,8 @@ function renderListTv(key, s) {
 
 // ---------- swipe to mark watched (list view) ----------
 let swipeState = null;
-const SWIPE_REVEAL = 220;
-const SWIPE_THRESHOLD = SWIPE_REVEAL / 2;
+const SWIPE_REVEAL = 100;
+const SWIPE_THRESHOLD = SWIPE_REVEAL * 0.6;
 
 function initListSwipe(container) {
   container.addEventListener('pointerdown', e => {
