@@ -50,7 +50,8 @@
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .topbar-logo { height: 42px; width: auto; display: block; }
+  .topbar-left { flex-shrink: 0; }
+  .topbar-logo { height: 34px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
@@ -93,24 +94,35 @@
   .cat-empty { color: rgba(var(--overlay-rgb),0.25); font-size: 13px; padding: 10px 0 18px; }
 
   /* risultati ricerca */
-  .resultrow {
-    display: flex; gap: 12px; align-items: center;
-    padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; transition: background 0.15s;
-  }
-  .resultrow:active { background: rgba(var(--overlay-rgb),0.08); }
-  .resultrow img, .resultrow .noimg {
-    width: 46px; height: 64px; border-radius: 8px; object-fit: cover;
-    background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
-  }
-  .resultrow .noimg { display: flex; align-items: center; justify-content: center; }
-  .resultrow .rt { flex: 1; min-width: 0; }
-  .resultrow .rt .n { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .resultrow .rt .m { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .addbtn {
     width: 30px; height: 30px; border-radius: 50%;
     background: rgba(10,132,255,0.9); border: none; color: #fff;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
+
+  /* search results grid */
+  .searchcard {
+    border-radius: 20px; overflow: hidden; position: relative; cursor: pointer;
+    aspect-ratio: 2/3; background: rgba(var(--overlay-rgb),0.06);
+  }
+  .searchcard img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .searchcard .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.3); font-size: 10px; text-align: center; padding: 8px; }
+  .searchcard .scrating {
+    position: absolute; top: 6px; left: 6px; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px;
+    background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    color: #FFD60A; display: flex; align-items: center; gap: 2px;
+  }
+  .searchcard .scadd {
+    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(10,132,255,0.9); border: none; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .searchcard .scinfo {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 8px 8px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.8));
+  }
+  .searchcard .scinfo .sn { font-size: 11.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .searchcard .scinfo .sm { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* GRID */
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -124,7 +136,7 @@
     position: absolute; bottom: 5px; left: 5px; right: 5px;
     font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 7px;
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
   }
   .card .progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(var(--overlay-rgb),0.15); }
   .card .progress i { display: block; height: 100%; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
@@ -208,6 +220,8 @@
     color: rgba(var(--overlay-rgb),0.55); background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.1);
   }
   .seasontab.active { background: var(--fg); color: var(--bg); }
+  .cat-tabs { justify-content: center; }
+  .cat-tabs .seasontab { text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; }
 
   .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; }
   .epitop { display: flex; gap: 12px; align-items: center; cursor: pointer; }
@@ -322,7 +336,7 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
-    <div class="seasontabs" id="tvCatTabs" style="padding:14px 16px 4px">
+    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 16px 4px">
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
       <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">Da Vedere</button>
@@ -336,7 +350,7 @@
 
   <!-- FILM -->
   <div class="view" id="view-film">
-    <div class="seasontabs" id="filmCatTabs" style="padding:14px 16px 4px">
+    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 16px 4px">
       <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti</button>
       <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere</button>
     </div>
@@ -391,6 +405,17 @@
       </div>
     </div>
     <div class="section" style="margin-top:24px">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-0.01em">TMDb</h2>
+      <div class="settingsrow glass" style="flex-direction:column; align-items:stretch; gap:10px">
+        <div class="st"><div class="sn">API Key</div><div class="sd">Necessaria per cercare e aggiungere serie/film. Gratuita su themoviedb.org</div></div>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="tmdbKeyInput" placeholder="Incolla qui la tua API key" autocomplete="off"
+            style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
+          <button class="filebtn" onclick="saveTmdbKey()">Salva</button>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:24px">
       <h2 style="font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-0.01em">Serie TV</h2>
       <div class="settingsrow glass">
         <div class="st"><div class="sn">Importa libreria</div><div class="sd">Carica un JSON e sostituisci i dati attuali</div></div>
@@ -425,9 +450,9 @@
     <div class="section" style="margin-top:24px">
       <h2 style="font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-0.01em">Informazioni</h2>
       <div class="empty" style="padding:14px 0; text-align:left; font-size:13px; color:rgba(var(--overlay-rgb),0.45); line-height:1.6">
-        Serie TV: database TVMaze, completo e sempre aggiornato.<br>
-        Film: catalogo iTunes, gratuito ma con copertura parziale su titoli non in vendita sull'App Store.<br><br>
-        I tuoi dati restano salvati solo su questo dispositivo in localStorage.
+        Serie TV e Film: database TMDb (The Movie Database), con valutazioni della community.<br>
+        Serve una tua API key gratuita, da inserire qui sopra.<br><br>
+        I tuoi dati restano salvati solo su questo dispositivo in localStorage. La API key resta anch'essa solo sul tuo dispositivo.
       </div>
     </div>
   </div>
@@ -469,9 +494,21 @@
 </div>
 
 <script>
-const TV_API = 'https://api.tvmaze.com';
-const FILM_API = 'https://itunes.apple.com/search';
+const TMDB_API = 'https://api.themoviedb.org/3';
+const TMDB_IMG = 'https://image.tmdb.org/t/p';
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
+
+function getTmdbKey() { try { return localStorage.getItem('serietracker_tmdb_key') || ''; } catch(e) { return ''; } }
+function hasTmdbKey() {
+  const has = !!getTmdbKey();
+  if (!has) showToast('Aggiungi la tua API key TMDb in Impostazioni');
+  return has;
+}
+function tmdbUrl(path, params) {
+  const qs = new URLSearchParams(Object.assign({ api_key: getTmdbKey() }, params||{}));
+  return `${TMDB_API}${path}?${qs.toString()}`;
+}
+function tmdbImg(path, size) { return path ? `${TMDB_IMG}/${size||'w500'}${path}` : null; }
 
 let library = {};
 let filmLibrary = {};
@@ -487,13 +524,18 @@ const translationCache = {};
 
 const GENRE_IT = {
   'Drama':'Drammatico','Comedy':'Commedia','Action':'Azione','Adventure':'Avventura','Crime':'Poliziesco',
-  'Thriller':'Thriller','Horror':'Horror','Science-Fiction':'Fantascienza','Sci-Fi':'Fantascienza','Fantasy':'Fantasy',
-  'Romance':'Romantico','Mystery':'Mistero','Family':'Famiglia','Anime':'Anime','Children':'Bambini','War':'Guerra',
+  'Thriller':'Thriller','Horror':'Horror','Science-Fiction':'Fantascienza','Science Fiction':'Fantascienza','Sci-Fi':'Fantascienza','Fantasy':'Fantasy',
+  'Romance':'Romantico','Mystery':'Mistero','Family':'Famiglia','Anime':'Anime','Children':'Bambini','Kids':'Bambini','War':'Guerra',
   'Music':'Musica','Sports':'Sport','Legal':'Legale','Medical':'Medico','History':'Storico','Nature':'Natura',
   'Food':'Cibo','Travel':'Viaggi','Supernatural':'Soprannaturale','Espionage':'Spionaggio','Western':'Western',
-  'Documentary':'Documentario','Animation':'Animazione','Biography':'Biografico','Musical':'Musical'
+  'Documentary':'Documentario','Animation':'Animazione','Biography':'Biografico','Musical':'Musical',
+  'Action & Adventure':'Azione e Avventura','Sci-Fi & Fantasy':'Fantascienza e Fantasy','War & Politics':'Guerra e Politica',
+  'News':'Notizie','Reality':'Reality','Soap':'Soap Opera','Talk':'Talk Show','TV Movie':'Film TV'
 };
-const STATUS_IT = { 'Running':'In corso','Ended':'Terminata','To Be Determined':'Da determinare','In Development':'In sviluppo' };
+const STATUS_IT = {
+  'Running':'In corso','Ended':'Terminata','To Be Determined':'Da determinare','In Development':'In sviluppo',
+  'Returning Series':'In corso','Planned':'Pianificata','In Production':'In produzione','Canceled':'Cancellata','Pilot':'Pilot'
+};
 
 function translateGenre(g) { return GENRE_IT[g] || g; }
 function translateStatus(s) { return STATUS_IT[s] || s; }
@@ -717,11 +759,13 @@ document.getElementById('searchInput').addEventListener('input', () => {
 
 async function doSearchTv(q) {
   const c = document.getElementById('searchResults');
+  if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
   c.innerHTML = '<div class="spinner"></div>';
   document.getElementById('searchEmpty').style.display = 'none';
   try {
-    const res = await fetch(`${TV_API}/search/shows?q=${encodeURIComponent(q)}`);
-    renderTvResults(await res.json());
+    const res = await fetch(tmdbUrl('/search/tv', { query: q }));
+    const data = await res.json();
+    renderTvResults(data.results || []);
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
@@ -729,28 +773,36 @@ function renderTvResults(results) {
   const c = document.getElementById('searchResults');
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
-  c.innerHTML = results.slice(0,20).map(r => {
-    const s = r.show;
+
+  const ranked = results.slice().sort((a, b) => (b.vote_average||0) - (a.vote_average||0));
+
+  c.innerHTML = `<div class="grid">${ranked.slice(0,24).map(s => {
     const inLib = !!library[s.id];
-    const poster = s.image ? (s.image.medium||s.image.original) : null;
-    const genres = (s.genres||[]).slice(0,2).map(translateGenre).join(', ');
-    return `<div class="resultrow" onclick="openShow(${s.id})">
-      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
-      <div class="rt"><div class="n">${escapeHtml(s.name)}</div><div class="m">${s.premiered?s.premiered.slice(0,4):'—'} · ${genres||'Serie TV'}</div></div>
-      <button class="addbtn" onclick="event.stopPropagation();quickAdd(${s.id})">
-        ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+    const poster = tmdbImg(s.poster_path, 'w342');
+    const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
+    return `<div class="searchcard" onclick="openShow(${s.id})">
+      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
+      ${rating ? `<div class="scrating">★ ${rating}</div>` : ''}
+      <button class="scadd" onclick="event.stopPropagation();quickAdd(${s.id})">
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
+      <div class="scinfo">
+        <div class="sn">${escapeHtml(s.name)}</div>
+        <div class="sm">${s.first_air_date?s.first_air_date.slice(0,4):'—'}</div>
+      </div>
     </div>`;
-  }).join('');
+  }).join('')}</div>`;
 }
 
 async function doSearchFilm(q) {
   const c = document.getElementById('searchResults');
+  if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
   c.innerHTML = '<div class="spinner"></div>';
   document.getElementById('searchEmpty').style.display = 'none';
   try {
-    const res = await fetch(`${FILM_API}?term=${encodeURIComponent(q)}&media=movie&entity=movie&limit=25&country=IT&lang=it_it`);
-    renderFilmResults((await res.json()).results || []);
+    const res = await fetch(tmdbUrl('/search/movie', { query: q }));
+    const data = await res.json();
+    renderFilmResults(data.results || []);
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
@@ -758,26 +810,35 @@ function renderFilmResults(results) {
   const c = document.getElementById('searchResults');
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
-  c.innerHTML = results.map(f => {
-    const inLib = !!filmLibrary[f.trackId];
-    const poster = f.artworkUrl100 ? f.artworkUrl100.replace('100x100','400x400') : null;
-    return `<div class="resultrow" onclick="openFilm(${f.trackId})">
-      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
-      <div class="rt"><div class="n">${escapeHtml(f.trackName)}</div><div class="m">${f.releaseDate?f.releaseDate.slice(0,4):'—'} · ${escapeHtml(f.primaryGenreName||'Film')}</div></div>
-      <button class="addbtn" onclick="event.stopPropagation();quickAddFilm(${f.trackId})">
-        ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+
+  const ranked = results.slice().sort((a, b) => (b.vote_average||0) - (a.vote_average||0));
+
+  c.innerHTML = `<div class="grid">${ranked.map(f => {
+    const inLib = !!filmLibrary[f.id];
+    const poster = tmdbImg(f.poster_path, 'w342');
+    const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
+    return `<div class="searchcard" onclick="openFilm(${f.id})">
+      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
+      ${rating ? `<div class="scrating">★ ${rating}</div>` : ''}
+      <button class="scadd" onclick="event.stopPropagation();quickAddFilm(${f.id})">
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
+      <div class="scinfo">
+        <div class="sn">${escapeHtml(f.title)}</div>
+        <div class="sm">${f.release_date?f.release_date.slice(0,4):'—'}</div>
+      </div>
     </div>`;
-  }).join('');
+  }).join('')}</div>`;
 }
 
 // ---------- quick add ----------
 async function quickAdd(id) {
   if (library[id]) { showToast('Già in libreria'); return; }
+  if (!hasTmdbKey()) return;
   try {
-    const res = await fetch(`${TV_API}/shows/${id}`);
+    const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await res.json();
-    library[id] = { id: show.id, name: show.name, image: show.image?show.image.original:null, watched:{} };
+    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), watched:{} };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
@@ -785,12 +846,12 @@ async function quickAdd(id) {
 
 async function quickAddFilm(id) {
   if (filmLibrary[id]) { showToast('Già in libreria'); return; }
+  if (!hasTmdbKey()) return;
   try {
-    const res = await fetch(`https://itunes.apple.com/lookup?id=${id}`);
-    const data = await res.json();
-    const f = data.results[0];
-    filmLibrary[id] = { id:f.trackId, title:f.trackName, image:f.artworkUrl100?f.artworkUrl100.replace('100x100','600x600'):null, year:f.releaseDate?f.releaseDate.slice(0,4):'', genre:f.primaryGenreName||'', description:f.longDescription||f.shortDescription||'', watched:false };
-    saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.trackName} aggiunto`);
+    const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
+    const f = await res.json();
+    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, watched:false };
+    saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
 }
@@ -804,6 +865,20 @@ function pickResumeSeason(seasons, episodes, watched) {
   return seasons[seasons.length-1];
 }
 
+async function fetchTvEpisodes(id, seasonNumbers) {
+  const lists = await Promise.all(seasonNumbers.map(async sn => {
+    try {
+      const r = await fetch(tmdbUrl(`/tv/${id}/season/${sn}`, {}));
+      const data = await r.json();
+      return (data.episodes||[]).map(ep => ({
+        season: sn, number: ep.episode_number, name: ep.name,
+        airdate: ep.air_date, image: tmdbImg(ep.still_path, 'w300'), summary: ep.overview||''
+      }));
+    } catch(e) { return []; }
+  }));
+  return lists.flat();
+}
+
 async function openShow(id) {
   currentShowId = id;
   const sheetBg = document.getElementById('sheetBg');
@@ -811,25 +886,28 @@ async function openShow(id) {
   sheet.innerHTML = '<div class="spinner" style="margin-top:80px"></div>';
   sheetBg.classList.add('open');
 
+  if (!hasTmdbKey()) { closeSheet(); return; }
+
   let show;
-  try { const r = await fetch(`${TV_API}/shows/${id}`); show = await r.json(); }
+  try { const r = await fetch(tmdbUrl(`/tv/${id}`, {})); show = await r.json(); }
   catch(e) { showToast('Errore di connessione'); closeSheet(); return; }
+
+  const seasons = (show.seasons||[]).map(s => s.season_number).sort((a,b)=>a-b);
 
   let episodes = episodesCache[id];
   if (!episodes) {
-    try { const r = await fetch(`${TV_API}/shows/${id}/episodes`); episodes = await r.json(); episodesCache[id] = episodes; }
-    catch(e) { episodes = []; }
+    episodes = await fetchTvEpisodes(id, seasons);
+    episodesCache[id] = episodes;
   }
 
   const inLib = !!library[id];
   if (inLib) {
     library[id].totalEpisodes = episodes.length;
-    library[id].image = show.image ? show.image.original : library[id].image;
+    library[id].image = tmdbImg(show.poster_path, 'original') || library[id].image;
     library[id].name = show.name;
     saveLibrary(); renderLibrary();
   }
 
-  const seasons = [...new Set(episodes.map(e=>e.season))].sort((a,b)=>a-b);
   const watched = (library[id]&&library[id].watched)||{};
   currentSeason = pickResumeSeason(seasons, episodes, watched);
   renderSheet(show, episodes, seasons, inLib);
@@ -837,13 +915,13 @@ async function openShow(id) {
 
 async function renderSheet(show, episodes, seasons, inLib) {
   const sheet = document.getElementById('sheet');
-  const poster = show.image ? (show.image.original||show.image.medium) : null;
+  const poster = tmdbImg(show.poster_path, 'original');
   const watched = (library[show.id]&&library[show.id].watched)||{};
   const watchedCount = Object.keys(watched).length;
   const total = episodes.length;
-  const genres = (show.genres||[]).slice(0,3).map(translateGenre);
-  const rating = show.rating&&show.rating.average ? show.rating.average : null;
-  const rawSummary = show.summary ? show.summary.replace(/<[^>]+>/g,'') : '';
+  const genres = (show.genres||[]).slice(0,3).map(g => translateGenre(g.name));
+  const rating = show.vote_average ? Math.round(show.vote_average*10)/10 : null;
+  const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
   sheet.innerHTML = `
     <div class="hero">
@@ -856,7 +934,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
       <div class="metarow">
-        <span class="pill">${show.premiered?show.premiered.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
+        <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
         ${genres.map(g=>`<span class="pill">${escapeHtml(g)}</span>`).join('')}
         ${rating?`<span class="pill">★ ${rating}</span>`:''}
       </div>
@@ -893,7 +971,7 @@ function renderEpisodeList(showId, episodes, season) {
   list.innerHTML = filtered.map(ep => {
     const key = `${ep.season}x${ep.number}`;
     const isW = !!watched[key];
-    const thumb = ep.image ? ep.image.medium : null;
+    const thumb = ep.image || null;
     const rawDesc = ep.summary ? ep.summary.replace(/<[^>]+>/g,'') : '';
     return `<div class="epitem glass" id="ep-${key}">
       <div class="epitop" onclick="toggleDesc('${key}')">
@@ -941,7 +1019,8 @@ async function toggleEpisode(showId, season, number) {
 }
 
 async function quickAddSilent(id) {
-  try { const r=await fetch(`${TV_API}/shows/${id}`); const s=await r.json(); library[id]={id:s.id,name:s.name,image:s.image?s.image.original:null,watched:{}}; saveLibrary(); } catch(e){}
+  if (!hasTmdbKey()) return;
+  try { const r=await fetch(tmdbUrl(`/tv/${id}`, {})); const s=await r.json(); library[id]={id:s.id,name:s.name,image:tmdbImg(s.poster_path,'original'),watched:{}}; saveLibrary(); } catch(e){}
 }
 
 async function addFromSheet(id) { await quickAdd(id); openShow(id); }
@@ -959,11 +1038,11 @@ async function openFilm(id) {
 
   let f = filmLibrary[id];
   if (!f) {
+    if (!hasTmdbKey()) { closeSheet(); return; }
     try {
-      const r = await fetch(`https://itunes.apple.com/lookup?id=${id}`);
-      const data = await r.json();
-      const rec = data.results[0];
-      f = { id:rec.trackId, title:rec.trackName, image:rec.artworkUrl100?rec.artworkUrl100.replace('100x100','600x600'):null, year:rec.releaseDate?rec.releaseDate.slice(0,4):'', genre:rec.primaryGenreName||'', description:rec.longDescription||rec.shortDescription||'', watched:false };
+      const r = await fetch(tmdbUrl(`/movie/${id}`, {}));
+      const rec = await r.json();
+      f = { id:rec.id, title:rec.title, image: tmdbImg(rec.poster_path, 'original'), year:rec.release_date?rec.release_date.slice(0,4):'', genre:(rec.genres&&rec.genres[0]&&rec.genres[0].name)||'', description:rec.overview||'', rating: rec.vote_average?Math.round(rec.vote_average*10)/10:null, watched:false };
     } catch(e) { showToast('Errore di connessione'); closeSheet(); return; }
   }
   renderFilmSheet(f, !!filmLibrary[id]);
@@ -983,6 +1062,7 @@ async function renderFilmSheet(f, inLib) {
       <div class="metarow">
         <span class="pill">${f.year||'—'}</span>
         ${f.genre?`<span class="pill">${escapeHtml(translateGenre(f.genre))}</span>`:''}
+        ${f.rating?`<span class="pill">★ ${f.rating}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Traduzione in corso…</span>':'Nessuna descrizione disponibile.'}</div>
       <div class="statrow">
@@ -1027,19 +1107,20 @@ document.getElementById('jsonFileInput').addEventListener('change', async e => {
 });
 
 async function enrichImportedLibrary() {
+  if (!hasTmdbKey()) return;
   let updated = 0;
   for (const id of Object.keys(library)) {
     const entry = library[id]; if(!entry) continue;
     if (entry.image && entry.totalEpisodes && entry.name) continue;
     try {
-      const r = await fetch(`${TV_API}/shows/${id}`);
+      const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
       if (!r.ok) continue;
       const show = await r.json();
       entry.name = show.name||entry.name;
-      entry.image = show.image ? show.image.original : entry.image;
+      entry.image = tmdbImg(show.poster_path, 'original') || entry.image;
       if (!entry.totalEpisodes) {
-        const re = await fetch(`${TV_API}/shows/${id}/episodes`);
-        const eps = await re.json();
+        const seasons = (show.seasons||[]).map(s => s.season_number).sort((a,b)=>a-b);
+        const eps = await fetchTvEpisodes(id, seasons);
         episodesCache[id] = eps;
         entry.totalEpisodes = eps.length;
       }
@@ -1064,18 +1145,21 @@ document.getElementById('jsonFilmFileInput').addEventListener('change', async e 
 });
 
 async function enrichImportedFilmLibrary() {
+  if (!hasTmdbKey()) return;
   let updated = 0;
   for (const id of Object.keys(filmLibrary)) {
     const entry = filmLibrary[id]; if(!entry) continue;
     if (entry.image && entry.title) continue;
     try {
-      const r = await fetch(`https://itunes.apple.com/lookup?id=${id}`);
-      const data = await r.json(); const rec = data.results&&data.results[0]; if(!rec) continue;
-      entry.title = rec.trackName||entry.title;
-      entry.image = rec.artworkUrl100?rec.artworkUrl100.replace('100x100','600x600'):entry.image;
-      entry.year = rec.releaseDate?rec.releaseDate.slice(0,4):entry.year;
-      entry.genre = rec.primaryGenreName||entry.genre;
-      entry.description = rec.longDescription||rec.shortDescription||entry.description||'';
+      const r = await fetch(tmdbUrl(`/movie/${id}`, {}));
+      if (!r.ok) continue;
+      const rec = await r.json();
+      entry.title = rec.title||entry.title;
+      entry.image = tmdbImg(rec.poster_path, 'original') || entry.image;
+      entry.year = rec.release_date?rec.release_date.slice(0,4):entry.year;
+      entry.genre = (rec.genres&&rec.genres[0]&&rec.genres[0].name)||entry.genre;
+      entry.description = rec.overview||entry.description||'';
+      entry.rating = rec.vote_average?Math.round(rec.vote_average*10)/10:entry.rating;
       updated++; renderFilmLibrary();
     } catch(err){}
   }
@@ -1132,12 +1216,20 @@ function updateLogo() {
   document.querySelectorAll('.topbar-logo').forEach(img => img.src = src);
 }
 
+// ---------- TMDb key ----------
+function saveTmdbKey() {
+  const v = document.getElementById('tmdbKeyInput').value.trim();
+  try { localStorage.setItem('serietracker_tmdb_key', v); } catch(e) {}
+  showToast(v ? 'API key salvata' : 'API key rimossa');
+}
+
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
 updateThemeButtons();
 updateLogo();
+document.getElementById('tmdbKeyInput').value = getTmdbKey();
 document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='grid');
 document.getElementById('btnList').classList.toggle('active-view', viewMode==='list');
 renderLibrary();
