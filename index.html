@@ -214,15 +214,13 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .sheet-handle {
-    position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 0; right: 0; z-index: 5;
-    display: flex; justify-content: center; padding: 8px 0; touch-action: none; cursor: grab;
-  }
-  .sheet-handle i {
-    width: 36px; height: 5px; border-radius: 3px; display: block;
-    background: rgba(255,255,255,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  }
   .hero { position: relative; height: 230px; overflow: hidden; }
+  .hero .closebtn {
+    position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
@@ -1313,16 +1311,14 @@ function initPullToRefresh() {
     }
     if (ptrState.baseY === null) ptrState.baseY = t.clientY;
     const dy = t.clientY - ptrState.baseY;
-    if (!ptrState.dragging) {
-      if (dy < 10) return;
-      const dx = t.clientX - ptrState.startX;
-      if (Math.abs(dx) > dy) { ptrState.baseY = null; return; }
-      ptrState.dragging = true;
-    }
-    if (dy <= 0) { hidePtrIndicator(); ptrState.dragging = false; ptrState.baseY = t.clientY; return; }
-    // Siamo in cima e stiamo tirando giù apposta: blocchiamo lo scroll nativo,
-    // altrimenti il browser prende il controllo e non riceviamo più eventi fluidi.
+    const dx = t.clientX - ptrState.startX;
+    if (dy <= 0) { if (ptrState.dragging) hidePtrIndicator(); ptrState.dragging = false; return; }
+    if (Math.abs(dx) > dy) return; // gesto troppo orizzontale: lascialo allo scroll/swipe nativo
+    // Siamo in cima e ci muoviamo verso il basso: prendiamo subito il controllo del
+    // gesto (preventDefault fin dal primissimo movimento), altrimenti il browser lo
+    // reclama per lo scroll nativo e non torna più indietro per il resto del tocco.
     e.preventDefault();
+    ptrState.dragging = true;
     const clamped = Math.min(PTR_MAX, dy * 0.5);
     ptrState.dy = clamped;
     const progress = Math.min(1, clamped / PTR_THRESHOLD);
@@ -1748,7 +1744,9 @@ async function renderSheet(show, episodes, seasons, inLib) {
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <div class="sheet-handle"><i></i></div>
+      <button class="closebtn" onclick="closeSheet()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
@@ -1951,7 +1949,9 @@ async function renderFilmSheet(f, inLib) {
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <div class="sheet-handle"><i></i></div>
+      <button class="closebtn" onclick="closeSheet()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(f.title)}</h2>
@@ -1985,33 +1985,6 @@ function closeSheet() {
   sheet.style.transition = ''; sheet.style.transform = '';
 }
 document.getElementById('sheetBg').addEventListener('click', e => { if(e.target.id==='sheetBg') closeSheet(); });
-
-// ---------- sheet drag-to-close ----------
-function initSheetDrag() {
-  const sheet = document.getElementById('sheet');
-  let startY = 0, dy = 0, dragging = false;
-  sheet.addEventListener('pointerdown', e => {
-    if (!e.target.closest('.sheet-handle')) return;
-    dragging = true; startY = e.clientY; dy = 0;
-    sheet.style.transition = 'none';
-    window.addEventListener('pointermove', onSheetDragMove);
-    window.addEventListener('pointerup', onSheetDragEnd);
-  });
-  function onSheetDragMove(e) {
-    if (!dragging) return;
-    dy = Math.max(0, e.clientY - startY);
-    sheet.style.transform = `translateY(${dy}px)`;
-  }
-  function onSheetDragEnd() {
-    window.removeEventListener('pointermove', onSheetDragMove);
-    window.removeEventListener('pointerup', onSheetDragEnd);
-    if (!dragging) return;
-    dragging = false;
-    sheet.style.transition = 'transform 0.3s cubic-bezier(.32,.72,0,1)';
-    if (dy > 120) { closeSheet(); }
-    else { sheet.style.transform = 'translateY(0)'; }
-  }
-}
 
 // ---------- import / export ----------
 document.getElementById('jsonFileInput').addEventListener('change', async e => {
@@ -2172,7 +2145,6 @@ renderFilmLibrary();
 refreshInPariShows();
 ensureUpcomingCache();
 initPullToRefresh();
-initSheetDrag();
 </script>
 </body>
 </html>
