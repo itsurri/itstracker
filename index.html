@@ -51,7 +51,7 @@
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; }
-  .topbar-logo { height: 34px; width: auto; display: block; }
+  .topbar-logo { height: 44px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
@@ -141,8 +141,8 @@
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
   }
   .card-ring { position: absolute; top: 6px; right: 6px; }
-  .badge-green { background: rgba(48,209,88,0.85) !important; }
-  .badge-blue  { background: rgba(10,132,255,0.85) !important; }
+  .card .badge-green { background: rgba(48,209,88,0.85); }
+  .card .badge-blue  { background: rgba(10,132,255,0.85); }
 
   /* LIST */
   .list-item {
@@ -833,10 +833,10 @@ function categorizeShow(s) {
   return 'continua';
 }
 
-// se una serie "in pari" ha nuovi episodi usciti, la sposta di nuovo in "continua"
+// aggiorna rating/stagioni mancanti e sposta in "continua" le serie "in pari" con nuovi episodi
 async function refreshInPariShows() {
   if (!hasTmdbKey()) return;
-  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari');
+  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari' || !library[id].rating || !library[id].totalSeasons);
   if (!ids.length) return;
   let changed = false;
   await Promise.all(ids.map(async id => {
@@ -844,11 +844,12 @@ async function refreshInPariShows() {
       const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
       const show = await r.json();
       const newTotal = show.number_of_episodes || 0;
-      if (newTotal && newTotal !== library[id].totalEpisodes) {
-        library[id].totalEpisodes = newTotal;
-        library[id].totalSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
-        library[id].rating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
-        delete episodesCache[id];
+      const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
+      const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
+      if ((newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating) {
+        if (newTotal && newTotal !== library[id].totalEpisodes) { library[id].totalEpisodes = newTotal; delete episodesCache[id]; }
+        library[id].totalSeasons = newSeasons;
+        library[id].rating = newRating;
         changed = true;
       }
     } catch(e) {}
@@ -1240,7 +1241,7 @@ function renderTvResults(results) {
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_average||0) - (a.vote_average||0));
+  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0));
 
   c.innerHTML = `<div class="grid">${ranked.slice(0,24).map(s => {
     const inLib = !!library[s.id];
@@ -1278,7 +1279,7 @@ function renderFilmResults(results) {
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_average||0) - (a.vote_average||0));
+  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0));
 
   c.innerHTML = `<div class="grid">${ranked.map(f => {
     const inLib = !!filmLibrary[f.id];
