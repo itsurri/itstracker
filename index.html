@@ -52,6 +52,9 @@
     --shadow-tabbar: 0 10px 30px rgba(0,0,0,0.12);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  button { transition: transform 0.12s ease; }
+  button:active { transform: scale(0.94); }
+  .card:active, .searchcard:active, .resume-card:active { transform: scale(0.97); transition: transform 0.12s ease; }
   html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--sf, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif); overscroll-behavior-y: none; }
   body {
     background: var(--bg);
@@ -226,7 +229,10 @@
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
+  .pill {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    background: rgba(var(--overlay-rgb),0.1); color: var(--accent, rgba(var(--overlay-rgb),0.75));
+  }
   .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 16px; }
   .statrow { display: flex; gap: 10px; margin-bottom: 18px; }
   .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
@@ -246,6 +252,16 @@
     min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
     background: #ff453a; color: #fff; font-size: 12px; font-weight: 800; margin-left: 8px;
   }
+  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
+  .ach { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: 0.4; }
+  .ach.unlocked { opacity: 1; }
+  .ach-icon {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0;
+  }
+  .ach.unlocked .ach-icon { background: #30D158; color: #fff; }
+  .ach-label { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); line-height: 1.25; }
+  .ach.unlocked .ach-label { color: var(--fg); }
   .removebtn {
     width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
@@ -318,7 +334,19 @@
   .tabbtn svg { width: 26px; height: 26px; shape-rendering: geometricPrecision; }
 
   .view { display: none; }
-  .view.active { display: block; }
+  .view.active { display: block; animation: viewIn 0.28s ease; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* coriandoli fine serie */
+  .confetti-layer { position: fixed; inset: 0; z-index: 300; pointer-events: none; overflow: hidden; }
+  .confetti-layer i {
+    position: absolute; top: -10px; width: 8px; height: 14px; border-radius: 2px;
+    opacity: 0.95; animation: confettiFall ease-in forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.95; }
+    100% { transform: translateY(105vh) translateX(var(--drift)) rotate(var(--rotate)); opacity: 0.3; }
+  }
 
   .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid rgba(var(--overlay-rgb),0.2); border-top-color: var(--fg); animation: spin 0.7s linear infinite; margin: 30px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -990,6 +1018,27 @@ function switchTab(tab) {
 
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
 
+// Piccola pioggia di coriandoli quando finisci tutti gli episodi di una serie.
+function celebrateShowComplete() {
+  const layer = document.createElement('div');
+  layer.className = 'confetti-layer';
+  const n = 26;
+  for (let i = 0; i < n; i++) {
+    const p = document.createElement('i');
+    const color = GENRE_PALETTE[i % GENRE_PALETTE.length];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 0.15;
+    const duration = 1.1 + Math.random() * 0.6;
+    const rotate = Math.random() * 360;
+    const drift = (Math.random() - 0.5) * 80;
+    p.style.cssText = `left:${left}%; background:${color}; animation-delay:${delay}s; animation-duration:${duration}s; --rotate:${rotate}deg; --drift:${drift}px;`;
+    layer.appendChild(p);
+  }
+  document.body.appendChild(layer);
+  haptic();
+  setTimeout(() => layer.remove(), 2000);
+}
+
 function computeWrapped() {
   const shows = Object.values(library);
   const films = Object.values(filmLibrary);
@@ -1048,6 +1097,42 @@ function renderBars(months) {
   return `<div class="bars">${cols}</div>`;
 }
 
+function animateCountUp(el) {
+  const target = Number(el.getAttribute('data-count')) || 0;
+  const duration = 600;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * eased);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function getAchievements(w) {
+  const anyCompleted = Object.values(library).some(s => categorizeShow(s) === 'inpari');
+  return [
+    { label: 'Prima serie completata', unlocked: anyCompleted },
+    { label: '50 episodi visti', unlocked: w.episodesWatched >= 50 },
+    { label: '250 episodi visti', unlocked: w.episodesWatched >= 250 },
+    { label: 'Primo film visto', unlocked: w.filmsWatched >= 1 },
+    { label: '50 ore guardate', unlocked: w.hours >= 50 },
+    { label: '7 giorni di fila', unlocked: w.streak >= 7 }
+  ];
+}
+
+function renderAchievements(w) {
+  const items = getAchievements(w).map(a => `
+    <div class="ach ${a.unlocked?'unlocked':''}">
+      <div class="ach-icon">${a.unlocked
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>`}</div>
+      <div class="ach-label">${a.label}</div>
+    </div>`).join('');
+  return `<div class="ach-grid">${items}</div>`;
+}
+
 function renderProfile() {
   renderProfileAuth();
   const statsRow = document.getElementById('profileStatsRow');
@@ -1055,18 +1140,19 @@ function renderProfile() {
   const w = computeWrapped();
 
   statsRow.innerHTML = `
-    <div class="stat"><div class="v">${w.totalShows}</div><div class="l">serie</div></div>
-    <div class="stat"><div class="v">${w.episodesWatched}</div><div class="l">episodi visti</div></div>
-    <div class="stat"><div class="v">${w.filmsWatched}</div><div class="l">film visti</div></div>
-    <div class="stat"><div class="v">${w.hours}</div><div class="l">ore viste</div></div>
+    <div class="stat"><div class="v" data-count="${w.totalShows}">0</div><div class="l">serie</div></div>
+    <div class="stat"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi visti</div></div>
+    <div class="stat"><div class="v" data-count="${w.filmsWatched}">0</div><div class="l">film visti</div></div>
+    <div class="stat"><div class="v" data-count="${w.hours}">0</div><div class="l">ore viste</div></div>
   `;
+  statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
 
   if (!w.episodesWatched && !w.filmsWatched) {
     c.innerHTML = `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
     return;
   }
 
-  let html = '';
+  let html = `<div class="wrap-sec-title">Achievement</div><div class="wrap-card glass">${renderAchievements(w)}</div>`;
 
   if (w.genres.length) {
     html += `<div class="wrap-sec-title">Generi preferiti</div><div class="wrap-card glass">${renderDonut(w.genres)}</div>`;
@@ -1693,6 +1779,7 @@ async function openShow(id) {
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
+  sheet.style.removeProperty('--accent');
   sheetBg.classList.add('open');
 
   if (!hasTmdbKey()) { closeSheet(); return; }
@@ -1764,7 +1851,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (poster) posterAccent(poster).then(col => { const sh = document.getElementById('sheet'); if (sh && col) sh.style.setProperty('--accent', col); });
 }
 
 function selectSeason(showId, season) {
@@ -1856,6 +1943,7 @@ function applyToggleEpisode(showId, season, number) {
 
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
   if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
+    celebrateShowComplete();
     refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
   }
 }
@@ -1909,6 +1997,10 @@ async function markNext(id) {
   renderLibrary();
   const btn = document.querySelector(`.checkbtn[data-show-id="${id}"]`);
   if (btn) { btn.classList.add('justchecked'); btn.addEventListener('animationend', () => btn.classList.remove('justchecked'), { once: true }); }
+  if (categorizeShow(s) === 'inpari') {
+    celebrateShowComplete();
+    refreshShowTotals(id).then(changed => { if (changed) renderLibrary(); });
+  }
 }
 
 async function quickAddSilent(id) {
@@ -1927,6 +2019,7 @@ async function openFilm(id) {
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
+  sheet.style.removeProperty('--accent');
   sheetBg.classList.add('open');
 
   let f = filmLibrary[id];
@@ -1966,7 +2059,7 @@ async function renderFilmSheet(f, inLib) {
         : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const sh = document.getElementById('sheet'); if (sh && col) sh.style.setProperty('--accent', col); });
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
