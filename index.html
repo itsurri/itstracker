@@ -391,7 +391,7 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" style="padding:26px 20px; text-align:center; margin-bottom:18px">
+      <div class="glass" id="profileAuthCard" style="padding:26px 20px; text-align:center; margin-bottom:18px">
         <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
       </div>
       <div class="statrow" id="profileStats"></div>
@@ -499,10 +499,94 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script>
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMG = 'https://image.tmdb.org/t/p';
 const TRANSLATE_API = 'https://api.mymemory.translated.net/get';
+
+// ---------- Firebase (accesso Google + sync libreria) ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyAOMKqlS2lm_CqXSnEDce5oJ1rk4nD-qTs",
+  authDomain: "itstracker-67c10.firebaseapp.com",
+  projectId: "itstracker-67c10",
+  storageBucket: "itstracker-67c10.firebasestorage.app",
+  messagingSenderId: "831367325836",
+  appId: "1:831367325836:web:942e845d73f7fcac7673a9"
+};
+let fbAuth = null, fbDb = null, fbGoogleProvider = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  fbAuth = firebase.auth();
+  fbDb = firebase.firestore();
+  fbGoogleProvider = new firebase.auth.GoogleAuthProvider();
+} catch(e) { console.warn('Firebase non disponibile', e); }
+
+let currentUser = null;
+let applyingRemoteData = false;
+let cloudSyncTimer = null;
+let unsubscribeCloud = null;
+
+function scheduleCloudSync() {
+  if (!fbDb || !currentUser || applyingRemoteData) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => {
+    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, updatedAt: Date.now() }).catch(()=>{});
+  }, 800);
+}
+
+async function signInGoogle() {
+  if (!fbAuth) { showToast('Accesso non disponibile'); return; }
+  try { await fbAuth.signInWithPopup(fbGoogleProvider); }
+  catch(e) { showToast('Accesso non riuscito'); }
+}
+
+function signOutGoogle() { if (fbAuth) fbAuth.signOut(); }
+
+function renderProfileAuth() {
+  const c = document.getElementById('profileAuthCard');
+  if (!c) return;
+  if (currentUser) {
+    c.innerHTML = `
+      ${currentUser.photoURL ? `<img src="${currentUser.photoURL}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin-bottom:10px">` : ''}
+      <div style="font-size:15px;font-weight:600">${escapeHtml(currentUser.displayName||'')}</div>
+      <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin:2px 0 14px">${escapeHtml(currentUser.email||'')}</div>
+      <button class="filebtn" onclick="signOutGoogle()">Esci</button>
+    `;
+  } else {
+    c.innerHTML = `
+      <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin-bottom:14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
+      <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
+    `;
+  }
+}
+
+if (fbAuth) {
+  fbAuth.onAuthStateChanged((user) => {
+    currentUser = user;
+    if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
+    if (user) {
+      const ref = fbDb.collection('users').doc(user.uid);
+      unsubscribeCloud = ref.onSnapshot((snap) => {
+        if (snap.exists) {
+          applyingRemoteData = true;
+          const data = snap.data();
+          library = data.library || {};
+          filmLibrary = data.filmLibrary || {};
+          normalizeLibrary(); normalizeFilmLibrary();
+          saveLibrary(); saveFilmLibrary();
+          renderLibrary(); renderFilmLibrary();
+          applyingRemoteData = false;
+        } else {
+          ref.set({ library, filmLibrary, updatedAt: Date.now() }).catch(()=>{});
+        }
+      }, () => showToast('Sync non riuscita'));
+    }
+    renderProfileAuth();
+  });
+}
 
 function getTmdbKey() { try { return localStorage.getItem('serietracker_tmdb_key') || ''; } catch(e) { return ''; } }
 function hasTmdbKey() {
@@ -574,8 +658,8 @@ function loadLibrary() {
   try { filmLibrary = JSON.parse(localStorage.getItem('serietracker_filmLibrary') || '{}'); } catch(e) { filmLibrary={}; }
   try { viewMode = localStorage.getItem('serietracker_view') || 'grid'; } catch(e) {}
 }
-function saveLibrary() { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e){} }
-function saveFilmLibrary() { try { localStorage.setItem('serietracker_filmLibrary', JSON.stringify(filmLibrary)); } catch(e){} }
+function saveLibrary() { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e){} scheduleCloudSync(); }
+function saveFilmLibrary() { try { localStorage.setItem('serietracker_filmLibrary', JSON.stringify(filmLibrary)); } catch(e){} scheduleCloudSync(); }
 
 // ---------- normalize ----------
 function normalizeLibrary() {
@@ -625,6 +709,7 @@ function switchTab(tab) {
 }
 
 function renderProfile() {
+  renderProfileAuth();
   const c = document.getElementById('profileStats');
   const totalShows = Object.keys(library).length;
   const episodesWatched = Object.values(library).reduce((sum,s) => sum + Object.keys(s.watched||{}).length, 0);
