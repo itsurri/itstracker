@@ -50,8 +50,8 @@
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 6px; }
-  .topbar-by { font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 4px; white-space: nowrap; }
+  .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
+  .topbar-by { font-size: 10px; font-weight: 400; color: #fff; margin-bottom: 4px; white-space: nowrap; }
   .topbar-logo { height: 44px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
   .icon-btn {
@@ -180,29 +180,29 @@
   /* sheet */
   .sheetbg {
     position: fixed; inset: 0; z-index: 100;
-    background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    display: flex; align-items: flex-end;
+    background: rgba(0,0,0,0.6);
     opacity: 0; pointer-events: none; transition: opacity 0.25s;
   }
   .sheetbg.open { opacity: 1; pointer-events: auto; }
   .sheet {
-    width: 100%; max-width: 480px; margin: 0 auto;
-    max-height: 92vh; overflow-y: auto;
-    background: var(--sheet-bg); border-radius: 34px 34px 0 0;
-    border: 0.5px solid rgba(var(--overlay-rgb),0.12); border-bottom: none;
-    transform: translateY(100%); transition: transform 0.3s cubic-bezier(.32,.72,0,1);
+    width: 100%; max-width: 480px; margin: 0 auto; position: relative;
+    height: 100%; max-height: 100%; overflow-y: auto;
+    background: var(--sheet-bg); border-radius: 0;
+    transform: translateY(100%); transition: transform 0.35s cubic-bezier(.32,.72,0,1);
     padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .hero { position: relative; height: 230px; overflow: hidden; border-radius: 34px 34px 0 0; }
+  .sheet-handle {
+    position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 0; right: 0; z-index: 5;
+    display: flex; justify-content: center; padding: 8px 0; touch-action: none; cursor: grab;
+  }
+  .sheet-handle i {
+    width: 36px; height: 5px; border-radius: 3px; display: block;
+    background: rgba(255,255,255,0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .hero { position: relative; height: 230px; overflow: hidden; }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
-  .hero .closebtn {
-    position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px;
-    width: 30px; height: 30px; border-radius: 50%;
-    background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-    display: flex; align-items: center; justify-content: center; border: none; color: #fff;
-  }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -212,6 +212,8 @@
   .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
   .stat .v { font-size: 20px; font-weight: 700; }
   .stat .l { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
+  .mini-stats b { color: var(--fg); font-weight: 700; }
   .removebtn {
     width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
@@ -238,6 +240,8 @@
     background: #ff453a; color: #fff; font-size: 10px; font-weight: 700; text-transform: none; letter-spacing: normal;
     vertical-align: middle;
   }
+  .cat-tab-icon { display: inline-flex; align-items: center; justify-content: center; }
+  .cat-tab-icon .tab-badge { margin-left: 4px; }
 
   .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; }
   .epitop { display: flex; gap: 12px; align-items: center; cursor: pointer; }
@@ -442,7 +446,10 @@
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
       <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista</button>
-      <button class="seasontab" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="tab-badge" id="inarrivoBadge" style="display:none"></span></button>
+      <button class="seasontab cat-tab-icon" data-cat="inarrivo" onclick="setTvCategory('inarrivo')" title="In Arrivo">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="tab-badge" id="inarrivoBadge" style="display:none"></span>
+      </button>
     </div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
@@ -1536,9 +1543,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <button class="closebtn" onclick="closeSheet()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
+      <div class="sheet-handle"><i></i></div>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
@@ -1548,11 +1553,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
         ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
-      <div class="statrow">
-        <div class="stat glass"><div class="v" id="statW">${watchedCount}</div><div class="l">visti</div></div>
-        <div class="stat glass"><div class="v">${total}</div><div class="l">totali</div></div>
-        <div class="stat glass"><div class="v" id="statP">${total?Math.round(watchedCount/total*100):0}%</div><div class="l">completato</div></div>
-      </div>
+      <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato</div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
@@ -1721,7 +1722,7 @@ async function renderFilmSheet(f, inLib) {
       ${f.image?`<img src="${f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <button class="closebtn" onclick="closeSheet()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      <div class="sheet-handle"><i></i></div>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(f.title)}</h2>
@@ -1731,9 +1732,7 @@ async function renderFilmSheet(f, inLib) {
         ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
-      <div class="statrow">
-        <div class="stat glass"><div class="v">${f.watched?'Visto':'Da vedere'}</div><div class="l">stato</div></div>
-      </div>
+      <div class="mini-stats"><b>${f.watched?'Visto':'Da vedere'}</b></div>
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">Aggiungi alla libreria</button>`
         : `<button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
@@ -1752,8 +1751,39 @@ async function toggleFilmWatched(id) {
 }
 async function removeFilm(id) { delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); closeSheet(); showToast('Film rimosso'); }
 
-function closeSheet() { document.getElementById('sheetBg').classList.remove('open'); }
+function closeSheet() {
+  document.getElementById('sheetBg').classList.remove('open');
+  const sheet = document.getElementById('sheet');
+  sheet.style.transition = ''; sheet.style.transform = '';
+}
 document.getElementById('sheetBg').addEventListener('click', e => { if(e.target.id==='sheetBg') closeSheet(); });
+
+// ---------- sheet drag-to-close ----------
+function initSheetDrag() {
+  const sheet = document.getElementById('sheet');
+  let startY = 0, dy = 0, dragging = false;
+  sheet.addEventListener('pointerdown', e => {
+    if (!e.target.closest('.sheet-handle')) return;
+    dragging = true; startY = e.clientY; dy = 0;
+    sheet.style.transition = 'none';
+    window.addEventListener('pointermove', onSheetDragMove);
+    window.addEventListener('pointerup', onSheetDragEnd);
+  });
+  function onSheetDragMove(e) {
+    if (!dragging) return;
+    dy = Math.max(0, e.clientY - startY);
+    sheet.style.transform = `translateY(${dy}px)`;
+  }
+  function onSheetDragEnd() {
+    window.removeEventListener('pointermove', onSheetDragMove);
+    window.removeEventListener('pointerup', onSheetDragEnd);
+    if (!dragging) return;
+    dragging = false;
+    sheet.style.transition = 'transform 0.3s cubic-bezier(.32,.72,0,1)';
+    if (dy > 120) { closeSheet(); }
+    else { sheet.style.transform = 'translateY(0)'; }
+  }
+}
 
 // ---------- import / export ----------
 document.getElementById('jsonFileInput').addEventListener('change', async e => {
@@ -1894,6 +1924,7 @@ renderFilmLibrary();
 refreshInPariShows();
 ensureUpcomingCache();
 initListSwipe(document.getElementById('tvContent'));
+initSheetDrag();
 </script>
 </body>
 </html>
