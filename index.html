@@ -640,7 +640,7 @@ function scheduleCloudSync() {
   if (!fbDb || !currentUser || applyingRemoteData) return;
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(() => {
-    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, updatedAt: Date.now() }).catch(()=>{});
+    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
   }, 800);
 }
 
@@ -704,9 +704,14 @@ if (fbAuth) {
           normalizeLibrary(); normalizeFilmLibrary();
           saveLibrary(); saveFilmLibrary();
           renderLibrary(); renderFilmLibrary();
+          if (data.tmdbKey && data.tmdbKey !== getTmdbKey()) {
+            try { localStorage.setItem('serietracker_tmdb_key', data.tmdbKey); } catch(e) {}
+            const input = document.getElementById('tmdbKeyInput');
+            if (input) input.value = data.tmdbKey;
+          }
           applyingRemoteData = false;
         } else {
-          ref.set({ library, filmLibrary, updatedAt: Date.now() }).catch(()=>{});
+          ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
         }
       }, () => showToast('Sync non riuscita'));
     }
@@ -1864,6 +1869,7 @@ darkModeQuery.addEventListener('change', updateLogo);
 function saveTmdbKey() {
   const v = document.getElementById('tmdbKeyInput').value.trim();
   try { localStorage.setItem('serietracker_tmdb_key', v); } catch(e) {}
+  scheduleCloudSync();
   showToast(v ? 'API key salvata' : 'API key rimossa');
 }
 
