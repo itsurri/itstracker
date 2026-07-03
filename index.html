@@ -768,7 +768,9 @@ function renderProfileAuth() {
 
 if (fbAuth) {
   // Completa un eventuale accesso avviato via redirect (PWA/iOS).
-  fbAuth.getRedirectResult().catch(() => { showToast('Accesso non riuscito'); });
+  fbAuth.getRedirectResult().then(result => {
+    if (result && result.user) showToast(`Accesso riuscito: ${result.user.displayName || result.user.email}`);
+  }).catch(err => { showToast(`Accesso non riuscito${err && err.code ? ' ('+err.code+')' : ''}`); });
   fbAuth.onAuthStateChanged((user) => {
     currentUser = user;
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
