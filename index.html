@@ -47,13 +47,11 @@
     background: var(--topbar-bg);
     -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .topbar-logo { height: 30px; width: auto; display: block; }
-  :root[data-theme="dark"] .topbar-logo { filter: drop-shadow(0 0 0.5px rgba(255,255,255,0.5)); }
-  .topbar-left .sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
-  .topbar-right { display: flex; gap: 8px; align-items: center; padding-top: 4px; }
+  .topbar-logo { height: 42px; width: auto; display: block; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); display: flex; align-items: center; justify-content: center;
@@ -64,13 +62,13 @@
   .glass {
     background: rgba(var(--overlay-rgb),0.06);
     -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.12); border-radius: 22px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.12); border-radius: 28px;
     box-shadow: var(--shadow-card), inset 0 1px 0 rgba(var(--overlay-rgb),0.08);
   }
 
   /* search */
   .searchwrap { padding: 14px 16px 4px; }
-  .searchbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px; }
+  .searchbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px; }
   .searchbar input { flex: 1; background: none; border: none; outline: none; color: var(--fg); font-size: 16px; font-family: inherit; }
   .searchbar input::placeholder { color: rgba(var(--overlay-rgb),0.4); }
   .searchbar svg { flex-shrink: 0; opacity: 0.5; }
@@ -97,7 +95,7 @@
   /* risultati ricerca */
   .resultrow {
     display: flex; gap: 12px; align-items: center;
-    padding: 10px 12px; margin-bottom: 8px; border-radius: 16px; cursor: pointer; transition: background 0.15s;
+    padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; transition: background 0.15s;
   }
   .resultrow:active { background: rgba(var(--overlay-rgb),0.08); }
   .resultrow img, .resultrow .noimg {
@@ -117,7 +115,7 @@
   /* GRID */
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .card {
-    border-radius: 14px; overflow: hidden; position: relative; cursor: pointer;
+    border-radius: 20px; overflow: hidden; position: relative; cursor: pointer;
     aspect-ratio: 2/3; background: rgba(var(--overlay-rgb),0.06);
   }
   .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -136,7 +134,7 @@
   /* LIST */
   .list-item {
     display: flex; gap: 12px; align-items: center;
-    padding: 10px 12px; margin-bottom: 8px; border-radius: 16px; cursor: pointer;
+    padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer;
     background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
   .list-item:active { background: rgba(var(--overlay-rgb),0.1); }
@@ -168,13 +166,13 @@
   .sheet {
     width: 100%; max-width: 480px; margin: 0 auto;
     max-height: 92vh; overflow-y: auto;
-    background: var(--sheet-bg); border-radius: 26px 26px 0 0;
+    background: var(--sheet-bg); border-radius: 34px 34px 0 0;
     border: 0.5px solid rgba(var(--overlay-rgb),0.12); border-bottom: none;
     transform: translateY(100%); transition: transform 0.3s cubic-bezier(.32,.72,0,1);
     padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .hero { position: relative; height: 230px; overflow: hidden; border-radius: 26px 26px 0 0; }
+  .hero { position: relative; height: 230px; overflow: hidden; border-radius: 34px 34px 0 0; }
   .hero img { width: 100%; height: 100%; object-fit: cover; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .hero .closebtn {
@@ -189,16 +187,16 @@
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
   .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 16px; }
   .statrow { display: flex; gap: 10px; margin-bottom: 18px; }
-  .stat { flex: 1; border-radius: 16px; padding: 12px; text-align: center; }
+  .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
   .stat .v { font-size: 20px; font-weight: 700; }
   .stat .l { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .removebtn {
-    width: 100%; padding: 13px; border-radius: 16px; border: 0.5px solid rgba(255,69,58,0.4);
+    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
     font-family: inherit; margin-top: 6px;
   }
   .addlibbtn {
-    width: 100%; padding: 13px; border-radius: 16px; border: 0.5px solid rgba(48,209,88,0.4);
+    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(48,209,88,0.4);
     background: rgba(48,209,88,0.12); color: #30D158; font-size: 14px; font-weight: 600;
     font-family: inherit; margin-bottom: 14px;
   }
@@ -206,12 +204,12 @@
   .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; }
   .seasontabs::-webkit-scrollbar { display: none; }
   .seasontab {
-    flex-shrink: 0; padding: 7px 16px; border-radius: 14px; font-size: 13px; font-weight: 600;
+    flex-shrink: 0; padding: 7px 16px; border-radius: 18px; font-size: 13px; font-weight: 600;
     color: rgba(var(--overlay-rgb),0.55); background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.1);
   }
   .seasontab.active { background: var(--fg); color: var(--bg); }
 
-  .epitem { padding: 12px; border-radius: 16px; margin-bottom: 8px; }
+  .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; }
   .epitop { display: flex; gap: 12px; align-items: center; cursor: pointer; }
   .epitem img { width: 76px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
   .epitem .noimg { width: 76px; height: 48px; border-radius: 10px; background: rgba(var(--overlay-rgb),0.06); flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
@@ -238,13 +236,13 @@
     display: flex; padding: 10px 6px;
     background: rgba(var(--overlay-rgb),0.08);
     -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 28px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 34px;
     box-shadow: var(--shadow-tabbar), inset 0 1px 0 rgba(var(--overlay-rgb),0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
   }
   .tabbtn {
     flex: 1; display: flex; align-items: center; justify-content: center;
     background: none; border: none; color: rgba(var(--overlay-rgb),0.45); font-family: inherit;
-    padding: 12px 0; border-radius: 18px; transition: background 0.2s, color 0.2s;
+    padding: 12px 0; border-radius: 22px; transition: background 0.2s, color 0.2s;
   }
   .tabbtn.active { color: var(--fg); background: rgba(var(--overlay-rgb),0.12); }
   .tabbtn svg { width: 26px; height: 26px; }
@@ -257,7 +255,7 @@
 
   .toast {
     position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
-    padding: 10px 18px; border-radius: 14px; font-size: 13px; font-weight: 600;
+    padding: 10px 18px; border-radius: 18px; font-size: 13px; font-weight: 600;
     background: rgba(30,30,34,0.9); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
     border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 200; max-width: 85%; text-align:center;
@@ -273,12 +271,12 @@
   .settingsrow .sn { font-size: 14.5px; font-weight: 600; }
   .settingsrow .sd { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .filebtn {
-    padding: 9px 16px; border-radius: 12px; border: 0.5px solid rgba(var(--overlay-rgb),0.2);
+    padding: 9px 16px; border-radius: 16px; border: 0.5px solid rgba(var(--overlay-rgb),0.2);
     background: rgba(var(--overlay-rgb),0.1); color: var(--fg); font-size: 13px; font-weight: 600; font-family: inherit; flex-shrink: 0;
   }
   .filebtn.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
   .redbtn {
-    padding: 9px 16px; border-radius: 12px; border: 0.5px solid rgba(255,69,58,0.4);
+    padding: 9px 16px; border-radius: 16px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 13px; font-weight: 600; font-family: inherit; flex-shrink: 0;
   }
   #jsonFileInput, #jsonFilmFileInput { display: none; }
@@ -292,7 +290,7 @@
   }
   .confirmbg.open { opacity: 1; pointer-events: auto; }
   .confirmbox {
-    background: var(--panel-bg); border: 0.5px solid rgba(var(--overlay-rgb),0.15); border-radius: 20px;
+    background: var(--panel-bg); border: 0.5px solid rgba(var(--overlay-rgb),0.15); border-radius: 26px;
     padding: 24px 20px; max-width: 300px; width: 88%; text-align: center;
     transform: scale(0.92); transition: transform 0.2s;
   }
@@ -300,7 +298,7 @@
   .confirmbox h3 { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
   .confirmbox p { font-size: 13.5px; color: rgba(var(--overlay-rgb),0.6); margin: 0 0 20px; line-height: 1.5; }
   .confirmbox .cbrow { display: flex; gap: 10px; }
-  .confirmbox .cbrow button { flex: 1; padding: 12px; border-radius: 14px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; }
+  .confirmbox .cbrow button { flex: 1; padding: 12px; border-radius: 16px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; }
   .cb-cancel { background: rgba(var(--overlay-rgb),0.1); color: var(--fg); }
   .cb-confirm { background: #ff453a; color: #fff; }
 </style>
@@ -311,7 +309,6 @@
   <div class="topbar">
     <div class="topbar-left">
       <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
-      <div class="sub" id="topSub">Tieni traccia di ogni episodio</div>
     </div>
     <div class="topbar-right" id="topbarRight">
       <button class="icon-btn active-view" id="btnGrid" title="Griglia" onclick="setView('grid')">
@@ -359,6 +356,17 @@
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <div>Cerca tra migliaia di titoli,<br>aggiornati in automatico.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- PROFILO -->
+  <div class="view" id="view-profile">
+    <div class="section" style="padding-top:14px">
+      <div class="glass" style="padding:26px 20px; text-align:center; margin-bottom:18px">
+        <img class="topbar-logo" src="logo-header.png" alt="its tracker." style="height:34px; margin:0 auto 6px">
+        <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
+      </div>
+      <div class="statrow" id="profileStats"></div>
     </div>
   </div>
 
@@ -428,6 +436,9 @@
   </button>
   <button class="tabbtn" data-tab="search" title="Cerca">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+  </button>
+  <button class="tabbtn" data-tab="profile" title="Profilo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
   </button>
   <button class="tabbtn" data-tab="settings" title="Impostazioni">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9c.23.5.7.85 1.51.85z"/></svg>
@@ -551,9 +562,20 @@ function switchTab(tab) {
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
-  const subs = { tv: 'Tieni traccia di ogni episodio', film: 'I tuoi film salvati', search: 'Trova una nuova serie o film', settings: 'Gestisci i tuoi dati' };
-  document.getElementById('topSub').textContent = subs[tab];
   document.getElementById('topbarRight').style.display = (tab === 'tv' || tab === 'film') ? 'flex' : 'none';
+  if (tab === 'profile') renderProfile();
+}
+
+function renderProfile() {
+  const c = document.getElementById('profileStats');
+  const totalShows = Object.keys(library).length;
+  const episodesWatched = Object.values(library).reduce((sum,s) => sum + Object.keys(s.watched||{}).length, 0);
+  const filmsWatched = Object.values(filmLibrary).filter(f => f.watched).length;
+  c.innerHTML = `
+    <div class="stat glass"><div class="v">${totalShows}</div><div class="l">serie</div></div>
+    <div class="stat glass"><div class="v">${episodesWatched}</div><div class="l">episodi visti</div></div>
+    <div class="stat glass"><div class="v">${filmsWatched}</div><div class="l">film visti</div></div>
+  `;
 }
 
 // ---------- render library TV ----------
