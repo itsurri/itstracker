@@ -322,6 +322,11 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
+    <div class="seasontabs" id="tvCatTabs" style="padding:14px 16px 4px">
+      <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
+      <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
+      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">Da Vedere</button>
+    </div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -331,6 +336,10 @@
 
   <!-- FILM -->
   <div class="view" id="view-film">
+    <div class="seasontabs" id="filmCatTabs" style="padding:14px 16px 4px">
+      <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti</button>
+      <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere</button>
+    </div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
@@ -363,7 +372,6 @@
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
       <div class="glass" style="padding:26px 20px; text-align:center; margin-bottom:18px">
-        <img class="topbar-logo" src="logo-header.png" alt="its tracker." style="height:34px; margin:0 auto 6px">
         <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
       </div>
       <div class="statrow" id="profileStats"></div>
@@ -473,6 +481,8 @@ let episodesCache = {};
 let searchMode = 'tv';
 let currentTab = 'tv';
 let viewMode = 'grid'; // 'grid' | 'list'
+let tvCategory = 'continua'; // 'continua' | 'inpari' | 'davedere'
+let filmCategory = 'visti'; // 'visti' | 'davedere'
 const translationCache = {};
 
 const GENRE_IT = {
@@ -579,6 +589,12 @@ function renderProfile() {
 }
 
 // ---------- render library TV ----------
+function setTvCategory(cat) {
+  tvCategory = cat;
+  document.querySelectorAll('#tvCatTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderLibrary();
+}
+
 function renderLibrary() {
   const container = document.getElementById('tvContent');
   const emptyEl = document.getElementById('libraryEmpty');
@@ -586,26 +602,14 @@ function renderLibrary() {
   if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
   emptyEl.style.display = 'none';
 
-  const cats = { continua: [], inpari: [], davedere: [] };
-  entries.forEach(([k, s]) => { const c = categorizeShow(s); cats[c].push([k, s]); });
-
-  const sections = [
-    { key: 'continua', label: 'Continua', dotClass: 'dot-continua' },
-    { key: 'inpari',   label: 'In Pari',  dotClass: 'dot-inpari' },
-    { key: 'davedere', label: 'Da Vedere',dotClass: 'dot-davedere' }
-  ];
-
-  container.innerHTML = sections.map(sec => {
-    const items = cats[sec.key];
-    return `<div class="section cat-block">
-      <div class="cat-title"><span class="dot ${sec.dotClass}"></span>${sec.label} <span style="color:rgba(var(--overlay-rgb),0.25);font-weight:400">${items.length}</span></div>
-      ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
-        viewMode === 'grid'
-          ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
-          : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
-      }
-    </div>`;
-  }).join('');
+  const items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
+  container.innerHTML = `<div class="section">
+    ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
+      viewMode === 'grid'
+        ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
+        : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
+    }
+  </div>`;
 }
 
 function renderCardTv(key, s) {
@@ -642,6 +646,12 @@ function renderListTv(key, s) {
 }
 
 // ---------- render library FILM ----------
+function setFilmCategory(cat) {
+  filmCategory = cat;
+  document.querySelectorAll('#filmCatTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  renderFilmLibrary();
+}
+
 function renderFilmLibrary() {
   const container = document.getElementById('filmContent');
   const emptyEl = document.getElementById('filmEmpty');
@@ -649,23 +659,14 @@ function renderFilmLibrary() {
   if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
   emptyEl.style.display = 'none';
 
-  const visti = entries.filter(([,f]) => f.watched);
-  const daVedere = entries.filter(([,f]) => !f.watched);
-
-  const sections = [
-    { label: 'Da Vedere', dotClass: 'dot-davedere', items: daVedere },
-    { label: 'Visti',     dotClass: 'dot-inpari',   items: visti }
-  ];
-
-  container.innerHTML = sections.map(sec => `
-    <div class="section cat-block">
-      <div class="cat-title"><span class="dot ${sec.dotClass}"></span>${sec.label} <span style="color:rgba(var(--overlay-rgb),0.25);font-weight:400">${sec.items.length}</span></div>
-      ${sec.items.length === 0 ? `<div class="cat-empty">Nessun film in questa categoria.</div>` :
-        viewMode === 'grid'
-          ? `<div class="grid">${sec.items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
-          : `<div>${sec.items.map(([k,f]) => renderListFilm(k,f)).join('')}</div>`
-      }
-    </div>`).join('');
+  const items = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
+  container.innerHTML = `<div class="section">
+    ${items.length === 0 ? `<div class="cat-empty">Nessun film in questa categoria.</div>` :
+      viewMode === 'grid'
+        ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
+        : `<div>${items.map(([k,f]) => renderListFilm(k,f)).join('')}</div>`
+    }
+  </div>`;
 }
 
 function renderCardFilm(key, f) {
