@@ -1276,7 +1276,7 @@ function renderListTv(key, s) {
       ].filter(Boolean).join(' · ')}</div>
       ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
     </div>
-    <button class="checkbtn ${isDone?'checked':''}" onclick="event.stopPropagation();markNext(${id})">
+    <button class="checkbtn ${isDone?'checked':''}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})">
       ${isDone?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
     </button>
   </div>`;
@@ -1289,26 +1289,42 @@ const PTR_MAX = 100;
 
 function initPullToRefresh() {
   document.addEventListener('pointerdown', e => {
-    if (window.scrollY > 0) return;
     if (document.getElementById('sheetBg').classList.contains('open')) return;
     if (document.getElementById('confirmBg').classList.contains('open')) return;
-    ptrState = { startX: e.clientX, startY: e.clientY, dy: 0, dragging: false, refreshing: false };
+    // baseY è il riferimento verticale da cui misurare il "pull": se siamo già in
+    // cima lo prendiamo subito, altrimenti aspettiamo di arrivarci durante lo scroll
+    // (per gesti continui: scroll-up fino in cima + tira giù, senza staccare il dito).
+    ptrState = { startX: e.clientX, baseY: window.scrollY <= 0 ? e.clientY : null, dy: 0, dragging: false, refreshing: false };
     window.addEventListener('pointermove', onPtrMove);
     window.addEventListener('pointerup', onPtrEnd);
     window.addEventListener('pointercancel', onPtrEnd);
   });
 }
 
+function hidePtrIndicator() {
+  const indicator = document.getElementById('ptrIndicator');
+  indicator.classList.remove('visible');
+  indicator.style.transform = '';
+  indicator.querySelector('svg').style.transform = '';
+}
+
 function onPtrMove(e) {
   if (!ptrState || ptrState.refreshing) return;
-  const dy = e.clientY - ptrState.startY;
+  if (window.scrollY > 0) {
+    // non (ancora, o non più) in cima: azzera il riferimento e aspetta
+    if (ptrState.dragging) { hidePtrIndicator(); ptrState.dragging = false; }
+    ptrState.baseY = null;
+    return;
+  }
+  if (ptrState.baseY === null) ptrState.baseY = e.clientY;
+  const dy = e.clientY - ptrState.baseY;
   if (!ptrState.dragging) {
-    if (Math.abs(dy) < 10) return;
+    if (dy < 10) return;
     const dx = e.clientX - ptrState.startX;
-    if (dy <= 0 || window.scrollY > 0 || Math.abs(dx) > dy) { ptrState = null; return; }
+    if (Math.abs(dx) > dy) { ptrState.baseY = null; return; }
     ptrState.dragging = true;
   }
-  if (dy <= 0) { resetPtr(); return; }
+  if (dy <= 0) { hidePtrIndicator(); ptrState.dragging = false; ptrState.baseY = e.clientY; return; }
   const clamped = Math.min(PTR_MAX, dy * 0.5);
   ptrState.dy = clamped;
   const progress = Math.min(1, clamped / PTR_THRESHOLD);
@@ -1319,10 +1335,7 @@ function onPtrMove(e) {
 }
 
 function resetPtr() {
-  const indicator = document.getElementById('ptrIndicator');
-  indicator.classList.remove('visible');
-  indicator.style.transform = '';
-  indicator.querySelector('svg').style.transform = '';
+  hidePtrIndicator();
   ptrState = null;
 }
 
@@ -1890,6 +1903,8 @@ async function markNext(id) {
   s.next = eps ? computeNextEp(eps, s.watched) : null;
   saveLibrary();
   renderLibrary();
+  const btn = document.querySelector(`.checkbtn[data-show-id="${id}"]`);
+  if (btn) { btn.classList.add('justchecked'); btn.addEventListener('animationend', () => btn.classList.remove('justchecked'), { once: true }); }
 }
 
 async function quickAddSilent(id) {
