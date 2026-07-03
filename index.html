@@ -214,6 +214,12 @@
   .stat .l { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
   .mini-stats b { color: var(--fg); font-weight: 700; }
+  .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
+  .streak-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+    background: #ff453a; color: #fff; font-size: 12px; font-weight: 800; margin-left: 8px;
+  }
   .removebtn {
     width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
@@ -224,6 +230,8 @@
     background: rgba(48,209,88,0.12); color: #30D158; font-size: 14px; font-weight: 600;
     font-family: inherit; margin-bottom: 14px;
   }
+  .btnrow { display: flex; gap: 10px; margin-bottom: 14px; }
+  .btnrow button { width: auto; flex: 1; margin: 0; }
 
   .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; }
   .seasontabs::-webkit-scrollbar { display: none; }
@@ -497,8 +505,12 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" id="profileAuthCard" style="padding:26px 20px; text-align:center; margin-bottom:18px">
-        <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
+      <div class="glass" style="padding:26px 20px 20px; text-align:center; margin-bottom:18px">
+        <div id="profileAuthCard">
+          <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
+        </div>
+        <div class="profile-divider"></div>
+        <div class="statrow" id="profileStatsRow" style="display:flex;"></div>
       </div>
       <div id="profileBody"></div>
     </div>
@@ -973,21 +985,23 @@ function renderBars(months) {
 
 function renderProfile() {
   renderProfileAuth();
+  const statsRow = document.getElementById('profileStatsRow');
   const c = document.getElementById('profileBody');
   const w = computeWrapped();
+
+  statsRow.innerHTML = `
+    <div class="stat"><div class="v">${w.totalShows}</div><div class="l">serie</div></div>
+    <div class="stat"><div class="v">${w.episodesWatched}</div><div class="l">episodi visti</div></div>
+    <div class="stat"><div class="v">${w.filmsWatched}</div><div class="l">film visti</div></div>
+    <div class="stat"><div class="v">${w.hours}</div><div class="l">ore viste</div></div>
+  `;
 
   if (!w.episodesWatched && !w.filmsWatched) {
     c.innerHTML = `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
     return;
   }
 
-  let html = `
-    <div class="wrap-card glass" style="display:flex; padding:18px 6px;">
-      <div class="stat"><div class="v">${w.totalShows}</div><div class="l">serie</div></div>
-      <div class="stat"><div class="v">${w.episodesWatched}</div><div class="l">episodi visti</div></div>
-      <div class="stat"><div class="v">${w.filmsWatched}</div><div class="l">film visti</div></div>
-      <div class="stat"><div class="v">${w.hours}</div><div class="l">ore viste</div></div>
-    </div>`;
+  let html = '';
 
   if (w.genres.length) {
     html += `<div class="wrap-sec-title">Generi preferiti</div><div class="wrap-card glass">${renderDonut(w.genres)}</div>`;
@@ -995,7 +1009,7 @@ function renderProfile() {
 
   if (w.hasActivity) {
     html += `<div class="wrap-sec-title">Attività recente</div><div class="wrap-card glass">${renderBars(w.months)}</div>`;
-    if (w.streak > 1) html += `<div class="wrap-card glass" style="text-align:center"><span style="font-size:18px;font-weight:800;color:var(--fg)">${w.streak}</span> <span style="color:rgba(var(--overlay-rgb),0.55);font-size:13px">giorni di fila</span> 🔥</div>`;
+    if (w.streak > 1) html += `<div class="wrap-card glass" style="text-align:center"><span style="color:rgba(var(--overlay-rgb),0.55);font-size:13px">giorni di fila</span><span class="streak-badge">${w.streak}</span></div>`;
   } else {
     html += `<div class="wrap-note">Segna gli episodi come visti per costruire il grafico di attività e la tua streak.</div>`;
   }
@@ -1435,7 +1449,7 @@ async function quickAddFilm(id) {
   try {
     const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
     const f = await res.json();
-    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
+    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
@@ -1501,7 +1515,7 @@ async function openShow(id) {
   try { const r = await fetch(tmdbUrl(`/tv/${id}`, {})); show = await r.json(); }
   catch(e) { showToast('Errore di connessione'); closeSheet(); return; }
 
-  const seasons = (show.seasons||[]).map(s => s.season_number).sort((a,b)=>a-b);
+  const seasons = (show.seasons||[]).map(s => s.season_number).filter(n => n > 0).sort((a,b)=>a-b);
 
   let episodes = episodesCache[id];
   if (!episodes) {
@@ -1529,7 +1543,7 @@ async function openShow(id) {
 
 async function renderSheet(show, episodes, seasons, inLib) {
   const sheet = document.getElementById('sheet');
-  const poster = tmdbImg(show.poster_path, 'original');
+  const poster = tmdbImg(show.backdrop_path, 'original') || tmdbImg(show.poster_path, 'original');
   const watched = (library[show.id]&&library[show.id].watched)||{};
   const watchedCount = Object.keys(watched).length;
   const total = episodes.length;
@@ -1663,7 +1677,7 @@ async function ensureEpisodes(id) {
   try {
     const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await r.json();
-    const seasons = (show.seasons||[]).map(x => x.season_number).sort((a,b)=>a-b);
+    const seasons = (show.seasons||[]).map(x => x.season_number).filter(n => n > 0).sort((a,b)=>a-b);
     episodesCache[id] = await fetchTvEpisodes(id, seasons);
     return episodesCache[id];
   } catch(e) { return null; }
@@ -1708,7 +1722,7 @@ async function openFilm(id) {
     try {
       const r = await fetch(tmdbUrl(`/movie/${id}`, {}));
       const rec = await r.json();
-      f = { id:rec.id, title:rec.title, image: tmdbImg(rec.poster_path, 'original'), year:rec.release_date?rec.release_date.slice(0,4):'', genre:(rec.genres&&rec.genres[0]&&rec.genres[0].name)||'', genres:showGenres(rec), description:rec.overview||'', rating: rec.vote_average?Math.round(rec.vote_average*10)/10:null, voteCount: rec.vote_count||0, runtime: rec.runtime||0, watched:false };
+      f = { id:rec.id, title:rec.title, image: tmdbImg(rec.poster_path, 'original'), backdrop: tmdbImg(rec.backdrop_path, 'original'), year:rec.release_date?rec.release_date.slice(0,4):'', genre:(rec.genres&&rec.genres[0]&&rec.genres[0].name)||'', genres:showGenres(rec), description:rec.overview||'', rating: rec.vote_average?Math.round(rec.vote_average*10)/10:null, voteCount: rec.vote_count||0, runtime: rec.runtime||0, watched:false };
     } catch(e) { showToast('Errore di connessione'); closeSheet(); return; }
   }
   renderFilmSheet(f, !!filmLibrary[id]);
@@ -1719,7 +1733,7 @@ async function renderFilmSheet(f, inLib) {
   const rawDesc = f.description||'';
   sheet.innerHTML = `
     <div class="hero">
-      ${f.image?`<img src="${f.image}" alt="">`:''}
+      ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
       <div class="sheet-handle"><i></i></div>
@@ -1732,13 +1746,12 @@ async function renderFilmSheet(f, inLib) {
         ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
-      <div class="mini-stats"><b>${f.watched?'Visto':'Da vedere'}</b></div>
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">Aggiungi alla libreria</button>`
-        : `<button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
-           <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button>`}
+        : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
+           <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.image) posterAccent(f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -1813,7 +1826,7 @@ async function enrichImportedLibrary() {
       entry.genres = showGenres(show);
       entry.runtime = showRuntime(show);
       if (!entry.totalEpisodes) {
-        const seasons = (show.seasons||[]).map(s => s.season_number).sort((a,b)=>a-b);
+        const seasons = (show.seasons||[]).map(s => s.season_number).filter(n => n > 0).sort((a,b)=>a-b);
         const eps = await fetchTvEpisodes(id, seasons);
         episodesCache[id] = eps;
         entry.totalEpisodes = eps.length;
