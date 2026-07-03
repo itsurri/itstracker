@@ -56,7 +56,9 @@
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); display: flex; align-items: center; justify-content: center;
+    padding: 0; margin: 0; line-height: 0; flex-shrink: 0;
   }
+  .icon-btn svg { display: block; }
   .icon-btn.active-view { background: rgba(var(--overlay-rgb),0.2); border-color: rgba(var(--overlay-rgb),0.35); }
 
   /* glass */
@@ -414,7 +416,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       </button>
       <button class="icon-btn" id="btnList" title="Lista" onclick="setView('list')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="6" x2="19" y2="6"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/><line x1="2" y1="6" x2="2.01" y2="6"/><line x1="2" y1="12" x2="2.01" y2="12"/><line x1="2" y1="18" x2="2.01" y2="18"/></svg>
       </button>
     </div>
   </div>
