@@ -167,15 +167,15 @@
   .card .badge-blue  { background: rgba(10,132,255,0.85); }
 
   /* LIST */
-  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 0 0 2px var(--bg); }
+  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 8px; background: var(--bg); }
   .swipe-action {
-    position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding-left: 22px;
-    background: #30D158; color: #fff; font-size: 13px; font-weight: 700; border-radius: 20px;
+    position: absolute; inset: 4px; display: flex; align-items: center; gap: 8px; padding-left: 18px;
+    background: #30D158; color: #fff; font-size: 13px; font-weight: 700; border-radius: 16px; overflow: hidden;
   }
   .list-item {
     display: flex; gap: 12px; align-items: center; position: relative;
     padding: 10px 12px; border-radius: 20px; cursor: pointer;
-    background: linear-gradient(rgba(var(--overlay-rgb),0.05), rgba(var(--overlay-rgb),0.05)) padding-box, var(--bg);
+    background: var(--sheet-bg);
     border: 0.5px solid rgba(var(--overlay-rgb),0.08);
     touch-action: pan-y;
   }
@@ -926,29 +926,35 @@ function categorizeShow(s) {
 }
 
 // aggiorna rating/stagioni mancanti e sposta in "continua" le serie "in pari" con nuovi episodi
+// Ricontrolla su TMDb totale episodi/stagioni/rating/backdrop di una singola serie.
+// Ritorna true se qualcosa è cambiato (utile per capire se sono usciti nuovi episodi).
+async function refreshShowTotals(id) {
+  if (!hasTmdbKey() || !library[id]) return false;
+  try {
+    const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
+    const show = await r.json();
+    const newTotal = show.number_of_episodes || 0;
+    const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
+    const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
+    const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
+    const changed = (newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating || newBackdrop !== library[id].backdrop;
+    if (changed) {
+      if (newTotal && newTotal !== library[id].totalEpisodes) { library[id].totalEpisodes = newTotal; delete episodesCache[id]; }
+      library[id].totalSeasons = newSeasons;
+      library[id].rating = newRating;
+      library[id].backdrop = newBackdrop;
+      saveLibrary();
+    }
+    return changed;
+  } catch(e) { return false; }
+}
+
 async function refreshInPariShows() {
   if (!hasTmdbKey()) return;
   const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop);
   if (!ids.length) return;
-  let changed = false;
-  await Promise.all(ids.map(async id => {
-    try {
-      const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
-      const show = await r.json();
-      const newTotal = show.number_of_episodes || 0;
-      const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
-      const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
-      const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
-      if ((newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating || newBackdrop !== library[id].backdrop) {
-        if (newTotal && newTotal !== library[id].totalEpisodes) { library[id].totalEpisodes = newTotal; delete episodesCache[id]; }
-        library[id].totalSeasons = newSeasons;
-        library[id].rating = newRating;
-        library[id].backdrop = newBackdrop;
-        changed = true;
-      }
-    } catch(e) {}
-  }));
-  if (changed) { saveLibrary(); renderLibrary(); }
+  const results = await Promise.all(ids.map(refreshShowTotals));
+  if (results.some(Boolean)) renderLibrary();
 }
 
 // ---------- view mode ----------
@@ -1446,23 +1452,40 @@ async function doSearchTv(q) {
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
-function renderTvResults(results) {
+async function renderTvResults(results) {
   const c = document.getElementById('searchResults');
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
+  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,30);
+  c.innerHTML = searchSkeletonGrid(Math.min(ranked.length, 9));
+
+  const enriched = await Promise.all(ranked.map(async s => {
+    try {
+      const r = await fetch(tmdbUrl(`/tv/${s.id}`, {}));
+      const d = await r.json();
+      s.totalSeasons = (d.seasons||[]).filter(se=>se.season_number>0).length || d.number_of_seasons || 0;
+      s.totalEpisodes = d.number_of_episodes || 0;
+    } catch(e) {}
+    return s;
+  }));
 
   if (viewMode === 'list') {
-    c.innerHTML = `<div>${ranked.map(s => {
+    c.innerHTML = `<div>${enriched.map(s => {
       const inLib = !!library[s.id];
       const poster = tmdbImg(s.poster_path, 'w185');
       const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
+      const meta = [
+        rating ? `★ ${rating}` : null,
+        s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
+        s.totalEpisodes ? `${s.totalEpisodes} ep` : null,
+        !rating && !s.totalSeasons ? (s.first_air_date?s.first_air_date.slice(0,4):'—') : null
+      ].filter(Boolean).join(' · ');
       return `<div class="list-item" onclick="openShow(${s.id})">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
         <div class="li-info">
           <div class="li-name">${escapeHtml(s.name)}</div>
-          <div class="li-meta">${rating?`★ ${rating} · `:''}${s.first_air_date?s.first_air_date.slice(0,4):'—'}</div>
+          <div class="li-meta">${meta}</div>
         </div>
         <button class="addbtn" onclick="event.stopPropagation();quickAdd(${s.id})">
           ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
@@ -1472,11 +1495,15 @@ function renderTvResults(results) {
     return;
   }
 
-  c.innerHTML = `<div class="grid">${ranked.map(s => {
+  c.innerHTML = `<div class="grid">${enriched.map(s => {
     const inLib = !!library[s.id];
     const poster = tmdbImg(s.poster_path, 'w342');
     const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
     const votes = formatVotes(s.vote_count);
+    const meta = [
+      s.totalSeasons ? `${s.totalSeasons} St.` : null,
+      s.totalEpisodes ? `${s.totalEpisodes} ep` : null
+    ].filter(Boolean).join(' · ') || (s.first_air_date?s.first_air_date.slice(0,4):'—');
     return `<div class="searchcard" onclick="openShow(${s.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
@@ -1485,7 +1512,7 @@ function renderTvResults(results) {
       </button>
       <div class="scinfo">
         <div class="sn">${escapeHtml(s.name)}</div>
-        <div class="sm">${s.first_air_date?s.first_air_date.slice(0,4):'—'}</div>
+        <div class="sm">${meta}</div>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -1783,6 +1810,11 @@ function applyToggleEpisode(showId, season, number) {
   const tot = episodesCache[showId] ? episodesCache[showId].length : 0;
   const sw = document.getElementById('statW'); if(sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if(sp) sp.textContent = (tot?Math.round(wc/tot*100):0)+'%';
+
+  // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
+  if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
+    refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
+  }
 }
 
 function askMarkPrevious(showId, priorUnwatched, season, number) {
