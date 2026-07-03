@@ -145,14 +145,14 @@
   .card .badge-blue  { background: rgba(10,132,255,0.85); }
 
   /* LIST */
-  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; }
+  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 8px; }
   .swipe-action {
     position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding-left: 22px;
     background: #30D158; color: #fff; font-size: 13px; font-weight: 700;
   }
   .list-item {
     display: flex; gap: 12px; align-items: center; position: relative;
-    padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer;
+    padding: 10px 12px; border-radius: 20px; cursor: pointer;
     background: linear-gradient(rgba(var(--overlay-rgb),0.05), rgba(var(--overlay-rgb),0.05)) padding-box, var(--bg);
     border: 0.5px solid rgba(var(--overlay-rgb),0.08);
     touch-action: pan-y;
@@ -342,7 +342,7 @@
   /* ===== resume carousel ===== */
   .resume-rail {
     display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
-    padding: 2px 16px 20px; scrollbar-width: none;
+    padding: 2px 20px 20px; scrollbar-width: none;
   }
   .resume-rail::-webkit-scrollbar { display: none; }
   .resume-card {
@@ -436,7 +436,7 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
-    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 16px 4px">
+    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 4px">
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
       <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">Da Vedere</button>
@@ -452,7 +452,7 @@
 
   <!-- FILM -->
   <div class="view" id="view-film">
-    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 16px 4px">
+    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 4px">
       <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti</button>
       <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere</button>
     </div>
@@ -1190,7 +1190,8 @@ function renderListTv(key, s) {
 
 // ---------- swipe to mark watched (list view) ----------
 let swipeState = null;
-const SWIPE_REVEAL = 90;
+const SWIPE_REVEAL = 220;
+const SWIPE_THRESHOLD = SWIPE_REVEAL / 2;
 
 function initListSwipe(container) {
   container.addEventListener('pointerdown', e => {
@@ -1224,7 +1225,7 @@ function onListSwipeEnd() {
   if (!swipeState) return;
   const { item, dx, dragging, showId } = swipeState;
   item.style.transition = 'transform 0.25s ease';
-  if (dragging && dx > 60) {
+  if (dragging && dx > SWIPE_THRESHOLD) {
     item.style.transform = `translateX(${SWIPE_REVEAL}px)`;
     setTimeout(() => { item.style.transform = 'translateX(0)'; }, 220);
     swipeMarkWatched(showId);
