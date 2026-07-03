@@ -1116,6 +1116,7 @@ function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   try { localStorage.setItem('serietracker_theme', theme); } catch(e) {}
   updateThemeButtons();
+  updateLogo();
 }
 function updateThemeButtons() {
   const theme = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -1124,12 +1125,18 @@ function updateThemeButtons() {
   if (lb) lb.classList.toggle('active', theme === 'light');
   if (db) db.classList.toggle('active', theme === 'dark');
 }
+function updateLogo() {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const src = theme === 'dark' ? 'logo-header-dark.png' : 'logo-header.png';
+  document.querySelectorAll('.topbar-logo').forEach(img => img.src = src);
+}
 
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
 updateThemeButtons();
+updateLogo();
 document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='grid');
 document.getElementById('btnList').classList.toggle('active-view', viewMode==='list');
 renderLibrary();
