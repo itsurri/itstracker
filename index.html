@@ -167,7 +167,7 @@
   .card .badge-blue  { background: rgba(10,132,255,0.85); }
 
   /* LIST */
-  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 8px; }
+  .list-item-wrap { position: relative; border-radius: 20px; overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 0 0 2px var(--bg); }
   .swipe-action {
     position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; padding-left: 22px;
     background: #30D158; color: #fff; font-size: 13px; font-weight: 700; border-radius: 20px;
@@ -437,7 +437,6 @@
   .up-date { flex-shrink: 0; text-align: center; min-width: 46px; }
   .up-date .ud-d { font-size: 17px; font-weight: 700; line-height: 1; }
   .up-date .ud-m { font-size: 10px; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; letter-spacing: 0.04em; }
-  .up-soon .ud-d, .up-soon .ud-m { color: #0A84FF; }
 
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
@@ -548,7 +547,7 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" style="padding:20px; text-align:center; margin-bottom:18px">
+      <div class="glass" style="padding:16px; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
           <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
@@ -740,11 +739,11 @@ function renderProfileAuth() {
         ${currentUser.photoURL ? `<img class="profile-avatar" src="${currentUser.photoURL}" alt="">` : `<div class="profile-avatar"></div>`}
         <div>
           <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
-          <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
+          <div class="profile-email">${escapeHtml(currentUser.email||'')}</div>
+          <button class="filebtn" style="padding:6px 14px; font-size:12px; margin-top:2px" onclick="signOutGoogle()">Esci</button>
         </div>
       </div>
-      <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-bottom:14px"></div>
-      <button class="filebtn" onclick="signOutGoogle()">Esci</button>
+      <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:16px"></div>
     `;
   } else {
     c.innerHTML = `
@@ -1312,13 +1311,8 @@ function onListSwipeEnd() {
   if (!swipeState) return;
   const { item, dx, dragging, showId } = swipeState;
   item.style.transition = 'transform 0.25s ease';
-  if (dragging && dx > SWIPE_THRESHOLD) {
-    item.style.transform = `translateX(${SWIPE_REVEAL}px)`;
-    setTimeout(() => { item.style.transform = 'translateX(0)'; }, 220);
-    swipeMarkWatched(showId);
-  } else {
-    item.style.transform = 'translateX(0)';
-  }
+  item.style.transform = 'translateX(0)';
+  if (dragging && dx > SWIPE_THRESHOLD) swipeMarkWatched(showId);
   swipeState = null;
 }
 
@@ -1418,9 +1412,14 @@ async function loadPopular(mode) {
   document.getElementById('searchEmpty').style.display = 'none';
   try {
     const path = mode === 'tv' ? '/discover/tv' : '/discover/movie';
-    const res = await fetch(tmdbUrl(path, { sort_by: 'popularity.desc' }));
-    const data = await res.json();
-    const results = (data.results || []).filter(r => mode === 'tv' ? !library[r.id] : !filmLibrary[r.id]);
+    const pages = await Promise.all([1,2,3,4,5].map(p => fetch(tmdbUrl(path, { sort_by: 'popularity.desc', page: p })).then(r => r.json())));
+    const all = pages.flatMap(d => d.results || []);
+    const seen = new Set();
+    const results = all.filter(r => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return mode === 'tv' ? !library[r.id] : !filmLibrary[r.id];
+    });
     if (mode === 'tv') renderTvResults(results); else renderFilmResults(results);
   } catch(e) { c.innerHTML = ''; showToast('Errore di connessione'); }
 }
@@ -1452,7 +1451,7 @@ function renderTvResults(results) {
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,24);
+  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
 
   if (viewMode === 'list') {
     c.innerHTML = `<div>${ranked.map(s => {
@@ -1509,7 +1508,7 @@ function renderFilmResults(results) {
   if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0));
+  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
 
   if (viewMode === 'list') {
     c.innerHTML = `<div>${ranked.map(f => {
