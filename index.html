@@ -229,10 +229,7 @@
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .pill {
-    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
-    background: rgba(var(--overlay-rgb),0.1); color: var(--accent, rgba(var(--overlay-rgb),0.75));
-  }
+  .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
   .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 16px; }
   .statrow { display: flex; gap: 10px; margin-bottom: 18px; }
   .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
@@ -359,6 +356,19 @@
     opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 200; max-width: 85%; text-align:center;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .ach-toast {
+    position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 50%; z-index: 250;
+    max-width: 90%; width: 320px;
+    display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; border-radius: 18px;
+    background: linear-gradient(135deg, #FF9F0A, #FF453A);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(-20px); transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .ach-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .ach-toast-icon { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ach-toast-title { font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ach-toast-label { font-size: 14px; font-weight: 700; color: #fff; margin-top: 1px; }
 
   /* impostazioni */
   .settings-h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.01em; color: rgba(var(--overlay-rgb),0.55); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -693,6 +703,13 @@
 
 <div class="sheetbg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
+<div class="ach-toast" id="achToast">
+  <div class="ach-toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg></div>
+  <div class="ach-toast-text">
+    <div class="ach-toast-title">Achievement sbloccato</div>
+    <div class="ach-toast-label"></div>
+  </div>
+</div>
 
 <!-- CONFIRM DIALOG -->
 <div class="confirmbg" id="confirmBg">
@@ -1072,7 +1089,7 @@ function computeWrapped() {
   for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({ y: d.getFullYear(), m: d.getMonth(), count: 0 }); }
   times.forEach(t => { const d = new Date(t); const mo = months.find(x => x.y === d.getFullYear() && x.m === d.getMonth()); if (mo) mo.count++; });
 
-  return { totalShows, episodesWatched, filmsWatched, hours, genres, top, streak: best, months, hasActivity: times.length > 0 };
+  return { totalShows, episodesWatched, filmsWatched, hours, genres, distinctGenres: Object.keys(gTally).length, top, streak: best, months, hasActivity: times.length > 0 };
 }
 
 function renderDonut(genres) {
@@ -1111,15 +1128,53 @@ function animateCountUp(el) {
 }
 
 function getAchievements(w) {
-  const anyCompleted = Object.values(library).some(s => categorizeShow(s) === 'inpari');
-  return [
-    { label: 'Prima serie completata', unlocked: anyCompleted },
-    { label: '50 episodi visti', unlocked: w.episodesWatched >= 50 },
-    { label: '250 episodi visti', unlocked: w.episodesWatched >= 250 },
-    { label: 'Primo film visto', unlocked: w.filmsWatched >= 1 },
-    { label: '50 ore guardate', unlocked: w.hours >= 50 },
-    { label: '7 giorni di fila', unlocked: w.streak >= 7 }
+  const completedShows = Object.values(library).filter(s => categorizeShow(s) === 'inpari').length;
+  const defs = [
+    // episodi visti
+    { id:'ep1',   label: 'Primo episodio',        unlocked: w.episodesWatched >= 1 },
+    { id:'ep10',  label: '10 episodi visti',       unlocked: w.episodesWatched >= 10 },
+    { id:'ep50',  label: '50 episodi visti',       unlocked: w.episodesWatched >= 50 },
+    { id:'ep100', label: '100 episodi visti',      unlocked: w.episodesWatched >= 100 },
+    { id:'ep250', label: '250 episodi visti',      unlocked: w.episodesWatched >= 250 },
+    { id:'ep500', label: '500 episodi visti',      unlocked: w.episodesWatched >= 500 },
+    { id:'ep1000',label: '1000 episodi visti',     unlocked: w.episodesWatched >= 1000 },
+    { id:'ep2000',label: '2000 episodi visti',     unlocked: w.episodesWatched >= 2000 },
+    // serie completate
+    { id:'sc1',   label: 'Prima serie completata', unlocked: completedShows >= 1 },
+    { id:'sc3',   label: '3 serie completate',     unlocked: completedShows >= 3 },
+    { id:'sc5',   label: '5 serie completate',     unlocked: completedShows >= 5 },
+    { id:'sc10',  label: '10 serie completate',    unlocked: completedShows >= 10 },
+    { id:'sc25',  label: '25 serie completate',    unlocked: completedShows >= 25 },
+    // libreria
+    { id:'lib5',  label: '5 serie in libreria',    unlocked: w.totalShows >= 5 },
+    { id:'lib10', label: '10 serie in libreria',   unlocked: w.totalShows >= 10 },
+    { id:'lib25', label: '25 serie in libreria',   unlocked: w.totalShows >= 25 },
+    { id:'lib50', label: '50 serie in libreria',   unlocked: w.totalShows >= 50 },
+    // film
+    { id:'f1',    label: 'Primo film visto',       unlocked: w.filmsWatched >= 1 },
+    { id:'f5',    label: '5 film visti',           unlocked: w.filmsWatched >= 5 },
+    { id:'f10',   label: '10 film visti',          unlocked: w.filmsWatched >= 10 },
+    { id:'f25',   label: '25 film visti',          unlocked: w.filmsWatched >= 25 },
+    { id:'f50',   label: '50 film visti',          unlocked: w.filmsWatched >= 50 },
+    // ore guardate
+    { id:'h5',    label: '5 ore guardate',         unlocked: w.hours >= 5 },
+    { id:'h24',   label: '24 ore guardate',        unlocked: w.hours >= 24 },
+    { id:'h100',  label: '100 ore guardate',       unlocked: w.hours >= 100 },
+    { id:'h250',  label: '250 ore guardate',       unlocked: w.hours >= 250 },
+    { id:'h500',  label: '500 ore guardate',       unlocked: w.hours >= 500 },
+    { id:'h1000', label: '1000 ore guardate',      unlocked: w.hours >= 1000 },
+    // streak
+    { id:'st3',   label: '3 giorni di fila',       unlocked: w.streak >= 3 },
+    { id:'st7',   label: '7 giorni di fila',       unlocked: w.streak >= 7 },
+    { id:'st14',  label: '14 giorni di fila',      unlocked: w.streak >= 14 },
+    { id:'st30',  label: '30 giorni di fila',      unlocked: w.streak >= 30 },
+    { id:'st60',  label: '60 giorni di fila',      unlocked: w.streak >= 60 },
+    // generi
+    { id:'g3',    label: '3 generi diversi',       unlocked: w.distinctGenres >= 3 },
+    { id:'g5',    label: '5 generi diversi',       unlocked: w.distinctGenres >= 5 },
+    { id:'g8',    label: '8 generi diversi',       unlocked: w.distinctGenres >= 8 }
   ];
+  return defs;
 }
 
 function renderAchievements(w) {
@@ -1131,6 +1186,48 @@ function renderAchievements(w) {
       <div class="ach-label">${a.label}</div>
     </div>`).join('');
   return `<div class="ach-grid">${items}</div>`;
+}
+
+// ---------- tracciamento sblocco achievement ----------
+function getUnlockedAchievementIds() {
+  try { return new Set(JSON.parse(localStorage.getItem('serietracker_achievements') || '[]')); } catch(e) { return new Set(); }
+}
+function saveUnlockedAchievementIds(set) {
+  try { localStorage.setItem('serietracker_achievements', JSON.stringify([...set])); } catch(e) {}
+}
+
+let achievementQueue = [];
+let achievementShowing = false;
+
+function checkAchievements(notify) {
+  const w = computeWrapped();
+  const unlocked = getUnlockedAchievementIds();
+  const newly = [];
+  getAchievements(w).forEach(a => {
+    if (a.unlocked && !unlocked.has(a.id)) { unlocked.add(a.id); newly.push(a); }
+  });
+  if (newly.length) saveUnlockedAchievementIds(unlocked);
+  if (notify !== false) newly.forEach(a => queueAchievementToast(a));
+  return newly;
+}
+
+function queueAchievementToast(a) {
+  achievementQueue.push(a);
+  if (!achievementShowing) showNextAchievementToast();
+}
+
+function showNextAchievementToast() {
+  const a = achievementQueue.shift();
+  if (!a) { achievementShowing = false; return; }
+  achievementShowing = true;
+  const el = document.getElementById('achToast');
+  el.querySelector('.ach-toast-label').textContent = a.label;
+  el.classList.add('show');
+  haptic();
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(showNextAchievementToast, 350);
+  }, 2200);
 }
 
 function renderProfile() {
@@ -1779,7 +1876,6 @@ async function openShow(id) {
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
-  sheet.style.removeProperty('--accent');
   sheetBg.classList.add('open');
 
   if (!hasTmdbKey()) { closeSheet(); return; }
@@ -1851,7 +1947,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (poster) posterAccent(poster).then(col => { const sh = document.getElementById('sheet'); if (sh && col) sh.style.setProperty('--accent', col); });
+  if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
 function selectSeason(showId, season) {
@@ -1946,6 +2042,7 @@ function applyToggleEpisode(showId, season, number) {
     celebrateShowComplete();
     refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
   }
+  if (!wasWatched) checkAchievements();
 }
 
 function askMarkPrevious(showId, priorUnwatched, season, number) {
@@ -1960,6 +2057,7 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     saveLibrary();
     renderEpisodeList(showId, episodesCache[showId], currentSeason);
     renderLibrary();
+    checkAchievements();
     okBtn.textContent = 'Elimina';
     closeConfirm();
   };
@@ -2001,6 +2099,7 @@ async function markNext(id) {
     celebrateShowComplete();
     refreshShowTotals(id).then(changed => { if (changed) renderLibrary(); });
   }
+  checkAchievements();
 }
 
 async function quickAddSilent(id) {
@@ -2019,7 +2118,6 @@ async function openFilm(id) {
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
-  sheet.style.removeProperty('--accent');
   sheetBg.classList.add('open');
 
   let f = filmLibrary[id];
@@ -2059,7 +2157,7 @@ async function renderFilmSheet(f, inLib) {
         : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const sh = document.getElementById('sheet'); if (sh && col) sh.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -2069,6 +2167,7 @@ async function toggleFilmWatched(id) {
   filmLibrary[id].watched = !filmLibrary[id].watched;
   if (filmLibrary[id].watched) { filmLibrary[id].watchedAt = Date.now(); haptic(); }
   saveFilmLibrary(); renderFilmLibrary(); openFilm(id);
+  if (filmLibrary[id].watched) checkAchievements();
 }
 async function removeFilm(id) { delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); closeSheet(); showToast('Film rimosso'); }
 
@@ -2236,6 +2335,7 @@ document.getElementById('btnList').classList.toggle('active-view', viewMode==='l
 renderLibrary();
 renderFilmLibrary();
 refreshInPariShows();
+checkAchievements(false);
 ensureUpcomingCache();
 initPullToRefresh();
 </script>
