@@ -162,6 +162,7 @@
   .list-badge {
     font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 8px; flex-shrink: 0;
     background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.7);
+    min-width: 44px; text-align: center; box-sizing: border-box;
   }
   .list-badge.badge-green { background: rgba(48,209,88,0.2); color: #30D158; }
   .list-badge.badge-blue  { background: rgba(10,132,255,0.2); color: #0A84FF; }
@@ -830,6 +831,29 @@ function categorizeShow(s) {
   return 'continua';
 }
 
+// se una serie "in pari" ha nuovi episodi usciti, la sposta di nuovo in "continua"
+async function refreshInPariShows() {
+  if (!hasTmdbKey()) return;
+  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari');
+  if (!ids.length) return;
+  let changed = false;
+  await Promise.all(ids.map(async id => {
+    try {
+      const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
+      const show = await r.json();
+      const newTotal = show.number_of_episodes || 0;
+      if (newTotal && newTotal !== library[id].totalEpisodes) {
+        library[id].totalEpisodes = newTotal;
+        library[id].totalSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
+        library[id].rating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
+        delete episodesCache[id];
+        changed = true;
+      }
+    } catch(e) {}
+  }));
+  if (changed) { saveLibrary(); renderLibrary(); }
+}
+
 // ---------- view mode ----------
 function setView(mode) {
   viewMode = mode;
@@ -923,23 +947,12 @@ function renderProfile() {
   }
 
   let html = `
-    <div class="wrap-hero glass">
-      <div class="wh-num">${w.hours}</div>
-      <div class="wh-lbl">ore guardate in totale</div>
-    </div>
-    <div class="statrow">
-      <div class="stat glass"><div class="v">${w.totalShows}</div><div class="l">serie</div></div>
-      <div class="stat glass"><div class="v">${w.episodesWatched}</div><div class="l">episodi</div></div>
-      <div class="stat glass"><div class="v">${w.filmsWatched}</div><div class="l">film</div></div>
+    <div class="wrap-card glass" style="display:flex; padding:18px 6px;">
+      <div class="stat"><div class="v">${w.totalShows}</div><div class="l">serie</div></div>
+      <div class="stat"><div class="v">${w.episodesWatched}</div><div class="l">episodi</div></div>
+      <div class="stat"><div class="v">${w.filmsWatched}</div><div class="l">film</div></div>
+      <div class="stat"><div class="v">${w.hours}</div><div class="l">ore</div></div>
     </div>`;
-
-  if (w.top) {
-    html += `<div class="wrap-sec-title">Serie più vista</div>
-      <div class="wrap-card glass"><div class="top-show">
-        ${w.top.image ? `<img src="${w.top.image}" alt="">` : ''}
-        <div><div class="ts-name">${escapeHtml(w.top.name||'')}</div><div class="ts-sub">${w.top.w}${w.top.total?'/'+w.top.total:''} episodi visti</div></div>
-      </div></div>`;
-  }
 
   if (w.genres.length) {
     html += `<div class="wrap-sec-title">Generi preferiti</div><div class="wrap-card glass">${renderDonut(w.genres)}</div>`;
@@ -1052,15 +1065,18 @@ async function renderUpcoming(container) {
     upcomingCache = results.filter(Boolean).sort((a,b) => a.date.localeCompare(b.date));
     upcomingCacheAt = now;
   }
-  if (!upcomingCache.length) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30 = new Date(today.getTime() + 30 * 86400000);
+  const upcoming30 = upcomingCache.filter(u => { const d = new Date(u.date + 'T00:00:00'); return d >= today && d <= in30; });
+
+  if (!upcoming30.length) {
     container.innerHTML = `<div class="section"><div class="empty" style="padding:34px 20px">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <div>Nessuna uscita in programma<br>per le serie che segui.</div></div></div>`;
+      <div>Nessuna uscita nei prossimi 30 giorni<br>per le serie che segui.</div></div></div>`;
     return;
   }
   const MONTHS = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC'];
-  const today = new Date(); today.setHours(0,0,0,0);
-  const rows = upcomingCache.map(u => {
+  const rows = upcoming30.map(u => {
     const d = new Date(u.date + 'T00:00:00');
     const soon = (d - today) <= 7 * 86400000;
     return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
@@ -1116,7 +1132,8 @@ function renderListTv(key, s) {
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
-      <div class="li-meta">${watched}${total?'/'+total:''} episodi visti</div>
+      <div class="li-meta">${s.rating?`★ ${s.rating}`:''}${s.rating&&s.totalSeasons?' · ':''}${s.totalSeasons?`Stagioni ${s.totalSeasons}`:''}</div>
+      <div class="li-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}Episodio ${watched}${total?'/'+total:''}</div>
       ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
     </div>
     <div class="list-badge ${badgeClass}">${badgeTxt}</div>
@@ -1283,7 +1300,7 @@ async function quickAdd(id) {
   try {
     const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await res.json();
-    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show) };
+    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0) };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
@@ -1376,6 +1393,8 @@ async function openShow(id) {
     library[id].name = show.name;
     library[id].genres = showGenres(show);
     library[id].runtime = showRuntime(show);
+    library[id].rating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
+    library[id].totalSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||library[id].totalSeasons||0);
     library[id].next = computeNextEp(episodes, library[id].watched || {});
     saveLibrary(); renderLibrary();
   }
@@ -1721,6 +1740,7 @@ document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='g
 document.getElementById('btnList').classList.toggle('active-view', viewMode==='list');
 renderLibrary();
 renderFilmLibrary();
+refreshInPariShows();
 </script>
 </body>
 </html>
