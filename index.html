@@ -737,11 +737,11 @@ function renderProfileAuth() {
     c.innerHTML = `
       <div class="profile-top">
         ${currentUser.photoURL ? `<img class="profile-avatar" src="${currentUser.photoURL}" alt="">` : `<div class="profile-avatar"></div>`}
-        <div>
+        <div style="flex:1; min-width:0">
           <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
-          <div class="profile-email">${escapeHtml(currentUser.email||'')}</div>
-          <button class="filebtn" style="padding:6px 14px; font-size:12px; margin-top:2px" onclick="signOutGoogle()">Esci</button>
+          <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
         </div>
+        <button class="filebtn" style="padding:6px 14px; font-size:12px" onclick="signOutGoogle()">Esci</button>
       </div>
       <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:16px"></div>
     `;
