@@ -266,6 +266,7 @@
     background: transparent; display: flex; align-items: center; justify-content: center;
   }
   .checkbtn.checked { background: #30D158; border-color: #30D158; }
+  .checkbtn.not-aired { opacity: 0.3; }
   .epdesc {
     font-size: 12.5px; line-height: 1.5; color: rgba(var(--overlay-rgb),0.55);
     margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); display: none;
@@ -364,7 +365,7 @@
   }
   .resume-rail::-webkit-scrollbar { display: none; }
   .resume-card {
-    position: relative; flex: 0 0 82%; max-width: 320px; scroll-snap-align: start;
+    position: relative; flex: 0 0 90%; max-width: 400px; scroll-snap-align: start;
     aspect-ratio: 16/9; border-radius: 24px; overflow: hidden; cursor: pointer;
     background: rgba(var(--overlay-rgb),0.08); box-shadow: var(--shadow-card);
   }
@@ -496,20 +497,14 @@
         </div>
         <button class="icon-btn active-view" id="modeTvBtn" onclick="setSearchMode('tv')" title="Serie TV">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="13" rx="2.5"/>
-            <path d="M7 17l-2.5 4M17 17l2.5 4"/>
-            <path d="M10.3 8.2L15 11l-4.7 2.8z" fill="currentColor" stroke="none"/>
+            <rect x="2" y="7" width="20" height="15" rx="2"/>
+            <path d="M17 2l-5 5-5-5"/>
           </svg>
         </button>
         <button class="icon-btn" id="modeFilmBtn" onclick="setSearchMode('film')" title="Film">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/>
-            <circle cx="12" cy="12" r="2.2"/>
-            <circle cx="12" cy="5.8" r="1.3"/>
-            <circle cx="17.6" cy="9.4" r="1.3"/>
-            <circle cx="15.5" cy="17" r="1.3"/>
-            <circle cx="8.5" cy="17" r="1.3"/>
-            <circle cx="6.4" cy="9.4" r="1.3"/>
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>
           </svg>
         </button>
       </div>
@@ -594,29 +589,23 @@
 
 <!-- TAB BAR -->
 <div class="tabbar">
+  <button class="tabbtn" data-tab="profile" title="Profilo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+  </button>
   <button class="tabbtn active" data-tab="tv" title="Serie TV">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="13" rx="2.5"/>
-      <path d="M7 17l-2.5 4M17 17l2.5 4"/>
-      <path d="M10.3 8.2L15 11l-4.7 2.8z" fill="currentColor" stroke="none"/>
+      <rect x="2" y="7" width="20" height="15" rx="2"/>
+      <path d="M17 2l-5 5-5-5"/>
     </svg>
   </button>
   <button class="tabbtn" data-tab="film" title="Film">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/>
-      <circle cx="12" cy="12" r="2.2"/>
-      <circle cx="12" cy="5.8" r="1.3"/>
-      <circle cx="17.6" cy="9.4" r="1.3"/>
-      <circle cx="15.5" cy="17" r="1.3"/>
-      <circle cx="8.5" cy="17" r="1.3"/>
-      <circle cx="6.4" cy="9.4" r="1.3"/>
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>
     </svg>
   </button>
   <button class="tabbtn" data-tab="search" title="Cerca">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-  </button>
-  <button class="tabbtn" data-tab="profile" title="Profilo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
   </button>
   <button class="tabbtn" data-tab="settings" title="Impostazioni">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1289,6 +1278,9 @@ function onListSwipeEnd() {
 function swipeMarkWatched(showId) {
   const s = library[showId];
   if (!s || !s.next) { showToast('Apri la serie per iniziare a segnare gli episodi'); return; }
+  const eps = episodesCache[showId];
+  const nextEp = eps && eps.find(e => e.season===s.next.season && e.number===s.next.number);
+  if (isFutureEpisode(nextEp)) { showToast('Episodio non ancora uscito'); return; }
   const key = `${s.next.season}x${s.next.number}`;
   if (!s.watched) s.watched = {};
   s.watched[key] = Date.now();
@@ -1327,23 +1319,19 @@ function renderFilmLibrary() {
 
 function renderCardFilm(key, f) {
   const id = validId(f, key);
-  const badgeClass = f.watched ? 'badge-green' : '';
   return `<div class="card" data-poster="${f.image||''}" onclick="openFilm(${id})">
     ${f.image ? `<img src="${f.image}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
-    <div class="badge ${badgeClass}">${f.watched ? 'Visto' : 'Da vedere'}</div>
   </div>`;
 }
 
 function renderListFilm(key, f) {
   const id = validId(f, key);
-  const badgeClass = f.watched ? 'badge-green' : '';
   return `<div class="list-item" onclick="openFilm(${id})">
     ${f.image ? `<img src="${f.image}" alt="">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
       <div class="li-meta">${f.year||'—'}${f.genre?' · '+escapeHtml(f.genre):''}</div>
     </div>
-    <div class="list-badge ${badgeClass}">${f.watched ? 'Visto' : 'Da vedere'}</div>
   </div>`;
 }
 
@@ -1625,6 +1613,7 @@ function renderEpisodeList(showId, episodes, season) {
     const isW = !!watched[key];
     const thumb = ep.image || null;
     const rawDesc = ep.summary ? ep.summary.replace(/<[^>]+>/g,'') : '';
+    const notAired = !isW && isFutureEpisode(ep);
     return `<div class="epitem glass" id="ep-${key}">
       <div class="epitop" onclick="toggleDesc('${key}')">
         ${thumb?`<img src="${thumb}" alt="">`:`<div class="noimg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
@@ -1633,7 +1622,7 @@ function renderEpisodeList(showId, episodes, season) {
           <div class="tt">${escapeHtml(ep.name||'Senza titolo')}</div>
           <div class="dd">${ep.airdate||''}</div>
         </div>
-        <button class="checkbtn ${isW?'checked':''}" onclick="event.stopPropagation();toggleEpisode(${showId},${ep.season},${ep.number})">
+        <button class="checkbtn ${isW?'checked':''}${notAired?' not-aired':''}" onclick="event.stopPropagation();toggleEpisode(${showId},${ep.season},${ep.number})">
           ${isW?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
         </button>
       </div>
@@ -1648,10 +1637,23 @@ function toggleDesc(key) {
   el.classList.toggle('open');
 }
 
+function isFutureEpisode(ep) {
+  if (!ep || !ep.airdate) return false;
+  const d = new Date(ep.airdate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return d > today;
+}
+
 async function toggleEpisode(showId, season, number) {
   if (!library[showId]) { await quickAddSilent(showId); }
   const key = `${season}x${number}`;
   const wasWatched = !!(library[showId].watched && library[showId].watched[key]);
+
+  if (!wasWatched) {
+    const eps = episodesCache[showId];
+    const ep = eps && eps.find(e => e.season===season && e.number===number);
+    if (isFutureEpisode(ep)) { showToast('Episodio non ancora uscito'); return; }
+  }
 
   applyToggleEpisode(showId, season, number);
 
@@ -1719,13 +1721,16 @@ async function ensureEpisodes(id) {
 async function markNext(id) {
   const s = library[id];
   if (!s || !s.next) return;
+  if (!episodesCache[id]) await ensureEpisodes(id);
+  const eps = episodesCache[id];
+  const nextEp = eps && eps.find(e => e.season===s.next.season && e.number===s.next.number);
+  if (isFutureEpisode(nextEp)) { showToast('Episodio non ancora uscito'); return; }
   const key = `${s.next.season}x${s.next.number}`;
   if (!s.watched) s.watched = {};
   s.watched[key] = Date.now();
   s.lastWatchedAt = Date.now();
   haptic();
-  if (!episodesCache[id]) await ensureEpisodes(id);
-  s.next = episodesCache[id] ? computeNextEp(episodesCache[id], s.watched) : null;
+  s.next = eps ? computeNextEp(eps, s.watched) : null;
   saveLibrary();
   renderLibrary();
 }
