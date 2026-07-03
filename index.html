@@ -7,32 +7,30 @@
 <link rel="icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
 <link rel="apple-touch-icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="its tracker">
 <meta name="mobile-web-app-capable" content="yes">
-<script>
-(function(){
-  try { document.documentElement.setAttribute('data-theme', localStorage.getItem('serietracker_theme') || 'dark'); }
-  catch(e) { document.documentElement.setAttribute('data-theme', 'dark'); }
-})();
-</script>
 <style>
   @supports (font: -apple-system-body) { :root { --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display"; } }
   :root {
+    color-scheme: light dark;
     --bg: #000; --fg: #fff; --overlay-rgb: 255,255,255;
     --sheet-bg: #0b0b0d; --panel-bg: #1c1c1e;
     --topbar-bg: rgba(10,10,14,0.55);
     --shadow-card: 0 8px 30px rgba(0,0,0,0.35);
     --shadow-tabbar: 0 10px 40px rgba(0,0,0,0.45);
   }
-  :root[data-theme="light"] {
-    --bg: #fff; --fg: #000; --overlay-rgb: 0,0,0;
-    --sheet-bg: #f5f5f7; --panel-bg: #f5f5f7;
-    --topbar-bg: rgba(255,255,255,0.7);
-    --shadow-card: 0 8px 24px rgba(0,0,0,0.10);
-    --shadow-tabbar: 0 10px 30px rgba(0,0,0,0.12);
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fff; --fg: #000; --overlay-rgb: 0,0,0;
+      --sheet-bg: #f5f5f7; --panel-bg: #f5f5f7;
+      --topbar-bg: rgba(255,255,255,0.7);
+      --shadow-card: 0 8px 24px rgba(0,0,0,0.10);
+      --shadow-tabbar: 0 10px 30px rgba(0,0,0,0.12);
+    }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--sf, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif); overscroll-behavior-y: none; }
@@ -140,8 +138,7 @@
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
   }
-  .card .progress { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(var(--overlay-rgb),0.15); }
-  .card .progress i { display: block; height: 100%; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
+  .card-ring { position: absolute; top: 6px; right: 6px; }
   .badge-green { background: rgba(48,209,88,0.85) !important; }
   .badge-blue  { background: rgba(10,132,255,0.85) !important; }
 
@@ -290,7 +287,6 @@
     padding: 9px 16px; border-radius: 16px; border: 0.5px solid rgba(var(--overlay-rgb),0.2);
     background: rgba(var(--overlay-rgb),0.1); color: var(--fg); font-size: 13px; font-weight: 600; font-family: inherit; flex-shrink: 0;
   }
-  .filebtn.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
   .emptybtn {
     margin-top: 14px; padding: 11px 22px; border-radius: 18px; border: none;
     background: rgba(10,132,255,0.9); color: #fff; font-size: 14px; font-weight: 600; font-family: inherit;
@@ -486,16 +482,6 @@
   <!-- IMPOSTAZIONI -->
   <div class="view" id="view-settings">
     <div class="section">
-      <h2 style="font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-0.01em">Aspetto</h2>
-      <div class="settingsrow glass">
-        <div class="st"><div class="sn">Tema</div><div class="sd">Chiaro o scuro</div></div>
-        <div style="display:flex;gap:8px">
-          <button class="filebtn" id="themeLightBtn" onclick="setTheme('light')">Chiaro</button>
-          <button class="filebtn" id="themeDarkBtn" onclick="setTheme('dark')">Scuro</button>
-        </div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:24px">
       <h2 style="font-size:20px;font-weight:700;margin:0 0 14px;letter-spacing:-0.01em">TMDb</h2>
       <div class="settingsrow glass" style="flex-direction:column; align-items:stretch; gap:10px">
         <div class="st"><div class="sn">API Key</div><div class="sd">Necessaria per cercare e aggiungere serie/film. Gratuita su themoviedb.org</div></div>
@@ -1063,6 +1049,21 @@ async function renderUpcoming(container) {
   container.innerHTML = `<div class="section" style="padding-top:14px">${rows}</div>`;
 }
 
+const RING_C_SM = 2 * Math.PI * 12; // r=12
+
+function renderProgressRing(pct, color) {
+  if (!pct) return '';
+  const off = RING_C_SM * (1 - Math.min(100,pct)/100);
+  return `<div class="card-ring" title="${pct}%">
+    <svg width="30" height="30" viewBox="0 0 30 30">
+      <circle cx="15" cy="15" r="15" fill="rgba(0,0,0,0.55)"/>
+      <circle class="ring-track" cx="15" cy="15" r="12" fill="none" stroke-width="2.5"/>
+      <circle class="ring-fill" cx="15" cy="15" r="12" fill="none" stroke-width="2.5" stroke-linecap="round"
+        style="stroke:${color}" stroke-dasharray="${RING_C_SM.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 15 15)"/>
+    </svg>
+  </div>`;
+}
+
 function renderCardTv(key, s) {
   const id = validId(s, key);
   const watched = Object.keys(s.watched || {}).length;
@@ -1072,7 +1073,7 @@ function renderCardTv(key, s) {
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
   return `<div class="card" data-poster="${s.image||''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-    <div class="progress"><i style="width:${pct}%"></i></div>
+    ${renderProgressRing(pct, cat === 'inpari' ? '#30D158' : '#0A84FF')}
     <div class="badge ${badgeClass}">${watched}${total?'/'+total:''} ep</div>
   </div>`;
 }
@@ -1666,25 +1667,13 @@ function doReset() {
   closeConfirm();
 }
 
-// ---------- theme ----------
-function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  try { localStorage.setItem('serietracker_theme', theme); } catch(e) {}
-  updateThemeButtons();
-  updateLogo();
-}
-function updateThemeButtons() {
-  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-  const lb = document.getElementById('themeLightBtn');
-  const db = document.getElementById('themeDarkBtn');
-  if (lb) lb.classList.toggle('active', theme === 'light');
-  if (db) db.classList.toggle('active', theme === 'dark');
-}
+// ---------- theme (segue le impostazioni di sistema) ----------
+const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function updateLogo() {
-  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-  const src = theme === 'dark' ? 'logo-header-dark.png' : 'logo-header.png';
+  const src = darkModeQuery.matches ? 'logo-header-dark.png' : 'logo-header.png';
   document.querySelectorAll('.topbar-logo').forEach(img => img.src = src);
 }
+darkModeQuery.addEventListener('change', updateLogo);
 
 // ---------- TMDb key ----------
 function saveTmdbKey() {
@@ -1697,7 +1686,6 @@ function saveTmdbKey() {
 loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
-updateThemeButtons();
 updateLogo();
 document.getElementById('tmdbKeyInput').value = getTmdbKey();
 document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='grid');
