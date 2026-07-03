@@ -50,7 +50,8 @@
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .topbar-left { flex-shrink: 0; }
+  .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 6px; }
+  .topbar-by { font-size: 11px; font-weight: 600; color: #fff; margin-bottom: 4px; white-space: nowrap; }
   .topbar-logo { height: 44px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
   .icon-btn {
@@ -194,7 +195,7 @@
   }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; border-radius: 34px 34px 0 0; }
-  .hero img { width: 100%; height: 100%; object-fit: cover; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .hero .closebtn {
     position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px;
@@ -341,7 +342,7 @@
 
   /* ===== resume carousel ===== */
   .resume-rail {
-    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
     padding: 2px 20px 20px; scrollbar-width: none;
   }
   .resume-rail::-webkit-scrollbar { display: none; }
@@ -423,6 +424,7 @@
   <div class="topbar">
     <div class="topbar-left">
       <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
+      <span class="topbar-by">by itsurri</span>
     </div>
     <div class="topbar-right" id="topbarRight">
       <button class="icon-btn active-view" id="btnGrid" title="Griglia" onclick="setView('grid')">
@@ -439,7 +441,7 @@
     <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 4px">
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
-      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">Da Vedere</button>
+      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista</button>
       <button class="seasontab" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="tab-badge" id="inarrivoBadge" style="display:none"></span></button>
     </div>
     <div id="tvContent"></div>
@@ -648,10 +650,15 @@ function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
 async function signInGoogle() {
   if (!fbAuth) { showToast('Accesso non disponibile'); return; }
-  // In PWA installata (soprattutto iOS) i popup vengono bloccati: usa il redirect.
-  if (isStandalone()) {
+  // I popup sono inaffidabili su mobile (bloccati o chiusi subito dal browser),
+  // quindi su telefono/PWA installata usiamo sempre il redirect.
+  if (isStandalone() || isMobileDevice()) {
     try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
     catch(e) { showToast('Accesso non riuscito'); }
     return;
@@ -689,7 +696,7 @@ function renderProfileAuth() {
 
 if (fbAuth) {
   // Completa un eventuale accesso avviato via redirect (PWA/iOS).
-  fbAuth.getRedirectResult().catch(() => {});
+  fbAuth.getRedirectResult().catch(() => { showToast('Accesso non riuscito'); });
   fbAuth.onAuthStateChanged((user) => {
     currentUser = user;
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
@@ -1157,7 +1164,7 @@ function renderCardTv(key, s) {
   return `<div class="card" data-poster="${s.image||''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
     ${renderProgressRing(pct, cat === 'inpari' ? '#30D158' : '#0A84FF')}
-    <div class="badge ${badgeClass}">${s.next?`S${s.next.season} E${s.next.number} · `:''}Episodio ${watched}${total?'/'+total:''}</div>
+    <div class="badge ${badgeClass}">${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}</div>
   </div>`;
 }
 
@@ -1168,7 +1175,7 @@ function renderListTv(key, s) {
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const cat = categorizeShow(s);
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
-  const badgeTxt = cat === 'inpari' ? 'In Pari' : cat === 'continua' ? `${pct}%` : 'Da vedere';
+  const badgeTxt = cat === 'inpari' ? 'In Pari' : cat === 'continua' ? `${pct}%` : 'In Lista';
   return `<div class="list-item-wrap" data-show-id="${id}">
     <div class="swipe-action"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg><span>Segna visto</span></div>
     <div class="list-item" onclick="openShow(${id})">
