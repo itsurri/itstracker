@@ -471,9 +471,10 @@
   .up-info { flex: 1; min-width: 0; }
   .up-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .up-ep { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
-  .up-date { flex-shrink: 0; text-align: center; min-width: 46px; }
-  .up-date .ud-d { font-size: 17px; font-weight: 700; line-height: 1; }
-  .up-date .ud-m { font-size: 10px; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; letter-spacing: 0.04em; }
+  .up-date { flex-shrink: 0; text-align: right; min-width: 64px; }
+  .up-date .ud-d { font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+  .up-date .ud-m { font-size: 12px; font-weight: 400; color: rgba(var(--overlay-rgb),0.65); }
+  .up-date .ud-days { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 3px; letter-spacing: 0.02em; }
 
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
@@ -1523,18 +1524,20 @@ async function renderUpcoming(container) {
       <div>Nessuna uscita nei prossimi 30 giorni<br>per le serie che segui.</div></div></div>`;
     return;
   }
-  const MONTHS = ['GEN','FEB','MAR','APR','MAG','GIU','LUG','AGO','SET','OTT','NOV','DIC'];
+  const MONTHS = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
   const today = new Date(); today.setHours(0,0,0,0);
   const rows = upcoming30.map(u => {
     const d = new Date(u.date + 'T00:00:00');
-    const soon = (d - today) <= 7 * 86400000;
+    const daysLeft = Math.round((d - today) / 86400000);
+    const soon = daysLeft <= 7;
+    const daysLabel = daysLeft <= 0 ? 'Oggi' : ('-' + daysLeft);
     return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
         <div class="up-ep">S${u.season}E${u.number}${u.epname ? ' · ' + escapeHtml(u.epname) : ''}</div>
       </div>
-      <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()]}</div></div>
+      <div class="up-date"><div class="ud-d">${d.getDate()} · ${MONTHS[d.getMonth()]}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
   }).join('');
   container.innerHTML = `<div class="section" style="padding-top:14px">${rows}</div>`;
