@@ -714,31 +714,17 @@ function scheduleCloudSync() {
   }, 800);
 }
 
-function isStandalone() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-
-function isMobileDevice() {
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-}
-
 async function signInGoogle() {
   if (!fbAuth) { showToast('Accesso non disponibile'); return; }
-  // I popup sono inaffidabili su mobile (bloccati o chiusi subito dal browser),
-  // quindi su telefono/PWA installata usiamo sempre il redirect.
-  if (isStandalone() || isMobileDevice()) {
-    try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
-    catch(e) { showToast('Accesso non riuscito'); }
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+    showToast('Apri l\'app da https:// per accedere con Google (non dal file locale)');
     return;
   }
   try { await fbAuth.signInWithPopup(fbGoogleProvider); }
   catch(e) {
-    if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/operation-not-supported-in-this-environment')) {
-      try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
-      catch(_) { showToast('Accesso non riuscito'); }
-    } else if (e && e.code !== 'auth/popup-closed-by-user') {
-      showToast('Accesso non riuscito');
-    }
+    if (e && e.code === 'auth/popup-closed-by-user') return;
+    try { await fbAuth.signInWithRedirect(fbGoogleProvider); }
+    catch(err) { showToast(`Accesso non riuscito${err && err.code ? ' ('+err.code+')' : ''}`); }
   }
 }
 
