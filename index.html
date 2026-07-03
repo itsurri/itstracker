@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>Serie e Film</title>
-<link rel="icon" href="Gemini_Generated_Image_8btfay8btfay8btf.png">
-<link rel="apple-touch-icon" href="Gemini_Generated_Image_8btfay8btfay8btf.png">
+<link rel="icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
+<link rel="apple-touch-icon" href="Gemini_Generated_Image_b4rhzab4rhzab4rh.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="its tracker">
@@ -50,6 +50,8 @@
     display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  .topbar-logo { height: 30px; width: auto; display: block; }
+  :root[data-theme="dark"] .topbar-logo { filter: drop-shadow(0 0 0.5px rgba(255,255,255,0.5)); }
   .topbar-left .sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .topbar-right { display: flex; gap: 8px; align-items: center; padding-top: 4px; }
   .icon-btn {
@@ -308,7 +310,7 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <h1 id="topTitle">Serie TV</h1>
+      <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
       <div class="sub" id="topSub">Tieni traccia di ogni episodio</div>
     </div>
     <div class="topbar-right" id="topbarRight">
@@ -549,9 +551,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
-  const titles = { tv: ['Serie TV','Tieni traccia di ogni episodio'], film: ['Film','I tuoi film salvati'], search: ['Cerca','Trova una nuova serie o film'], settings: ['Impostazioni','Gestisci i tuoi dati'] };
-  document.getElementById('topTitle').textContent = titles[tab][0];
-  document.getElementById('topSub').textContent = titles[tab][1];
+  const subs = { tv: 'Tieni traccia di ogni episodio', film: 'I tuoi film salvati', search: 'Trova una nuova serie o film', settings: 'Gestisci i tuoi dati' };
+  document.getElementById('topSub').textContent = subs[tab];
   document.getElementById('topbarRight').style.display = (tab === 'tv' || tab === 'film') ? 'flex' : 'none';
 }
 
