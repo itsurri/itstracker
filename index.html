@@ -236,6 +236,12 @@
   .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
   .mini-stats b { color: var(--fg); font-weight: 700; }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
+  .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .profile-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(var(--overlay-rgb),0.1); }
+  .profile-stats-inline { flex: 1; display: flex; justify-content: space-around; }
+  .profile-stats-inline .v { font-size: 17px; }
+  .profile-name { font-size: 16px; font-weight: 700; text-align: left; }
+  .profile-email { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); text-align: left; margin: 1px 0 14px; }
   .streak-badge {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
@@ -380,12 +386,12 @@
 
   /* ===== resume carousel ===== */
   .resume-rail {
-    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
-    padding: 2px 20px 20px; scrollbar-width: none;
+    display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 8px;
+    padding: 8px 8px 20px; scrollbar-width: none;
   }
   .resume-rail::-webkit-scrollbar { display: none; }
   .resume-card {
-    position: relative; flex: 0 0 90%; max-width: 400px; scroll-snap-align: start;
+    position: relative; flex: 0 0 94%; max-width: 440px; scroll-snap-align: start;
     aspect-ratio: 16/9; border-radius: 24px; overflow: hidden; cursor: pointer;
     background: rgba(var(--overlay-rgb),0.08); box-shadow: var(--shadow-card);
   }
@@ -476,7 +482,7 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
-    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 4px">
+    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 16px">
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
       <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista</button>
@@ -495,7 +501,7 @@
 
   <!-- FILM -->
   <div class="view" id="view-film">
-    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 4px">
+    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 16px">
       <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti</button>
       <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere</button>
     </div>
@@ -541,12 +547,10 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" style="padding:26px 20px 20px; text-align:center; margin-bottom:18px">
+      <div class="glass" style="padding:20px; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
           <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
-        <div class="profile-divider"></div>
-        <div class="statrow" id="profileStatsRow" style="display:flex;"></div>
       </div>
       <div id="profileBody"></div>
     </div>
@@ -743,16 +747,21 @@ function renderProfileAuth() {
   const c = document.getElementById('profileAuthCard');
   if (!c) return;
   if (currentUser) {
+    const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
     c.innerHTML = `
-      ${currentUser.photoURL ? `<img src="${currentUser.photoURL}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;margin-bottom:10px">` : ''}
-      <div style="font-size:15px;font-weight:600">${escapeHtml(currentUser.displayName||'')}</div>
-      <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin:2px 0 14px">${escapeHtml(currentUser.email||'')}</div>
+      <div class="profile-top">
+        ${currentUser.photoURL ? `<img class="profile-avatar" src="${currentUser.photoURL}" alt="">` : `<div class="profile-avatar"></div>`}
+        <div class="statrow profile-stats-inline" id="profileStatsRow"></div>
+      </div>
+      <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
+      <div class="profile-email">${escapeHtml(currentUser.email||'')}</div>
       <button class="filebtn" onclick="signOutGoogle()">Esci</button>
     `;
   } else {
     c.innerHTML = `
       <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin-bottom:14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
       <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
+      <div class="statrow" id="profileStatsRow" style="margin-top:18px"></div>
     `;
   }
 }
@@ -929,7 +938,7 @@ function categorizeShow(s) {
 // aggiorna rating/stagioni mancanti e sposta in "continua" le serie "in pari" con nuovi episodi
 async function refreshInPariShows() {
   if (!hasTmdbKey()) return;
-  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari' || !library[id].rating || !library[id].totalSeasons);
+  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop);
   if (!ids.length) return;
   let changed = false;
   await Promise.all(ids.map(async id => {
@@ -939,10 +948,12 @@ async function refreshInPariShows() {
       const newTotal = show.number_of_episodes || 0;
       const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
       const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
-      if ((newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating) {
+      const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
+      if ((newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating || newBackdrop !== library[id].backdrop) {
         if (newTotal && newTotal !== library[id].totalEpisodes) { library[id].totalEpisodes = newTotal; delete episodesCache[id]; }
         library[id].totalSeasons = newSeasons;
         library[id].rating = newRating;
+        library[id].backdrop = newBackdrop;
         changed = true;
       }
     } catch(e) {}
@@ -1121,8 +1132,9 @@ function renderResumeRail(items) {
     const total = s.totalEpisodes || 0;
     const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
     const off = RING_C * (1 - pct/100);
+    const bg = s.backdrop || s.image;
     return `<div class="resume-card" onclick="openShow(${id})">
-      ${s.image ? `<img src="${s.image}" alt="">` : ''}
+      ${bg ? `<img src="${bg}" alt="">` : ''}
       <div class="rc-shade"></div>
       <div class="rc-body">
         <div class="rc-info">
@@ -1553,7 +1565,7 @@ async function quickAdd(id) {
   try {
     const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await res.json();
-    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0) };
+    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0) };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
     if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
   } catch(e) { showToast('Errore, riprova'); }
@@ -1643,6 +1655,7 @@ async function openShow(id) {
   if (inLib) {
     library[id].totalEpisodes = episodes.length;
     library[id].image = tmdbImg(show.poster_path, 'original') || library[id].image;
+    library[id].backdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
     library[id].name = show.name;
     library[id].genres = showGenres(show);
     library[id].runtime = showRuntime(show);
