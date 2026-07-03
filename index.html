@@ -737,7 +737,7 @@ function renderProfileAuth() {
     c.innerHTML = `
       <div class="profile-top">
         ${currentUser.photoURL ? `<img class="profile-avatar" src="${currentUser.photoURL}" alt="">` : `<div class="profile-avatar"></div>`}
-        <div style="flex:1; min-width:0">
+        <div style="min-width:0">
           <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
           <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
         </div>
