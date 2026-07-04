@@ -238,6 +238,11 @@
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
+  .sheetbody::before {
+    content: ''; position: absolute; top: 0; left: -20px; right: -20px; height: 460px; z-index: -1;
+    background: linear-gradient(180deg, var(--accent, transparent) 0%, transparent 75%);
+    opacity: 0.22; mix-blend-mode: screen; pointer-events: none;
+  }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
@@ -256,6 +261,12 @@
   .profile-stats-inline .v { font-size: 17px; }
   .profile-name { font-size: 16px; font-weight: 700; text-align: left; }
   .profile-email { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); text-align: left; margin: 1px 0 14px; }
+  .level-badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px 2px 6px; border-radius: 20px;
+    background: rgba(var(--overlay-rgb),0.1); font-size: 11px; font-weight: 700; color: var(--fg);
+    vertical-align: middle; margin-left: 6px;
+  }
+  .commentAuthor .level-badge { font-size: 10px; padding: 1px 7px 1px 5px; margin-left: 5px; }
   .streak-badge {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
@@ -1212,7 +1223,7 @@ function renderProfileAuth() {
           ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="">` : `<div class="profile-avatar"></div>`}
         </div>
         <div style="min-width:0">
-          <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
+          <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}${renderLevelBadge(computeWrapped().hours)}</div>
           <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
         </div>
         <button class="filebtn" style="padding:6px 14px; font-size:12px" onclick="signOutGoogle()">Esci</button>
@@ -1567,6 +1578,25 @@ function celebrateShowComplete() {
   document.body.appendChild(layer);
   haptic();
   setTimeout(() => layer.remove(), 2000);
+}
+
+const USER_LEVELS = [
+  { min: 0,    label: 'Novizio',      emoji: '🌱' },
+  { min: 10,   label: 'Curioso',      emoji: '👀' },
+  { min: 50,   label: 'Appassionato', emoji: '🎬' },
+  { min: 150,  label: 'Binger',       emoji: '🍿' },
+  { min: 400,  label: 'Maratoneta',   emoji: '🏃' },
+  { min: 800,  label: 'Leggenda',     emoji: '🏆' },
+  { min: 1500, label: 'Mito',         emoji: '👑' }
+];
+function getUserLevel(hours) {
+  let level = USER_LEVELS[0];
+  for (const l of USER_LEVELS) { if (hours >= l.min) level = l; else break; }
+  return level;
+}
+function renderLevelBadge(hours) {
+  const level = getUserLevel(hours);
+  return `<span class="level-badge" title="${level.min}+ ore guardate">${level.emoji} ${level.label}</span>`;
 }
 
 function computeWrapped() {
@@ -2942,6 +2972,7 @@ async function openShow(id) {
 
 async function renderSheet(show, episodes, seasons, inLib) {
   const sheet = document.getElementById('sheet');
+  sheet.style.removeProperty('--accent');
   const poster = tmdbImg(show.backdrop_path, 'original') || tmdbImg(show.poster_path, 'original');
   const watched = (library[show.id]&&library[show.id].watched)||{};
   const watchedCount = Object.keys(watched).length;
@@ -2973,7 +3004,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (poster) posterAccent(poster).then(col => { if (col) sheet.style.setProperty('--accent', col); });
 }
 
 function selectSeason(showId, season) {
@@ -3350,7 +3381,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   return `<div class="commentItem" id="comment-${c.id}">
     <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
     <div class="commentBody">
-      <div class="commentHeadline"><span class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}</span><span class="commentDate">${when}</span></div>
+      <div class="commentHeadline"><span class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${c.authorLevelEmoji||''} ${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
@@ -3399,12 +3430,15 @@ async function postComment(epKey, parentId) {
   try {
     const mentionUids = await resolveMentions(text);
     const myName = commentAuthorName();
+    const myLevel = getUserLevel(computeWrapped().hours);
     const docRef = await fbDb.collection('comments').add({
       epKey,
       parentId: parentId || null,
       uid: currentUser.uid,
       displayName: myName,
       photoURL: getCustomAvatar() || currentUser.photoURL || null,
+      authorLevel: myLevel.label,
+      authorLevelEmoji: myLevel.emoji,
       text,
       mentions: mentionUids,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -3466,6 +3500,7 @@ async function openFilm(id) {
 
 async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
+  sheet.style.removeProperty('--accent');
   const rawDesc = f.description||'';
   sheet.innerHTML = `
     <div class="hero">
@@ -3486,7 +3521,7 @@ async function renderFilmSheet(f, inLib) {
         : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { if (col) sheet.style.setProperty('--accent', col); });
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
