@@ -238,11 +238,6 @@
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
-  .sheetbody::before {
-    content: ''; position: absolute; top: 0; left: -20px; right: -20px; height: 460px; z-index: -1;
-    background: linear-gradient(180deg, var(--accent, transparent) 0%, transparent 75%);
-    opacity: 0.22; mix-blend-mode: screen; pointer-events: none;
-  }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
@@ -2972,7 +2967,6 @@ async function openShow(id) {
 
 async function renderSheet(show, episodes, seasons, inLib) {
   const sheet = document.getElementById('sheet');
-  sheet.style.removeProperty('--accent');
   const poster = tmdbImg(show.backdrop_path, 'original') || tmdbImg(show.poster_path, 'original');
   const watched = (library[show.id]&&library[show.id].watched)||{};
   const watchedCount = Object.keys(watched).length;
@@ -3004,7 +2998,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (poster) posterAccent(poster).then(col => { if (col) sheet.style.setProperty('--accent', col); });
+  if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
 function selectSeason(showId, season) {
@@ -3500,7 +3494,6 @@ async function openFilm(id) {
 
 async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
-  sheet.style.removeProperty('--accent');
   const rawDesc = f.description||'';
   sheet.innerHTML = `
     <div class="hero">
@@ -3521,7 +3514,7 @@ async function renderFilmSheet(f, inLib) {
         : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { if (col) sheet.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
