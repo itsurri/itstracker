@@ -103,6 +103,8 @@
   }
   .icon-btn svg { display: block; shape-rendering: geometricPrecision; }
   .icon-btn.active-view { background: rgba(var(--overlay-rgb),0.2); border-color: rgba(var(--overlay-rgb),0.35); }
+  .topbar-right .icon-btn { width: 38px; height: 38px; }
+  .topbar-right .icon-btn svg { width: 18px; height: 18px; }
 
   /* glass */
   .glass {
@@ -715,18 +717,24 @@
   }
   .notifOverlay.open { display: block; }
   .notifPanel {
-    position: fixed; top: calc(env(safe-area-inset-top) + 54px); right: 14px; z-index: 70;
-    width: min(340px, calc(100vw - 28px)); max-height: 60vh; display: flex; flex-direction: column;
-    background: var(--sheet-bg); border-radius: 20px; box-shadow: var(--shadow-card);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.1);
-    opacity: 0; transform: translateY(-8px) scale(0.97); pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column;
+    background: var(--sheet-bg);
+    opacity: 0; transform: translateY(16px); pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .notifPanel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-  .notifPanel-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; flex-shrink: 0; }
-  .notifPanel-title { font-size: 14px; font-weight: 700; }
-  .notifMarkRead { font-size: 11.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); background: transparent; }
-  .notifList { overflow-y: auto; padding: 0 16px 14px; }
+  .notifPanel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .notifPanel-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
+    padding: calc(env(safe-area-inset-top) + 16px) 16px 14px;
+    border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .notifPanel-title { font-size: 17px; font-weight: 700; flex: 1; }
+  .notifMarkRead { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); background: transparent; }
+  .notifPanel-close {
+    width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.1);
+    display: flex; align-items: center; justify-content: center; color: var(--fg); flex-shrink: 0;
+  }
+  .notifList { flex: 1; overflow-y: auto; padding: 6px 16px calc(env(safe-area-inset-bottom) + 16px); }
   .notifItem { display: flex; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); }
   .notifList .notifItem:last-child { border-bottom: none; }
   .notifItem.unread { position: relative; }
@@ -785,6 +793,9 @@
     <div class="notifPanel-head">
       <span class="notifPanel-title">Notifiche</span>
       <button class="notifMarkRead" onclick="markAllNotificationsRead()">Segna tutte come lette</button>
+      <button class="notifPanel-close" onclick="closeNotifPanel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <div class="notifList" id="notifList"></div>
   </div>
@@ -793,6 +804,9 @@
   <div class="notifPanel" id="chatListPanel">
     <div class="notifPanel-head">
       <span class="notifPanel-title">Messaggi</span>
+      <button class="notifPanel-close" onclick="closeChatListPanel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <div class="notifList" id="chatListBody"></div>
   </div>
@@ -2070,7 +2084,7 @@ function renderListTv(key, s) {
       <div class="li-meta">${[
         s.rating ? `★ ${s.rating}` : null,
         s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
-        s.next ? `S${s.next.season} E${s.next.number}` : null,
+        watched > 0 ? (s.next ? `S${s.next.season} E${s.next.number}` : null) : null,
         watched > 0 ? `Episodio ${watched}${total?'/'+total:''}` : (total ? `${total} Episodi` : null)
       ].filter(Boolean).join(' · ')}</div>
       ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
@@ -2173,7 +2187,13 @@ async function refreshCurrentTab() {
       renderFilmLibrary();
     } else if (currentTab === 'search') {
       const q = document.getElementById('searchInput').value.trim();
-      if (q) { await (searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q)); } else { await loadPopular(searchMode); }
+      if (searchMode === 'people') {
+        await (q ? doSearchPeople(q) : loadSuggestedPeople());
+      } else if (q) {
+        await (searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q));
+      } else {
+        await loadPopular(searchMode);
+      }
     } else if (currentTab === 'profile') {
       renderProfile();
     }
