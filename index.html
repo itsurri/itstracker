@@ -1349,7 +1349,13 @@ function scheduleCloudSync() {
   if (!fbDb || !currentUser || applyingRemoteData) return;
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(() => {
-    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
+    const ref = fbDb.collection('users').doc(currentUser.uid);
+    // update() sostituisce interamente i campi library/filmLibrary invece di
+    // fare merge ricorsivo (come farebbe set con merge:true): altrimenti una
+    // serie/film rimossi localmente restano nel documento remoto e "resuscitano"
+    // al prossimo sync da cloud.
+    const payload = { library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() };
+    ref.update(payload).catch(() => ref.set(payload, { merge: true }).catch(()=>{}));
     syncPublicProfile();
   }, 800);
 }
