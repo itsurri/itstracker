@@ -77,19 +77,25 @@
   @keyframes ptrSpin { to { transform: rotate(360deg); } }
 
   /* topbar */
-  .topbar {
+  .topbar-wrap {
     position: sticky; top: 0; z-index: 40;
-    padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
     background: var(--topbar-bg);
     -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .topbar {
+    padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
   }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
-  .topbar-by { font-size: 10px; font-weight: 400; color: #fff; margin-bottom: 4px; white-space: nowrap; }
+  .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   .topbar-logo { height: 44px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .donateBar {
+    display: block; text-align: center; padding: 5px 16px 9px; font-size: 11px; font-weight: 600;
+    color: rgba(var(--overlay-rgb),0.5); text-decoration: none;
+  }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); display: flex; align-items: center; justify-content: center;
@@ -564,6 +570,10 @@
   .up-grid-card .badge.up-badge { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .up-grid-card .badge .ud-days-mini { color: #0A84FF; font-weight: 800; }
   .up-grid-card.up-soon .badge .ud-days-mini { color: #FF9F0A; }
+  .up-ep-badge {
+    position: absolute; top: 6px; left: 6px; font-size: 9.5px; font-weight: 700; padding: 3px 7px; border-radius: 7px;
+    background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff;
+  }
 
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
@@ -683,6 +693,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/></svg>
   </div>
 
+  <div class="topbar-wrap">
   <div class="topbar">
     <div class="topbar-left">
       <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
@@ -700,6 +711,8 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="6" x2="19" y2="6"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/><line x1="2" y1="6" x2="2.01" y2="6"/><line x1="2" y1="12" x2="2.01" y2="12"/><line x1="2" y1="18" x2="2.01" y2="18"/></svg>
       </button>
     </div>
+  </div>
+  <a class="donateBar" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">Ti piace l'app? Offrimi un caffè ☕️</a>
   </div>
 
   <div class="notifOverlay" id="notifOverlay" onclick="closeNotifPanel()"></div>
@@ -1861,6 +1874,7 @@ async function renderUpcoming(container) {
     if (viewMode === 'grid') {
       return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
         ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg">${escapeHtml(u.name)}</div>`}
+        <div class="up-ep-badge">S${u.season} E${u.number}</div>
         <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}</span><span class="ud-days-mini">${daysLabel}</span></div>
       </div>`;
     }
@@ -2642,9 +2656,11 @@ async function loadSeasonCommentCounts(showId, season) {
   const prefix = `${showId}_${season}x`;
   try {
     const snap = await fbDb.collection('comments').where('epKey', '>=', prefix).where('epKey', '<', prefix + '').get();
-    const counts = {};
-    snap.forEach(d => { const k = d.data().epKey; counts[k] = (counts[k]||0)+1; });
-    Object.entries(counts).forEach(([key, n]) => {
+    const byKey = {};
+    snap.forEach(d => { const c = { id: d.id, ...d.data() }; const k = c.epKey; (byKey[k] = byKey[k] || []).push(c); });
+    Object.entries(byKey).forEach(([key, docs]) => {
+      const ids = new Set(docs.map(x => x.id));
+      const n = docs.filter(x => !x.parentId || ids.has(x.parentId)).length;
       commentCounts[key] = n;
       const el = document.getElementById(`epcCount-${key}`);
       if (el) el.textContent = n;
@@ -2676,13 +2692,14 @@ function renderComments(showId, season, number) {
       commentsCache = {};
       const all = snap.docs.map(d => { const c = { id: d.id, ...d.data() }; commentsCache[d.id] = c; return c; });
       const top = all.filter(c => !c.parentId).sort((a, b) => commentMillis(b) - commentMillis(a));
-      const replies = all.filter(c => c.parentId);
+      const topIds = new Set(top.map(c => c.id));
+      const replies = all.filter(c => c.parentId && topIds.has(c.parentId));
       list.innerHTML = top.length
         ? top.map(c => renderCommentItem(c, key, replies.filter(r => r.parentId === c.id).sort((a,b) => commentMillis(a) - commentMillis(b)))).join('')
         : '<div class="commentsEmpty">Nessun commento, sii il primo!</div>';
-      commentCounts[key] = all.length;
+      commentCounts[key] = top.length + replies.length;
       const countEl = document.getElementById(`epcCount-${key}`);
-      if (countEl) countEl.textContent = all.length;
+      if (countEl) countEl.textContent = top.length + replies.length;
     }, () => { list.innerHTML = '<div class="commentsEmpty">Errore nel caricamento dei commenti.</div>'; });
 }
 
@@ -2775,8 +2792,13 @@ async function postComment(epKey, parentId) {
 
 async function deleteComment(commentId) {
   if (!currentUser || !fbDb) return;
-  try { await fbDb.collection('comments').doc(commentId).delete(); }
-  catch (e) { showToast('Errore nell\'eliminazione'); }
+  try {
+    const replies = await fbDb.collection('comments').where('parentId', '==', commentId).get();
+    const batch = fbDb.batch();
+    replies.forEach(d => batch.delete(d.ref));
+    batch.delete(fbDb.collection('comments').doc(commentId));
+    await batch.commit();
+  } catch (e) { showToast('Errore nell\'eliminazione'); }
 }
 
 // ---------- film detail ----------
