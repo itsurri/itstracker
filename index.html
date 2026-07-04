@@ -339,7 +339,7 @@
     color: #fff; font-size: 11.5px; font-weight: 700; font-family: inherit;
   }
   .profile-inner { padding: 16px; }
-  .profile-cover + .profile-inner .cover-lift { margin-top: -46px; border: 3px solid var(--sheet-bg); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+  .profile-cover + .profile-inner .cover-lift { margin-top: -52px; border: 3px solid var(--sheet-bg); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
   /* picker copertina */
   .coverPickerBg {
     display: none; position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,0.75);
@@ -3471,8 +3471,8 @@ function renderTimeLeft(show, episodes, watchedCount) {
   if (remaining <= 0 || !runtime) return '';
   const mins = remaining * runtime;
   const h = Math.floor(mins / 60), m = mins % 60;
-  const label = h > 0 ? `${h} h${m ? ' ' + m + ' min' : ''}` : `${m} min`;
-  return ` · ⏳ ~${label} per finirla`;
+  const label = h > 0 ? `${h} ore${m ? ' ' + m + ' min' : ''}` : `${m} min`;
+  return ` · <b>~${label}</b> per finirla`;
 }
 
 // Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
