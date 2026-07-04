@@ -716,11 +716,11 @@
   }
   .notif-badge.show { display: flex; }
   .notifOverlay {
-    display: none; position: fixed; inset: 0; z-index: 69; background: transparent;
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 69; background: transparent;
   }
   .notifOverlay.open { display: block; }
   .notifPanel {
-    position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; display: flex; flex-direction: column;
     background: var(--sheet-bg);
     opacity: 0; transform: translateY(16px); pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
@@ -728,7 +728,7 @@
   .notifPanel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .notifPanel-head {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top) + 16px) 16px 14px;
+    padding: 16px 16px 14px;
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
   .notifPanel-title { font-size: 17px; font-weight: 700; flex: 1; }
@@ -2029,12 +2029,20 @@ function renderNotifPanel() {
     : '<div class="commentsEmpty">Nessuna notifica</div>';
 }
 
+// Posiziona i pannelli notifiche/messaggi sotto l'header, così restano
+// sempre visibili il logo/tabbar e la riga di donazione.
+function positionHeaderPanel(panel, overlay) {
+  const headerBottom = document.querySelector('.topbar-wrap').getBoundingClientRect().bottom;
+  panel.style.top = headerBottom + 'px';
+  overlay.style.top = headerBottom + 'px';
+}
+
 function toggleNotifPanel(e) {
   if (e) e.stopPropagation();
   const panel = document.getElementById('notifPanel');
   const overlay = document.getElementById('notifOverlay');
   const opening = !panel.classList.contains('open');
-  if (opening) { renderNotifPanel(); panel.classList.add('open'); overlay.classList.add('open'); }
+  if (opening) { renderNotifPanel(); positionHeaderPanel(panel, overlay); panel.classList.add('open'); overlay.classList.add('open'); }
   else closeNotifPanel();
 }
 
@@ -2584,7 +2592,7 @@ function toggleChatListPanel(e) {
   const panel = document.getElementById('chatListPanel');
   const overlay = document.getElementById('chatListOverlay');
   const opening = !panel.classList.contains('open');
-  if (opening) { renderChatListPanel(); panel.classList.add('open'); overlay.classList.add('open'); }
+  if (opening) { renderChatListPanel(); positionHeaderPanel(panel, overlay); panel.classList.add('open'); overlay.classList.add('open'); }
   else closeChatListPanel();
 }
 
