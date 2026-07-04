@@ -655,9 +655,10 @@
   .ring-fill { stroke: #fff; transition: stroke-dashoffset 0.4s ease; }
 
   /* ===== skeleton shimmer ===== */
-  .skel { position: relative; overflow: hidden; background: rgba(var(--overlay-rgb),0.07); border-radius: 12px; }
-  .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(var(--overlay-rgb),0.09), transparent); animation: shimmer 1.3s infinite; }
+  .skel { position: relative; overflow: hidden; background: rgba(var(--overlay-rgb),0.07); border-radius: 12px; animation: skelPulse 1.6s ease-in-out infinite; }
+  .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(var(--overlay-rgb),0.18), rgba(255,255,255,0.06), rgba(var(--overlay-rgb),0.18), transparent); animation: shimmer 1.6s ease-in-out infinite; }
   @keyframes shimmer { 100% { transform: translateX(100%); } }
+  @keyframes skelPulse { 0%, 100% { background: rgba(var(--overlay-rgb),0.07); } 50% { background: rgba(var(--overlay-rgb),0.1); } }
   .sheet-skel { padding: 0; }
   .sheet-skel .sk-hero { height: 230px; border-radius: 0; }
   .sheet-skel .sk-body { padding: 20px; }
@@ -1402,6 +1403,38 @@ function pickVibrant(data) {
   if (!best || bestScore < 0.12) best = [Math.round(rSum/n), Math.round(gSum/n), Math.round(bSum/n)];
   return `rgb(${best[0]},${best[1]},${best[2]})`;
 }
+// ---------- transizione poster -> hero (shared element) ----------
+let flipSource = null;
+document.addEventListener('click', e => {
+  const img = e.target.closest('.card img, .searchcard img, .list-item img, .resume-card img, .up-grid-card img, .personcard img, .person-item img');
+  if (img) flipSource = { src: img.src, rect: img.getBoundingClientRect() };
+}, true);
+
+function runPosterFlip() {
+  if (!flipSource) return;
+  const src = flipSource.src, startRect = flipSource.rect;
+  flipSource = null;
+  const heroImg = document.querySelector('#sheet .hero img');
+  if (!heroImg) return;
+  const endRect = heroImg.getBoundingClientRect();
+  if (!startRect.width || !startRect.height) return;
+  const clone = document.createElement('img');
+  clone.src = src;
+  clone.style.cssText = `position:fixed; z-index:150; object-fit:cover; pointer-events:none;
+    border-radius:12px; will-change:transform,width,height,border-radius;
+    transition: left 0.42s cubic-bezier(.22,.61,.36,1), top 0.42s cubic-bezier(.22,.61,.36,1),
+      width 0.42s cubic-bezier(.22,.61,.36,1), height 0.42s cubic-bezier(.22,.61,.36,1), border-radius 0.42s ease;
+    left:${startRect.left}px; top:${startRect.top}px; width:${startRect.width}px; height:${startRect.height}px;`;
+  document.body.appendChild(clone);
+  heroImg.style.opacity = '0';
+  requestAnimationFrame(() => {
+    clone.style.left = endRect.left + 'px'; clone.style.top = endRect.top + 'px';
+    clone.style.width = endRect.width + 'px'; clone.style.height = endRect.height + 'px';
+    clone.style.borderRadius = '0px';
+  });
+  setTimeout(() => { clone.remove(); heroImg.style.opacity = ''; heroImg.style.transition = 'opacity 0.2s'; }, 430);
+}
+
 function posterAccent(url) {
   return new Promise(resolve => {
     if (!url) return resolve(null);
@@ -2999,6 +3032,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
 
   renderEpisodeList(show.id, episodes, currentSeason);
   if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  runPosterFlip();
 }
 
 function selectSeason(showId, season) {
@@ -3515,6 +3549,7 @@ async function renderFilmSheet(f, inLib) {
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  runPosterFlip();
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -3533,6 +3568,7 @@ function closeSheet() {
   const sheet = document.getElementById('sheet');
   sheet.style.transition = ''; sheet.style.transform = '';
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
+  flipSource = null;
 }
 document.getElementById('sheetBg').addEventListener('click', e => { if(e.target.id==='sheetBg') closeSheet(); });
 
