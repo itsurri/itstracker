@@ -94,7 +94,7 @@
   .topbar-right { display: flex; gap: 8px; align-items: center; }
   .donateBar {
     display: block; text-align: center; padding: 5px 16px 9px; font-size: 11px; font-weight: 600;
-    color: rgba(var(--overlay-rgb),0.5); text-decoration: none;
+    color: var(--fg); text-decoration: none;
   }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
@@ -475,6 +475,22 @@
   .commentEmojiBtn .emo { font-size: 14px; }
   .commentEmojiBtn.liked { color: #ff453a; }
   .commentReplies { display: flex; flex-direction: column; margin: 6px 0 0 42px; }
+  .mention { color: #0A84FF; font-weight: 700; }
+  .mentionDropdown {
+    display: none; position: fixed; z-index: 200; max-height: 190px; overflow-y: auto;
+    background: var(--sheet-bg); border-radius: 14px; box-shadow: var(--shadow-card);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.14);
+  }
+  .mentionDropdown.open { display: block; }
+  .mentionItem { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; }
+  .mentionItem:active, .mentionItem:hover { background: rgba(var(--overlay-rgb),0.08); }
+  .mentionItem img, .mentionItem .noimg-s { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .commentItem.highlight-flash, .notifItem.clickable { cursor: pointer; }
+  .commentItem.highlight-flash { animation: commentFlash 1.6s ease; }
+  @keyframes commentFlash {
+    0%, 100% { background: transparent; }
+    15% { background: rgba(10,132,255,0.18); }
+  }
 
   /* tab bar */
   .tabbar {
@@ -919,10 +935,6 @@
           <button class="filebtn" onclick="saveNickname()">Salva</button>
         </div>
       </div>
-      <div class="settingsrow glass" style="margin-bottom:18px">
-        <div class="st"><div class="sn">Confronta con un amico</div><div class="sd">Genera un link con le tue statistiche da confrontare</div></div>
-        <button class="filebtn" onclick="shareCompareLink()">Condividi</button>
-      </div>
       <div id="profileBody"></div>
     </div>
   </div>
@@ -1084,6 +1096,7 @@
   </div>
 </div>
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+<div class="mentionDropdown" id="mentionDropdown"></div>
 <div class="toast" id="toast"></div>
 <div class="ach-toast" id="achToast">
   <div class="ach-toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg></div>
@@ -2054,6 +2067,8 @@ function allNotifications() {
 
 const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️' };
 
+let notifItemsCache = {};
+
 function renderNotifPanel() {
   const list = document.getElementById('notifList');
   const badge = document.getElementById('notifBadge');
@@ -2062,15 +2077,33 @@ function renderNotifPanel() {
   const unread = items.filter(n => !n.read).length;
   badge.textContent = unread > 9 ? '9+' : unread;
   badge.classList.toggle('show', unread > 0);
+  notifItemsCache = {};
+  items.forEach(n => { notifItemsCache[n.id] = n; });
   list.innerHTML = items.length
-    ? items.slice(0, 50).map(n => `<div class="notifItem${n.read ? '' : ' unread'}">
+    ? items.slice(0, 50).map(n => {
+        const clickable = n.type === 'mention' && n.showId;
+        return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="goToCommentNotification('${n.id}')"` : ''}>
         <div class="notifIcon">${NOTIF_ICONS[n.type] || '🔔'}</div>
         <div class="notifBody">
           <div class="notifText">${escapeHtml(n.text || '')}</div>
           <div class="notifTime">${notifMillis(n) ? formatDateIT(new Date(notifMillis(n)).toISOString().slice(0,10)) : ''}</div>
         </div>
-      </div>`).join('')
+      </div>`;
+      }).join('')
     : '<div class="commentsEmpty">Nessuna notifica</div>';
+}
+
+async function goToCommentNotification(id) {
+  const n = notifItemsCache[id];
+  if (!n || !n.showId) return;
+  closeNotifPanel();
+  await openShow(n.showId);
+  if (n.season && n.season !== currentSeason) selectSeason(n.showId, n.season);
+  toggleEpisodeComments(n.showId, n.season, n.number);
+  setTimeout(() => {
+    const el = document.getElementById(`comment-${n.commentId}`);
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('highlight-flash'); setTimeout(() => el.classList.remove('highlight-flash'), 1600); }
+  }, 900);
 }
 
 // Posiziona i pannelli notifiche/messaggi sotto l'header, così restano
@@ -2158,9 +2191,12 @@ function renderCardTv(key, s) {
   const cat = categorizeShow(s);
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
   const badgeStyle = (cat === 'continua' && total) ? ` style="background:linear-gradient(90deg,#0A84FF ${pct}%,rgba(0,0,0,0.75) ${pct}%)"` : '';
+  const badgeText = watched > 0
+    ? `${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}`
+    : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
   return `<div class="card" data-poster="${s.image||''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-    <div class="badge ${badgeClass}"${badgeStyle}>${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}</div>
+    <div class="badge ${badgeClass}"${badgeStyle}>${badgeText}</div>
   </div>`;
 }
 
@@ -3157,6 +3193,92 @@ function commentAuthorName() {
 
 function epCommentKey(showId, season, number) { return `${showId}_${season}x${number}`; }
 
+// ---------- menzioni (@nickname) nei commenti ----------
+let mentionState = null;
+const mentionCache = {};
+
+document.addEventListener('input', e => {
+  if (e.target.tagName === 'TEXTAREA' && (e.target.id.startsWith('epcInput-') || e.target.id.startsWith('replyInput-'))) {
+    onMentionInput(e.target.id);
+  }
+});
+document.addEventListener('focusout', e => {
+  if (e.target.tagName === 'TEXTAREA') setTimeout(closeMentionDropdown, 150);
+});
+
+async function onMentionInput(textareaId) {
+  const el = document.getElementById(textareaId);
+  if (!el || !fbDb) { closeMentionDropdown(); return; }
+  const pos = el.selectionStart;
+  const uptoCursor = el.value.slice(0, pos);
+  const m = uptoCursor.match(/@([a-zA-Z0-9_.]{1,20})$/);
+  if (!m) { closeMentionDropdown(); return; }
+  const query = m[1].toLowerCase();
+  mentionState = { textareaId, start: pos - m[0].length, query };
+  try {
+    const snap = await fbDb.collection('publicProfiles').where('nicknameLower', '>=', query).where('nicknameLower', '<', query + '').limit(6).get();
+    if (!mentionState || mentionState.query !== query) return;
+    const results = snap.docs.map(d => d.data()).filter(p => p.nickname && (!currentUser || p.uid !== currentUser.uid));
+    renderMentionDropdown(el, results);
+  } catch(e) { closeMentionDropdown(); }
+}
+
+function renderMentionDropdown(el, results) {
+  const dd = document.getElementById('mentionDropdown');
+  if (!results.length) { dd.classList.remove('open'); return; }
+  dd.innerHTML = results.map(p => `<div class="mentionItem" onmousedown="event.preventDefault();selectMention('${p.uid}','${escapeHtml(p.nickname).replace(/'/g,"\\'")}')">
+    ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
+    <span>${escapeHtml(p.nickname)}</span>
+  </div>`).join('');
+  const rect = el.getBoundingClientRect();
+  const ddHeight = Math.min(190, results.length * 40);
+  dd.style.left = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.style.top = Math.max(8, rect.top - ddHeight - 6) + 'px';
+  dd.classList.add('open');
+}
+
+function selectMention(uid, nickname) {
+  if (!mentionState) return;
+  const el = document.getElementById(mentionState.textareaId);
+  if (!el) return;
+  const before = el.value.slice(0, mentionState.start);
+  const afterCursorIdx = mentionState.start + 1 + mentionState.query.length;
+  const after = el.value.slice(afterCursorIdx);
+  const insertion = `@${nickname} `;
+  el.value = before + insertion + after;
+  const newPos = before.length + insertion.length;
+  el.focus();
+  el.setSelectionRange(newPos, newPos);
+  mentionCache[nickname.toLowerCase()] = uid;
+  closeMentionDropdown();
+}
+
+function closeMentionDropdown() {
+  const dd = document.getElementById('mentionDropdown');
+  if (dd) dd.classList.remove('open');
+  mentionState = null;
+}
+
+async function resolveMentions(text) {
+  const names = [...text.matchAll(/@([a-zA-Z0-9_.]{1,24})/g)].map(m => m[1]);
+  const uids = new Set();
+  for (const name of names) {
+    const lower = name.toLowerCase();
+    if (mentionCache[lower]) { uids.add(mentionCache[lower]); continue; }
+    if (!fbDb) continue;
+    try {
+      const snap = await fbDb.collection('publicProfiles').where('nicknameLower', '==', lower).limit(1).get();
+      if (!snap.empty) { const uid = snap.docs[0].data().uid; uids.add(uid); mentionCache[lower] = uid; }
+    } catch(e) {}
+  }
+  return [...uids];
+}
+
+function highlightMentions(text) {
+  return escapeHtml(text).replace(/@([a-zA-Z0-9_.]{1,24})/g, '<span class="mention">@$1</span>');
+}
+
 async function loadSeasonCommentCounts(showId, season) {
   if (!fbDb) return;
   const prefix = `${showId}_${season}x`;
@@ -3229,7 +3351,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
     <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
     <div class="commentBody">
       <div class="commentHeadline"><span class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}</span><span class="commentDate">${when}</span></div>
-      <div class="commentText">${escapeHtml(c.text)}</div>
+      <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
       </div>
@@ -3275,22 +3397,38 @@ async function postComment(epKey, parentId) {
   if (text.length > 500) { showToast('Commento troppo lungo'); return; }
   input.disabled = true;
   try {
-    await fbDb.collection('comments').add({
+    const mentionUids = await resolveMentions(text);
+    const myName = commentAuthorName();
+    const docRef = await fbDb.collection('comments').add({
       epKey,
       parentId: parentId || null,
       uid: currentUser.uid,
-      displayName: commentAuthorName(),
-      photoURL: currentUser.photoURL || null,
+      displayName: myName,
+      photoURL: getCustomAvatar() || currentUser.photoURL || null,
       text,
+      mentions: mentionUids,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
+    closeMentionDropdown();
     if (parentId) {
       const f = document.getElementById(`replyForm-${parentId}`); if (f) f.classList.remove('open');
       const parent = commentsCache[parentId];
       if (parent && parent.uid && parent.uid !== currentUser.uid) {
-        pushRemoteNotification(parent.uid, { type: 'reply', text: `${commentAuthorName()} ha risposto al tuo commento` });
+        pushRemoteNotification(parent.uid, { type: 'reply', text: `${myName} ha risposto al tuo commento` });
       }
+    }
+    if (mentionUids.length) {
+      const [showIdStr, seasonEp] = epKey.split('_');
+      const [season, number] = seasonEp.split('x');
+      mentionUids.forEach(uid => {
+        if (uid !== currentUser.uid) {
+          pushRemoteNotification(uid, {
+            type: 'mention', text: `${myName} ti ha menzionato in un commento`,
+            showId: Number(showIdStr), season: Number(season), number: Number(number), commentId: docRef.id
+          });
+        }
+      });
     }
   } catch (e) { showToast('Errore nell\'invio del commento'); }
   input.disabled = false;
