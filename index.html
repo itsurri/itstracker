@@ -482,18 +482,37 @@
     max-width: 452px; margin: 0 auto;
     display: flex; padding: 10px 6px;
     background: rgba(var(--overlay-rgb),0.08);
-    -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(38px) saturate(220%); backdrop-filter: blur(38px) saturate(220%);
     border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 34px;
     box-shadow: var(--shadow-tabbar), inset 0 1px 0 rgba(var(--overlay-rgb),0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .tabbar::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 22%, rgba(255,255,255,0) 45%);
+  }
+  .tab-indicator {
+    position: absolute; top: 10px; bottom: 10px; left: 6px;
+    border-radius: 22px; background: rgba(var(--overlay-rgb),0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.15);
+    transition: transform 0.4s cubic-bezier(.34,1.4,.4,1);
+    will-change: transform, width;
   }
   .tabbtn {
-    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1; flex: 1; display: flex; align-items: center; justify-content: center;
     background: none; border: none; color: rgba(var(--overlay-rgb),0.45); font-family: inherit;
-    padding: 12px 0; border-radius: 22px; transition: background 0.2s, color 0.2s;
+    padding: 12px 0; border-radius: 22px; transition: color 0.2s;
     transform: translateZ(0);
   }
-  .tabbtn.active { color: var(--fg); background: rgba(var(--overlay-rgb),0.12); }
-  .tabbtn svg { width: 26px; height: 26px; shape-rendering: geometricPrecision; }
+  .tabbtn.active { color: var(--fg); }
+  .tabbtn svg { width: 26px; height: 26px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
+  .tabbtn.bounce svg { animation: tabBounce 0.4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes tabBounce {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.28); }
+    65% { transform: scale(0.92); }
+    100% { transform: scale(1); }
+  }
 
   .view { display: none; }
   .view.active { display: block; animation: viewIn 0.28s ease; }
@@ -984,6 +1003,7 @@
 
 <!-- TAB BAR -->
 <div class="tabbar">
+  <div class="tab-indicator" id="tabIndicator"></div>
   <button class="tabbtn active" data-tab="tv" title="Serie TV">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="7" width="20" height="15" rx="2"/>
@@ -1482,9 +1502,27 @@ function updateViewButtons() {
 // ---------- tabs ----------
 document.querySelectorAll('.tabbtn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 
+function moveTabIndicator(btn) {
+  const indicator = document.getElementById('tabIndicator');
+  if (!indicator || !btn) return;
+  indicator.style.width = btn.offsetWidth + 'px';
+  indicator.style.transform = `translateX(${btn.offsetLeft - 6}px)`;
+}
+
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  let activeBtn = null;
+  document.querySelectorAll('.tabbtn').forEach(b => {
+    const isActive = b.dataset.tab === tab;
+    b.classList.toggle('active', isActive);
+    if (isActive) {
+      activeBtn = b;
+      b.classList.remove('bounce');
+      void b.offsetWidth;
+      b.classList.add('bounce');
+    }
+  });
+  moveTabIndicator(activeBtn);
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
   document.getElementById('topbarRight').style.display = (tab === 'tv' || tab === 'film' || tab === 'search') ? 'flex' : 'none';
@@ -1493,6 +1531,7 @@ function switchTab(tab) {
     loadPopular(searchMode);
   }
 }
+window.addEventListener('resize', () => moveTabIndicator(document.querySelector('.tabbtn.active')));
 
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
 
@@ -3654,6 +3693,7 @@ ensureUpcomingCache();
 initPullToRefresh();
 initInstallBanner();
 renderNotifPanel();
+moveTabIndicator(document.querySelector('.tabbtn.active'));
 </script>
 </body>
 </html>
