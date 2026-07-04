@@ -1432,7 +1432,14 @@ async function refreshShowTotals(id) {
 
 async function refreshInPariShows() {
   if (!hasTmdbKey()) return;
-  const ids = Object.keys(library).filter(id => categorizeShow(library[id]) === 'inpari' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop || library[id].nextAirDate === undefined);
+  // "continua" è incluso sempre (non solo al primo controllo): la data del prossimo
+  // episodio va tenuta aggiornata finché la serie è attiva, altrimenti un vecchio
+  // nextAirDate mancante (null) resta bloccato per sempre e la serie non viene mai
+  // ricategorizzata correttamente quando TMDb pubblica la data vera.
+  const ids = Object.keys(library).filter(id => {
+    const cat = categorizeShow(library[id]);
+    return cat === 'inpari' || cat === 'continua' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop;
+  });
   if (!ids.length) return;
   const results = await Promise.all(ids.map(refreshShowTotals));
   if (results.some(Boolean)) renderLibrary();
