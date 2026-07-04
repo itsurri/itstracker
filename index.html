@@ -245,6 +245,56 @@
   .watch-providers img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
   /* stima tempo rimanente */
   .time-left { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-tv, #0A84FF); background: rgba(10,132,255,0.12); padding: 6px 12px; border-radius: 14px; margin-bottom: 16px; }
+  /* CTA anno in rassegna nel profilo */
+  .wrapped-cta {
+    display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 20px; cursor: pointer;
+    margin-bottom: 12px; color: #fff; background: linear-gradient(120deg,#7b2ff7,#f107a3);
+  }
+  .wrapped-cta .wc-icon { font-size: 26px; }
+  .wrapped-cta .wc-text { flex: 1; min-width: 0; }
+  .wrapped-cta .wc-title { font-size: 15px; font-weight: 800; }
+  .wrapped-cta .wc-sub { font-size: 12px; opacity: 0.85; margin-top: 1px; }
+  .wrapped-cta svg { stroke: #fff; }
+
+  /* anno in rassegna (storie) */
+  .wrappedBg {
+    display: none; position: fixed; inset: 0; z-index: 140; overflow: hidden;
+    color: #fff; -webkit-tap-highlight-color: transparent;
+  }
+  .wrappedBg.open { display: block; }
+  .wrapped-slide {
+    position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center;
+    padding: 0 34px calc(env(safe-area-inset-bottom) + 60px); text-align: center;
+    animation: wrapSlideIn 0.5s cubic-bezier(.2,.7,.3,1);
+  }
+  @keyframes wrapSlideIn { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+  .wrapped-progress {
+    position: absolute; top: calc(env(safe-area-inset-top) + 12px); left: 14px; right: 14px; z-index: 3;
+    display: flex; gap: 5px;
+  }
+  .wrapped-progress .wp-bar { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.3); overflow: hidden; }
+  .wrapped-progress .wp-bar i { display: block; height: 100%; width: 0; background: #fff; }
+  .wrapped-progress .wp-bar.done i { width: 100%; }
+  .wrapped-progress .wp-bar.active i { animation: wpFill 5s linear forwards; }
+  @keyframes wpFill { from { width: 0; } to { width: 100%; } }
+  .wrapped-close {
+    position: absolute; top: calc(env(safe-area-inset-top) + 22px); right: 16px; z-index: 4;
+    width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .wrapped-nav { position: absolute; top: 0; bottom: 0; width: 34%; z-index: 2; }
+  .wrapped-nav.wn-prev { left: 0; } .wrapped-nav.wn-next { right: 0; }
+  .w-eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; margin-bottom: 18px; }
+  .w-big { font-size: 88px; font-weight: 900; letter-spacing: -0.03em; line-height: 0.95; }
+  .w-mid { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 6px 0; }
+  .w-sub { font-size: 17px; font-weight: 600; opacity: 0.9; margin-top: 14px; line-height: 1.45; }
+  .w-poster { width: 150px; aspect-ratio: 2/3; border-radius: 16px; object-fit: cover; margin: 0 auto 22px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+  .w-share {
+    margin: 30px auto 0; display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px;
+    border-radius: 30px; background: #fff; color: #111; font-size: 15px; font-weight: 800; font-family: inherit;
+  }
+  .w-logo { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 26px); left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 700; opacity: 0.6; letter-spacing: 0.04em; }
+
   /* cinema mode episodio */
   .cinemaBg {
     display: none; position: fixed; inset: 0; z-index: 130; background: #000;
@@ -1172,6 +1222,15 @@
 </div>
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
 <div class="mentionDropdown" id="mentionDropdown"></div>
+<div class="wrappedBg" id="wrappedBg">
+  <div class="wrapped-progress" id="wrappedProgress"></div>
+  <button class="wrapped-close" onclick="closeWrapped()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="wrapped-slide" id="wrappedSlide"></div>
+  <div class="wrapped-nav wn-prev" onclick="wrappedPrev()"></div>
+  <div class="wrapped-nav wn-next" onclick="wrappedNext()"></div>
+</div>
 <div class="cinemaBg" id="cinemaBg">
   <button class="cinema-close" onclick="closeCinema()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1708,6 +1767,135 @@ function renderLevelBadge(hours) {
   return `<span class="level-badge" title="${level.min}+ ore guardate">${level.emoji} ${level.label}</span>`;
 }
 
+// ---------- anno in rassegna (storie) ----------
+const WRAP_MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+let wrappedSlides = [], wrappedIndex = 0, wrappedTimer = null, wrappedSummary = null;
+
+function gatherWrappedData() {
+  const w = computeWrapped();
+  const monthCounts = {};
+  Object.values(library).forEach(s => Object.values(s.watched||{}).forEach(v => { if (typeof v === 'number') { const d = new Date(v); const k = d.getMonth(); monthCounts[k] = (monthCounts[k]||0)+1; } }));
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt === 'number') { const d = new Date(f.watchedAt); const k = d.getMonth(); monthCounts[k] = (monthCounts[k]||0)+1; } });
+  let bestMonth = null, bestC = 0;
+  Object.entries(monthCounts).forEach(([k,c]) => { if (c > bestC) { bestC = c; bestMonth = Number(k); } });
+  const level = getUserLevel(w.hours);
+  const topGenre = w.genres.length ? w.genres[0] : null;
+  wrappedSummary = { hours: w.hours, episodes: w.episodesWatched, films: w.filmsWatched, shows: w.totalShows,
+    top: w.top, genre: topGenre ? topGenre[0] : null, genreCount: topGenre ? topGenre[1] : 0,
+    month: bestMonth !== null ? WRAP_MONTHS[bestMonth] : null, monthCount: bestC, level };
+
+  const slides = [];
+  slides.push({ bg: 'linear-gradient(160deg,#7b2ff7,#f107a3)', html: `
+    <div class="w-eyebrow">itstracker</div>
+    <div class="w-mid">Il tuo anno<br>in rassegna</div>
+    <div class="w-sub">Un riassunto di tutto quello<br>che hai guardato. Tocca a destra →</div>` });
+  slides.push({ bg: 'linear-gradient(160deg,#0A84FF,#5E5CE6)', html: `
+    <div class="w-eyebrow">Hai passato</div>
+    <div class="w-big" data-count="${w.hours}">0</div>
+    <div class="w-mid">ore a guardare</div>
+    <div class="w-sub">Praticamente ${Math.max(1,Math.round(w.hours/24))} giorni interi 🍿</div>` });
+  slides.push({ bg: 'linear-gradient(160deg,#30D158,#0A84FF)', html: `
+    <div class="w-eyebrow">In totale</div>
+    <div class="w-big" data-count="${w.episodesWatched}">0</div>
+    <div class="w-mid">episodi visti</div>
+    <div class="w-sub">${w.filmsWatched} film · ${w.totalShows} serie in libreria</div>` });
+  if (w.top && w.top.w) slides.push({ bg: 'linear-gradient(160deg,#FF9F0A,#FF375F)', html: `
+    <div class="w-eyebrow">La tua serie n.1</div>
+    ${w.top.image ? `<img class="w-poster" src="${w.top.image}" alt="">` : ''}
+    <div class="w-mid">${escapeHtml(w.top.name||'')}</div>
+    <div class="w-sub">${w.top.w} episodi visti — la più bingeata</div>` });
+  if (topGenre) slides.push({ bg: 'linear-gradient(160deg,#FF375F,#7b2ff7)', html: `
+    <div class="w-eyebrow">Il tuo genere</div>
+    <div class="w-mid" style="font-size:40px">${escapeHtml(topGenre[0])}</div>
+    <div class="w-sub">Il filo conduttore di ${topGenre[1]} titoli</div>` });
+  if (bestMonth !== null && bestC > 0) slides.push({ bg: 'linear-gradient(160deg,#64D2FF,#5E5CE6)', html: `
+    <div class="w-eyebrow">Il mese più intenso</div>
+    <div class="w-mid" style="font-size:44px">${WRAP_MONTHS[bestMonth]}</div>
+    <div class="w-sub">${bestC} titoli in un solo mese 🔥</div>` });
+  slides.push({ bg: 'linear-gradient(160deg,#5E5CE6,#111)', html: `
+    <div class="w-eyebrow">Il tuo livello</div>
+    <div class="w-mid" style="font-size:46px">${level.emoji} ${level.label}</div>
+    <div class="w-sub">${w.hours} ore totali guardate su itstracker</div>
+    <button class="w-share" onclick="shareWrapped()">📤 Condividi</button>` });
+  return slides;
+}
+
+function openWrapped() {
+  if (!currentUser && Object.keys(library).length === 0 && Object.keys(filmLibrary).length === 0) { showToast('Aggiungi qualcosa alla libreria'); return; }
+  wrappedSlides = gatherWrappedData();
+  wrappedIndex = 0;
+  document.getElementById('wrappedBg').classList.add('open');
+  renderWrappedProgress();
+  showWrappedSlide(0);
+}
+
+function renderWrappedProgress() {
+  document.getElementById('wrappedProgress').innerHTML = wrappedSlides.map(() => `<div class="wp-bar"><i></i></div>`).join('');
+}
+
+function showWrappedSlide(i) {
+  if (i < 0) return;
+  if (i >= wrappedSlides.length) { closeWrapped(); return; }
+  wrappedIndex = i;
+  const s = wrappedSlides[i];
+  const slide = document.getElementById('wrappedSlide');
+  document.getElementById('wrappedBg').style.background = s.bg;
+  slide.style.background = s.bg;
+  slide.innerHTML = s.html + `<div class="w-logo">itstracker · by itsurri</div>`;
+  slide.querySelectorAll('.w-big[data-count]').forEach(animateCountUp);
+  const bars = document.querySelectorAll('#wrappedProgress .wp-bar');
+  bars.forEach((b, idx) => { b.classList.remove('active','done'); if (idx < i) b.classList.add('done'); else if (idx === i) b.classList.add('active'); });
+  clearTimeout(wrappedTimer);
+  wrappedTimer = setTimeout(() => showWrappedSlide(i + 1), 5000);
+  haptic();
+}
+function wrappedNext() { showWrappedSlide(wrappedIndex + 1); }
+function wrappedPrev() { showWrappedSlide(wrappedIndex - 1); }
+function closeWrapped() { clearTimeout(wrappedTimer); document.getElementById('wrappedBg').classList.remove('open'); }
+
+async function shareWrapped() {
+  clearTimeout(wrappedTimer);
+  const s = wrappedSummary; if (!s) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1920;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
+  grad.addColorStop(0, '#7b2ff7'); grad.addColorStop(1, '#f107a3');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 1080, 1920);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.font = '700 44px -apple-system, "Segoe UI", sans-serif';
+  ctx.globalAlpha = 0.85; ctx.fillText('IL MIO ANNO SU ITSTRACKER', 540, 250); ctx.globalAlpha = 1;
+  const rows = [
+    [`${s.hours}`, 'ore guardate'],
+    [`${s.episodes}`, 'episodi visti'],
+    [`${s.films}`, 'film visti'],
+    [s.top && s.top.name ? s.top.name : '—', 'serie n.1'],
+    [s.genre || '—', 'genere preferito'],
+    [`${s.level.emoji} ${s.level.label}`, 'livello']
+  ];
+  let y = 480;
+  rows.forEach(([big, lab]) => {
+    ctx.font = '900 96px -apple-system, "Segoe UI", sans-serif';
+    const txt = String(big).length > 16 ? String(big).slice(0,15)+'…' : String(big);
+    ctx.fillText(txt, 540, y);
+    ctx.font = '600 38px -apple-system, "Segoe UI", sans-serif';
+    ctx.globalAlpha = 0.8; ctx.fillText(lab, 540, y + 54); ctx.globalAlpha = 1;
+    y += 230;
+  });
+  ctx.font = '700 34px -apple-system, "Segoe UI", sans-serif';
+  ctx.globalAlpha = 0.7; ctx.fillText('itstracker.github.io', 540, 1850); ctx.globalAlpha = 1;
+  try {
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'itstracker-wrapped.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: 'Il mio anno su itstracker 🎬' });
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'itstracker-wrapped.png'; a.click();
+      showToast('Immagine salvata');
+    }
+  } catch(e) {}
+}
+
 function computeWrapped() {
   const shows = Object.values(library);
   const films = Object.values(filmLibrary);
@@ -2027,7 +2215,12 @@ function renderProfile() {
     return;
   }
 
-  let html = renderAchievements(w);
+  let html = `<div class="wrapped-cta" onclick="openWrapped()">
+    <div class="wc-icon">🎬</div>
+    <div class="wc-text"><div class="wc-title">Il tuo anno in rassegna</div><div class="wc-sub">Scopri e condividi le tue statistiche</div></div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.6"><path d="M9 18l6-6-6-6"/></svg>
+  </div>`;
+  html += renderAchievements(w);
 
   if (w.hasActivity) {
     html += `<div class="wrap-sec-title">Attività recente</div><div class="wrap-card glass">${renderBars(w.months)}</div>`;
