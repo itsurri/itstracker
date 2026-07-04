@@ -1414,7 +1414,7 @@ function syncPublicProfile() {
     coverImage: getCoverImage() || null,
     shows, films,
     updatedAt: Date.now()
-  }).catch(() => {});
+  }, { merge: true }).catch(() => {});
 }
 
 async function signInGoogle() {
