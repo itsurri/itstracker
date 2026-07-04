@@ -1412,7 +1412,10 @@ async function refreshShowTotals(id) {
   try {
     const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await r.json();
-    const newTotal = show.number_of_episodes || 0;
+    // Somma degli episodi per stagione (esclusa la stagione 0/speciali), non il numero
+    // grezzo di TMDb: quello include gli speciali, che non vengono mai conteggiati tra
+    // i "visti", quindi il totale non coincideva mai col conteggio reale (es. 63/73).
+    const newTotal = (show.seasons||[]).filter(se=>se.season_number>0).reduce((sum,se)=>sum+(se.episode_count||0),0) || show.number_of_episodes || 0;
     const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
     const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
     const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
