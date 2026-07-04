@@ -1466,8 +1466,8 @@ if (fbAuth) {
             try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
           }
           followingList = data.following || [];
-          if (('coverImage' in data) && (data.coverImage || '') !== getCoverImage()) {
-            try { if (data.coverImage) localStorage.setItem('serietracker_cover', data.coverImage); else localStorage.removeItem('serietracker_cover'); } catch(e) {}
+          if (data.coverImage && data.coverImage !== getCoverImage()) {
+            try { localStorage.setItem('serietracker_cover', data.coverImage); } catch(e) {}
           }
           applyingRemoteData = false;
           renderProfileAuth();
@@ -3447,8 +3447,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
         ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
-      <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato</div>
-      ${renderTimeLeft(show, episodes, watchedCount)}
+      <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
@@ -3473,7 +3472,7 @@ function renderTimeLeft(show, episodes, watchedCount) {
   const mins = remaining * runtime;
   const h = Math.floor(mins / 60), m = mins % 60;
   const label = h > 0 ? `${h} h${m ? ' ' + m + ' min' : ''}` : `${m} min`;
-  return `<div class="time-left">⏳ Ti servono ~${label} per finirla (${remaining} ep)</div>`;
+  return ` · ⏳ ~${label} per finirla`;
 }
 
 // Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
@@ -4341,8 +4340,8 @@ function openCoverPicker() {
   const grid = document.getElementById('coverGrid');
   const imgs = [];
   const seen = new Set();
-  Object.values(library).forEach(s => { const u = s.backdrop || s.image; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
-  Object.values(filmLibrary).forEach(f => { const u = f.backdrop || f.image; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
+  Object.values(library).forEach(s => { const u = s.backdrop; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
+  Object.values(filmLibrary).forEach(f => { const u = f.backdrop; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
   grid.innerHTML = imgs.length
     ? imgs.slice(0, 40).map(u => `<img src="${u}" alt="" onclick="setCoverImage('${u.replace(/'/g,"\\'")}')">`).join('')
     : `<div class="wrap-note" style="grid-column:1/-1">Aggiungi qualcosa alla libreria per scegliere una copertina.</div>`;
@@ -4351,10 +4350,14 @@ function openCoverPicker() {
 function closeCoverPicker() { document.getElementById('coverPickerBg').classList.remove('open'); }
 function setCoverImage(url) {
   try { if (url) localStorage.setItem('serietracker_cover', url); else localStorage.removeItem('serietracker_cover'); } catch(e) {}
-  if (fbDb && currentUser) { fbDb.collection('users').doc(currentUser.uid).set({ coverImage: url || null }, { merge: true }).catch(()=>{}); syncPublicProfile(); }
   closeCoverPicker();
   renderProfileAuth();
   showToast(url ? 'Copertina aggiornata' : 'Copertina rimossa');
+  if (fbDb && currentUser) {
+    fbDb.collection('users').doc(currentUser.uid).set({ coverImage: url || null }, { merge: true })
+      .then(() => syncPublicProfile())
+      .catch(() => showToast('Copertina salvata solo su questo dispositivo (sync non riuscita)'));
+  }
 }
 
 let cropState = null;
