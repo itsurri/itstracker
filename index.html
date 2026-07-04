@@ -225,13 +225,13 @@
   }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
-  .hero .closebtn, .sheet > .closebtn {
+  .sheet > .closebtn {
     position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     display: flex; align-items: center; justify-content: center; color: #fff;
   }
-  .sheet > .closebtn { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
+  .sheet > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
@@ -1378,6 +1378,7 @@ function categorizeShow(s) {
   const total = s.totalEpisodes || 0;
   if (watched === 0) return 'davedere';
   if (total > 0 && watched >= total) return 'inpari';
+  if (s.next && isFutureEpisode(s.next)) return 'inpari';
   return 'continua';
 }
 
@@ -2386,7 +2387,7 @@ function renderPersonSheet(p) {
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
   sheet.innerHTML = `
-    <button class="closebtn" onclick="closePerson()">
+    <button class="closebtn plain" onclick="closePerson()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <div class="person-hero">
@@ -2734,7 +2735,7 @@ function sheetSkeleton() {
 function computeNextEp(episodes, watched) {
   const sorted = episodes.slice().sort((a,b) => a.season - b.season || a.number - b.number);
   for (const e of sorted) {
-    if (!watched[`${e.season}x${e.number}`]) return { season: e.season, number: e.number, name: e.name || '' };
+    if (!watched[`${e.season}x${e.number}`]) return { season: e.season, number: e.number, name: e.name || '', airdate: e.airdate || null };
   }
   return null;
 }
@@ -2814,13 +2815,13 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
   sheet.innerHTML = `
+    <button class="closebtn" onclick="closeSheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
     <div class="hero">
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <button class="closebtn" onclick="closeSheet()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
@@ -3231,13 +3232,13 @@ async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
   const rawDesc = f.description||'';
   sheet.innerHTML = `
+    <button class="closebtn" onclick="closeSheet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
-      <button class="closebtn" onclick="closeSheet()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
     </div>
     <div class="sheetbody">
       <h2>${escapeHtml(f.title)}</h2>
