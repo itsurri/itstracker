@@ -226,7 +226,7 @@
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
   .hero .closebtn, .sheet > .closebtn {
-    position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
+    position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     display: flex; align-items: center; justify-content: center; color: #fff;
@@ -2386,7 +2386,7 @@ function renderPersonSheet(p) {
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
   sheet.innerHTML = `
-    <button class="closebtn" style="position:absolute" onclick="closePerson()">
+    <button class="closebtn" onclick="closePerson()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <div class="person-hero">
