@@ -546,28 +546,54 @@
   .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
 
   /* chat */
-  .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; }
+  .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; background: var(--sheet-bg); }
   .chat-head {
-    display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 14px) 16px 12px;
+    display: flex; align-items: center; gap: 11px; padding: calc(env(safe-area-inset-top) + 14px) 16px 13px;
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
+    background: rgba(var(--overlay-rgb),0.035);
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
   }
   .chat-closebtn { position: static; }
-  .chat-head-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; overflow: hidden; }
+  .chat-head-avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; overflow: hidden;
+    box-shadow: 0 0 0 1.5px rgba(var(--overlay-rgb),0.1);
+  }
   .chat-head-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .chat-head-name { font-size: 14.5px; font-weight: 700; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
-  .chat-bubble { max-width: 75%; padding: 9px 13px; border-radius: 16px; font-size: 13.5px; line-height: 1.4; word-break: break-word; }
-  .chat-bubble.mine { align-self: flex-end; background: #0A84FF; color: #fff; border-bottom-right-radius: 4px; }
-  .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.1); border-bottom-left-radius: 4px; }
+  .chat-head-name { font-size: 15px; font-weight: 700; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px 14px 8px; display: flex; flex-direction: column;
+    background: linear-gradient(180deg, rgba(var(--overlay-rgb),0.02), transparent 160px);
+  }
+  .chat-daysep {
+    align-self: center; font-size: 11px; font-weight: 700; color: rgba(var(--overlay-rgb),0.38);
+    margin: 6px 0 14px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .chat-bubble {
+    max-width: 75%; padding: 9px 14px; margin-bottom: 2px; border-radius: 18px; font-size: 14px;
+    line-height: 1.42; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+  }
+  .chat-bubble.mine { align-self: flex-end; background: #0A84FF; color: #fff; }
+  .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.09); color: var(--fg); }
+  .chat-bubble.mine.grouped-top { border-top-right-radius: 6px; }
+  .chat-bubble.mine.grouped-bottom { border-bottom-right-radius: 6px; }
+  .chat-bubble.theirs.grouped-top { border-top-left-radius: 6px; }
+  .chat-bubble.theirs.grouped-bottom { border-bottom-left-radius: 6px; }
+  .chat-time { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin: 4px 3px 12px; }
+  .chat-time.mine { align-self: flex-end; }
+  .chat-time.theirs { align-self: flex-start; }
   .chat-inputrow {
-    display: flex; align-items: center; gap: 8px; padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px calc(env(safe-area-inset-bottom) + 12px);
     border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
+    background: rgba(var(--overlay-rgb),0.02);
   }
   .chat-inputrow textarea {
-    flex: 1; min-width: 0; min-height: 38px; max-height: 100px; resize: none; padding: 9px 14px; border-radius: 18px;
-    border: none; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-family: inherit; font-size: 13.5px; line-height: 1.4;
+    flex: 1; min-width: 0; min-height: 40px; max-height: 100px; resize: none; padding: 10px 16px; border-radius: 20px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.1); background: rgba(var(--overlay-rgb),0.06);
+    color: var(--fg); font-family: inherit; font-size: 14px; line-height: 1.4;
   }
-  .chat-inputrow .commentReplySendBtn { width: 36px; height: 36px; }
+  .chat-inputrow .commentReplySendBtn {
+    width: 38px; height: 38px; background: #0A84FF; color: #fff; box-shadow: 0 2px 6px rgba(10,132,255,0.35);
+  }
 
   /* ritaglio avatar */
   .cropBg {
@@ -926,27 +952,34 @@
   .notifPanel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .notifPanel-head {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
-    padding: 16px 16px 14px;
+    padding: calc(env(safe-area-inset-top) + 14px) 16px 13px;
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
+    background: rgba(var(--overlay-rgb),0.035);
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
   }
-  .notifPanel-title { font-size: 17px; font-weight: 700; flex: 1; }
+  .notifPanel-title { font-size: 16px; font-weight: 700; flex: 1; }
   .notifMarkRead { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); background: transparent; }
   .notifPanel-close {
     width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.1);
     display: flex; align-items: center; justify-content: center; color: var(--fg); flex-shrink: 0;
   }
-  .notifList { flex: 1; overflow-y: auto; padding: 6px 16px calc(env(safe-area-inset-bottom) + 16px); }
-  .notifItem { display: flex; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); }
-  .notifList .notifItem:last-child { border-bottom: none; }
-  .notifItem.unread { position: relative; }
-  .notifItem.unread::before { content: ''; position: absolute; left: -10px; top: 18px; width: 6px; height: 6px; border-radius: 50%; background: #0A84FF; }
-  .notifIcon {
-    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(var(--overlay-rgb),0.08); font-size: 14px;
+  .notifList {
+    flex: 1; overflow-y: auto; padding: 8px 12px calc(env(safe-area-inset-bottom) + 16px);
+    background: linear-gradient(180deg, rgba(var(--overlay-rgb),0.02), transparent 160px);
   }
+  .notifItem { display: flex; gap: 12px; padding: 10px 8px; border-radius: 16px; transition: background 0.15s ease; }
+  .notifItem.clickable { cursor: pointer; }
+  .notifItem.clickable:active { background: rgba(var(--overlay-rgb),0.07); }
+  .notifItem.unread { background: rgba(10,132,255,0.07); }
+  .notifIcon {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--overlay-rgb),0.08); font-size: 15px; overflow: hidden;
+    box-shadow: 0 0 0 1.5px rgba(var(--overlay-rgb),0.08);
+  }
+  .notifIcon img { width: 100%; height: 100%; object-fit: cover; }
   .notifBody { flex: 1; min-width: 0; }
-  .notifText { font-size: 12.5px; line-height: 1.4; }
-  .notifTime { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 2px; }
+  .notifText { font-size: 13px; line-height: 1.4; }
+  .notifTime { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 3px; }
 </style>
 </head>
 <body>
@@ -2495,9 +2528,12 @@ function renderNotifPanel() {
   items.forEach(n => { notifItemsCache[n.id] = n; });
   list.innerHTML = items.length
     ? items.slice(0, 50).map(n => {
-        const clickable = n.type === 'mention' && n.showId;
-        return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="goToCommentNotification('${n.id}')"` : ''}>
-        <div class="notifIcon">${NOTIF_ICONS[n.type] || '🔔'}</div>
+        const isChat = n.type === 'message' && n.fromUid;
+        const clickable = (n.type === 'mention' && n.showId) || isChat;
+        const handler = isChat ? `goToChatNotification('${n.id}')` : `goToCommentNotification('${n.id}')`;
+        const icon = (isChat && n.fromPhoto) ? `<img src="${n.fromPhoto}" alt="">` : (NOTIF_ICONS[n.type] || '🔔');
+        return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="${handler}"` : ''}>
+        <div class="notifIcon">${icon}</div>
         <div class="notifBody">
           <div class="notifText">${escapeHtml(n.text || '')}</div>
           <div class="notifTime">${notifMillis(n) ? formatDateIT(new Date(notifMillis(n)).toISOString().slice(0,10)) : ''}</div>
@@ -2518,6 +2554,13 @@ async function goToCommentNotification(id) {
     const el = document.getElementById(`comment-${n.commentId}`);
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('highlight-flash'); setTimeout(() => el.classList.remove('highlight-flash'), 1600); }
   }, 900);
+}
+
+function goToChatNotification(id) {
+  const n = notifItemsCache[id];
+  if (!n || !n.fromUid) return;
+  closeNotifPanel();
+  openChat(n.fromUid, n.fromName || 'Utente', n.fromPhoto || '');
 }
 
 // Posiziona i pannelli notifiche/messaggi sotto l'header, così restano
@@ -3130,11 +3173,43 @@ function openChat(uid, name, photoURL) {
 
 function chatMillis(m) { return (m.createdAt && m.createdAt.toMillis) ? m.createdAt.toMillis() : (m.createdAt || 0); }
 
+function chatDayLabel(t) {
+  if (!t) return '';
+  const d = new Date(t); d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  if (d.getTime() === today.getTime()) return 'Oggi';
+  if (d.getTime() === yesterday.getTime()) return 'Ieri';
+  return formatDateIT(new Date(t).toISOString().slice(0,10));
+}
+function chatTimeLabel(t) {
+  return t ? new Date(t).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
+}
+function chatDayKey(t) { return t ? new Date(t).toDateString() : null; }
+
+const CHAT_GROUP_GAP = 4 * 60 * 1000;
+
 function renderChatMessages(msgs) {
   const el = document.getElementById('chatMessages');
-  el.innerHTML = msgs.length
-    ? msgs.map(m => `<div class="chat-bubble ${m.from === currentUser.uid ? 'mine' : 'theirs'}">${escapeHtml(m.text)}</div>`).join('')
-    : '<div class="commentsEmpty">Nessun messaggio, scrivi il primo!</div>';
+  if (!msgs.length) { el.innerHTML = '<div class="commentsEmpty">Nessun messaggio, scrivi il primo!</div>'; return; }
+  const items = msgs.map(m => ({ m, t: chatMillis(m) }));
+  let html = '';
+  let lastDay = null;
+  items.forEach((cur, i) => {
+    const prev = items[i - 1];
+    const next = items[i + 1];
+    const day = chatDayKey(cur.t);
+    if (day !== lastDay) { html += `<div class="chat-daysep">${chatDayLabel(cur.t)}</div>`; lastDay = day; }
+    const groupedTop = !!prev && prev.m.from === cur.m.from && chatDayKey(prev.t) === day && (cur.t - prev.t) < CHAT_GROUP_GAP;
+    const groupedBottom = !!next && next.m.from === cur.m.from && chatDayKey(next.t) === day && (next.t - cur.t) < CHAT_GROUP_GAP;
+    const mine = cur.m.from === currentUser.uid;
+    const cls = ['chat-bubble', mine ? 'mine' : 'theirs'];
+    if (groupedTop) cls.push('grouped-top');
+    if (groupedBottom) cls.push('grouped-bottom');
+    html += `<div class="${cls.join(' ')}">${escapeHtml(cur.m.text)}</div>`;
+    if (!groupedBottom) html += `<div class="chat-time ${mine ? 'mine' : 'theirs'}">${chatTimeLabel(cur.t)}</div>`;
+  });
+  el.innerHTML = html;
   el.scrollTop = el.scrollHeight;
 }
 
@@ -3160,7 +3235,10 @@ async function sendChatMessage() {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       readBy: [currentUser.uid]
     }, { merge: true });
-    pushRemoteNotification(currentChatUid, { type: 'message', text: `${myName} ti ha scritto un messaggio` });
+    pushRemoteNotification(currentChatUid, {
+      type: 'message', text: `${myName} ti ha scritto un messaggio`,
+      fromUid: currentUser.uid, fromName: myName, fromPhoto: myPhoto || null
+    });
   } catch(e) { showToast('Errore nell\'invio'); }
 }
 
