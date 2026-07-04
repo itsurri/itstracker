@@ -328,6 +328,33 @@
   .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
   .mini-stats b { color: var(--fg); font-weight: 700; }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
+  .profile-cover {
+    height: 108px; background-size: cover; background-position: center; position: relative;
+    background-color: rgba(var(--overlay-rgb),0.08);
+    background-image: linear-gradient(120deg, rgba(123,47,247,0.5), rgba(241,7,163,0.4));
+  }
+  .cover-edit {
+    position: absolute; bottom: 8px; right: 8px; padding: 5px 11px; border-radius: 14px;
+    background: rgba(0,0,0,0.45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    color: #fff; font-size: 11.5px; font-weight: 700; font-family: inherit;
+  }
+  .profile-inner { padding: 16px; }
+  .profile-cover + .profile-inner .cover-lift { margin-top: -46px; border: 3px solid var(--sheet-bg); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+  /* picker copertina */
+  .coverPickerBg {
+    display: none; position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,0.75);
+    align-items: flex-end; justify-content: center;
+  }
+  .coverPickerBg.open { display: flex; }
+  .coverPicker {
+    width: 100%; max-width: 480px; max-height: 76vh; overflow-y: auto; background: var(--sheet-bg);
+    border-radius: 24px 24px 0 0; padding: 18px 16px calc(env(safe-area-inset-bottom) + 20px);
+  }
+  .coverPicker h3 { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+  .coverPicker .cp-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-bottom: 14px; }
+  .cover-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .cover-grid img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; cursor: pointer; background: rgba(var(--overlay-rgb),0.08); }
+  .cover-remove { width: 100%; margin-top: 12px; padding: 11px; border-radius: 14px; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-weight: 600; font-size: 13px; font-family: inherit; }
   .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
   .profile-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(var(--overlay-rgb),0.1); }
   .profile-stats-inline { flex: 1; display: flex; justify-content: space-around; }
@@ -476,8 +503,11 @@
   .personcard .pc-info { flex: 1; min-width: 0; }
   .personcard .pc-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .personcard .pc-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-cover { height: 150px; background-size: cover; background-position: center; }
   .person-hero { text-align: center; padding: 30px 20px 18px; }
+  .person-hero.has-cover { margin-top: -50px; position: relative; }
   .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
+  .person-hero.has-cover img, .person-hero.has-cover .noimg-s { border: 3px solid var(--sheet-bg); }
   .person-hero .ph-name { font-size: 19px; font-weight: 700; }
   .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .person-hero-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
@@ -1047,9 +1077,9 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" style="padding:16px; text-align:center; margin-bottom:18px">
+      <div class="glass" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
-          <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
+          <div style="padding:16px; font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
       </div>
       <div class="settingsrow glass" style="flex-direction:column; align-items:stretch; gap:8px; margin-bottom:18px">
@@ -1222,6 +1252,14 @@
 </div>
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
 <div class="mentionDropdown" id="mentionDropdown"></div>
+<div class="coverPickerBg" id="coverPickerBg" onclick="if(event.target.id==='coverPickerBg')closeCoverPicker()">
+  <div class="coverPicker">
+    <h3>Scegli la copertina</h3>
+    <div class="cp-sub">Un fotogramma dalle tue serie e film preferiti</div>
+    <div class="cover-grid" id="coverGrid"></div>
+    <button class="cover-remove" onclick="setCoverImage('')">Rimuovi copertina</button>
+  </div>
+</div>
 <div class="wrappedBg" id="wrappedBg">
   <div class="wrapped-progress" id="wrappedProgress"></div>
   <button class="wrapped-close" onclick="closeWrapped()">
@@ -1325,6 +1363,7 @@ function syncPublicProfile() {
     emailLower: (currentUser.email || '').toLowerCase(),
     nicknameLower: (getNickname() || '').toLowerCase(),
     photoURL: getCustomAvatar() || currentUser.photoURL || null,
+    coverImage: getCoverImage() || null,
     shows, films,
     updatedAt: Date.now()
   }).catch(() => {});
@@ -1352,24 +1391,32 @@ function renderProfileAuth() {
   if (currentUser) {
     const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
     const avatarUrl = getCustomAvatar() || currentUser.photoURL;
+    const cover = getCoverImage();
     c.innerHTML = `
-      <div class="profile-top">
-        <div onclick="document.getElementById('avatarFileInput').click()">
-          ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="">` : `<div class="profile-avatar"></div>`}
-        </div>
-        <div style="min-width:0">
-          <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}${renderLevelBadge(computeWrapped().hours)}</div>
-          <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
-        </div>
-        <button class="filebtn" style="padding:6px 14px; font-size:12px" onclick="signOutGoogle()">Esci</button>
+      <div class="profile-cover" style="${cover?`background-image:url('${cover}')`:''}">
+        <button class="cover-edit" onclick="openCoverPicker()">📸 Copertina</button>
       </div>
-      <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:16px;margin-bottom:0"></div>
+      <div class="profile-inner">
+        <div class="profile-top">
+          <div onclick="document.getElementById('avatarFileInput').click()">
+            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
+          </div>
+          <div style="min-width:0">
+            <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}${renderLevelBadge(computeWrapped().hours)}</div>
+            <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
+          </div>
+          <button class="filebtn" style="padding:6px 14px; font-size:12px" onclick="signOutGoogle()">Esci</button>
+        </div>
+        <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:16px;margin-bottom:0"></div>
+      </div>
     `;
   } else {
     c.innerHTML = `
-      <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin-bottom:14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
-      <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
-      <div class="statrow" id="profileStatsRow" style="margin-top:18px;margin-bottom:0"></div>
+      <div class="profile-inner">
+        <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin-bottom:14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
+        <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
+        <div class="statrow" id="profileStatsRow" style="margin-top:18px;margin-bottom:0"></div>
+      </div>
     `;
   }
 }
@@ -1419,6 +1466,9 @@ if (fbAuth) {
             try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
           }
           followingList = data.following || [];
+          if (('coverImage' in data) && (data.coverImage || '') !== getCoverImage()) {
+            try { if (data.coverImage) localStorage.setItem('serietracker_cover', data.coverImage); else localStorage.removeItem('serietracker_cover'); } catch(e) {}
+          }
           applyingRemoteData = false;
           renderProfileAuth();
           syncPublicProfile();
@@ -2944,7 +2994,8 @@ function renderPersonSheet(p) {
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
   sheet.innerHTML = `
-    <div class="person-hero">
+    ${p.coverImage ? `<div class="person-cover" style="background-image:url('${p.coverImage}')"></div>` : ''}
+    <div class="person-hero${p.coverImage ? ' has-cover' : ''}">
       ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
       <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
@@ -4283,6 +4334,28 @@ function saveNickname() {
 
 // ---------- avatar personalizzato (ritaglio + zoom) ----------
 function getCustomAvatar() { try { return localStorage.getItem('serietracker_avatar') || ''; } catch(e) { return ''; } }
+
+// ---------- copertina profilo ----------
+function getCoverImage() { try { return localStorage.getItem('serietracker_cover') || ''; } catch(e) { return ''; } }
+function openCoverPicker() {
+  const grid = document.getElementById('coverGrid');
+  const imgs = [];
+  const seen = new Set();
+  Object.values(library).forEach(s => { const u = s.backdrop || s.image; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
+  Object.values(filmLibrary).forEach(f => { const u = f.backdrop || f.image; if (u && !seen.has(u)) { seen.add(u); imgs.push(u); } });
+  grid.innerHTML = imgs.length
+    ? imgs.slice(0, 40).map(u => `<img src="${u}" alt="" onclick="setCoverImage('${u.replace(/'/g,"\\'")}')">`).join('')
+    : `<div class="wrap-note" style="grid-column:1/-1">Aggiungi qualcosa alla libreria per scegliere una copertina.</div>`;
+  document.getElementById('coverPickerBg').classList.add('open');
+}
+function closeCoverPicker() { document.getElementById('coverPickerBg').classList.remove('open'); }
+function setCoverImage(url) {
+  try { if (url) localStorage.setItem('serietracker_cover', url); else localStorage.removeItem('serietracker_cover'); } catch(e) {}
+  if (fbDb && currentUser) { fbDb.collection('users').doc(currentUser.uid).set({ coverImage: url || null }, { merge: true }).catch(()=>{}); syncPublicProfile(); }
+  closeCoverPicker();
+  renderProfileAuth();
+  showToast(url ? 'Copertina aggiornata' : 'Copertina rimossa');
+}
 
 let cropState = null;
 
