@@ -1,0 +1,90 @@
+rules_version = '2';
+
+// Regole di sicurezza Firestore complete per itstracker.
+// Copre TUTTE le collection usate dall'app (anche quelle vecchie: comments,
+// notifications, publicProfiles, chats). Sostituisci l'intero contenuto delle
+// regole nella console Firebase (Firestore Database > Regole) con questo file,
+// poi premi "Pubblica".
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Profilo privato + sync libreria: solo il proprietario ----
+    // Contiene library, filmLibrary, tmdbKey, nickname, customPhotoURL,
+    // following, coverImage. Nessun altro utente deve poterlo leggere.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---- Profili pubblici: lettura libera, scrittura solo del proprietario ----
+    // Usati per ricerca persone, menzioni @, feed e scheda profilo pubblica.
+    match /publicProfiles/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---- Commenti agli episodi ----
+    // Lettura libera (i conteggi si vedono anche senza login).
+    // Creazione: solo autenticato e come sé stesso.
+    // Update: consentito solo per il like (unico campo modificabile: likedBy).
+    // Delete: l'autore del commento, oppure l'autore del commento padre
+    //         (per l'eliminazione a cascata delle risposte).
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
+      allow delete: if request.auth != null && (
+                       resource.data.uid == request.auth.uid
+                       || (resource.data.parentId != null
+                           && get(/databases/$(database)/documents/comments/$(resource.data.parentId)).data.uid == request.auth.uid)
+                    );
+    }
+
+    // ---- Reazioni rapide agli episodi ----
+    // Lettura libera (per mostrare i conteggi), scrittura per utenti autenticati
+    // (ognuno aggiunge/rimuove solo il proprio uid tramite arrayUnion/arrayRemove).
+    match /reactions/{epKey} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ---- Notifiche ----
+    // Le legge, segna come lette ed elimina solo il destinatario.
+    // Chiunque autenticato può crearne una (like, risposta, menzione, messaggio).
+    match /notifications/{notifId} {
+      allow read, update, delete: if request.auth != null
+                                  && resource.data.toUid == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.toUid is string;
+    }
+
+    // ---- Feed attività ----
+    // Lettura libera (feed di chi si segue). Creazione solo come sé stesso.
+    match /activity/{actId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if request.auth != null
+                            && resource.data.uid == request.auth.uid;
+    }
+
+    // ---- Chat 1:1 ----
+    // Accesso ai soli due partecipanti, dedotti dall'id del documento
+    // (formato "uidA_uidB", con gli uid ordinati). Gli uid Firebase non
+    // contengono underscore, quindi lo split è affidabile.
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid in chatId.split('_');
+
+      match /messages/{msgId} {
+        allow read: if request.auth != null
+                    && request.auth.uid in chatId.split('_');
+        allow create: if request.auth != null
+                      && request.auth.uid in chatId.split('_')
+                      && request.resource.data.from == request.auth.uid;
+      }
+    }
+  }
+}
