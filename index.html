@@ -325,10 +325,7 @@
   .epcommentbtn svg { flex-shrink: 0; }
   .epcomments { display: none; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); }
   .epcomments.open { display: block; }
-  .commentReplies { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 0 34px; }
-  .commentReplyBtn {
-    padding: 2px 0; background: transparent; color: rgba(var(--overlay-rgb),0.45); font-size: 11.5px; font-weight: 600; font-family: inherit;
-  }
+  .commentReplies { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 0 30px; }
   .commentReplyForm { display: none; gap: 8px; margin-top: 8px; }
   .commentReplyForm.open { display: flex; }
   .commentReplyForm textarea {
@@ -340,14 +337,14 @@
   /* commenti */
   .commentsSection { margin-top: 22px; }
   .commentsTitle { font-size: 15px; font-weight: 700; margin: 0 0 12px; }
-  .commentForm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .commentForm { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 16px; }
   .commentForm textarea {
-    width: 100%; min-height: 64px; resize: vertical; padding: 12px; border-radius: 16px;
+    flex: 1; min-width: 0; min-height: 40px; max-height: 100px; resize: vertical; padding: 10px 12px; border-radius: 16px;
     border: 0.5px solid rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.06);
     color: var(--fg); font-family: inherit; font-size: 13.5px; line-height: 1.4;
   }
   .commentSendBtn {
-    align-self: flex-end; padding: 9px 18px; border-radius: 16px; border: 0;
+    flex-shrink: 0; padding: 10px 16px; border-radius: 16px; border: 0;
     background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 600; font-family: inherit;
   }
   .commentSendBtn:disabled { opacity: 0.5; }
@@ -359,20 +356,20 @@
   .commentsList { display: flex; flex-direction: column; gap: 8px; }
   .commentsEmpty, .commentsLoading { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.4); font-style: italic; padding: 4px 2px; }
   .commentItem { padding: 12px; }
-  .commentTop { display: flex; align-items: center; gap: 10px; }
-  .commentAvatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .commentTop { display: flex; align-items: center; gap: 8px; }
+  .commentAvatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
   .commentMeta { flex: 1; min-width: 0; }
   .commentAuthor { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .commentDate { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 1px; }
   .commentDeleteBtn { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.4); background: transparent; }
   .commentText { font-size: 13px; line-height: 1.45; margin-top: 8px; white-space: pre-wrap; word-break: break-word; }
-  .commentActions { display: flex; justify-content: flex-end; margin-top: 8px; }
-  .commentLikeBtn {
-    display: flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 12px;
-    background: transparent; color: rgba(var(--overlay-rgb),0.45); font-size: 12px; font-weight: 600; font-family: inherit;
+  .commentActions { display: flex; justify-content: flex-end; gap: 4px; margin-top: 8px; }
+  .commentEmojiBtn {
+    padding: 4px 8px; border-radius: 12px; background: transparent;
+    font-size: 15px; line-height: 1; font-family: inherit; opacity: 0.55;
   }
-  .commentLikeBtn svg { flex-shrink: 0; }
-  .commentLikeBtn.liked { color: #ff453a; }
+  .commentEmojiBtn.liked { opacity: 1; }
+  .commentEmojiBtn .n { font-size: 11px; font-weight: 600; margin-left: 3px; vertical-align: middle; }
 
   /* tab bar */
   .tabbar {
@@ -2426,7 +2423,12 @@ function commentMillis(c) {
 
 function renderCommentItem(c, epKey, replies) {
   const mine = currentUser && currentUser.uid === c.uid;
-  const when = (c.createdAt && c.createdAt.toDate) ? formatDateIT(c.createdAt.toDate().toISOString().slice(0, 10)) : '';
+  let when = '';
+  if (c.createdAt && c.createdAt.toDate) {
+    const dt = c.createdAt.toDate();
+    const time = dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    when = `${formatDateIT(dt.toISOString().slice(0, 10))} · ${time}`;
+  }
   const likedBy = c.likedBy || [];
   const liked = likedBy.includes(getLikeId());
   return `<div class="commentItem glass" id="comment-${c.id}">
@@ -2442,11 +2444,8 @@ function renderCommentItem(c, epKey, replies) {
     </div>
     <div class="commentText">${escapeHtml(c.text)}</div>
     <div class="commentActions">
-      <button class="commentReplyBtn" onclick="toggleReplyForm('${c.id}')">Rispondi</button>
-      <button class="commentLikeBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <span>${likedBy.length || ''}</span>
-      </button>
+      <button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')" title="Rispondi">💬</button>
+      <button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')" title="Mi piace">❤️${likedBy.length ? `<span class="n">${likedBy.length}</span>` : ''}</button>
     </div>
     <div class="commentReplyForm" id="replyForm-${c.id}">
       <textarea id="replyInput-${c.id}" placeholder="Scrivi una risposta..." maxlength="500"></textarea>
