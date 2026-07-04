@@ -223,12 +223,13 @@
   }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
-  .hero .closebtn {
+  .hero .closebtn, .sheet > .closebtn {
     position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     display: flex; align-items: center; justify-content: center; color: #fff;
   }
+  .sheet > .closebtn { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
@@ -351,6 +352,74 @@
     background: var(--fg); color: var(--bg); display: flex; align-items: center; justify-content: center;
   }
   .commentReplySendBtn:disabled { opacity: 0.5; }
+
+  /* persone */
+  .personcard {
+    display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer;
+    background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .personcard img, .personcard .noimg-s { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .personcard .pc-info { flex: 1; min-width: 0; }
+  .personcard .pc-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .personcard .pc-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-hero { text-align: center; padding: 30px 20px 18px; }
+  .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
+  .person-hero .ph-name { font-size: 19px; font-weight: 700; }
+  .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-msg-btn {
+    margin: 10px auto 0; display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 16px;
+    background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 700; font-family: inherit;
+  }
+  .person-item {
+    display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
+  }
+  .person-item img, .person-item .noimg-s { width: 36px; height: 50px; border-radius: 7px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
+  .person-item .pi-info { flex: 1; min-width: 0; }
+  .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-item .pi-prog { margin-top: 5px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
+  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
+
+  /* chat */
+  .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; }
+  .chat-head {
+    display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 14px) 16px 12px;
+    border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
+  }
+  .chat-closebtn { position: static; }
+  .chat-head-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; overflow: hidden; }
+  .chat-head-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .chat-head-name { font-size: 14.5px; font-weight: 700; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .chat-bubble { max-width: 75%; padding: 9px 13px; border-radius: 16px; font-size: 13.5px; line-height: 1.4; word-break: break-word; }
+  .chat-bubble.mine { align-self: flex-end; background: #0A84FF; color: #fff; border-bottom-right-radius: 4px; }
+  .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.1); border-bottom-left-radius: 4px; }
+  .chat-inputrow {
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px calc(env(safe-area-inset-bottom) + 12px);
+    border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
+  }
+  .chat-inputrow textarea {
+    flex: 1; min-width: 0; min-height: 38px; max-height: 100px; resize: none; padding: 9px 14px; border-radius: 18px;
+    border: none; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-family: inherit; font-size: 13.5px; line-height: 1.4;
+  }
+  .chat-inputrow .commentReplySendBtn { width: 36px; height: 36px; }
+
+  /* ritaglio avatar */
+  .cropBg {
+    display: none; position: fixed; inset: 0; z-index: 110; background: rgba(0,0,0,0.75);
+    align-items: center; justify-content: center;
+  }
+  .cropBg.open { display: flex; }
+  .cropCard { background: var(--sheet-bg); border-radius: 24px; padding: 20px; width: min(320px, calc(100vw - 40px)); text-align: center; }
+  .cropCard-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+  .cropViewport {
+    width: 240px; height: 240px; border-radius: 50%; overflow: hidden; margin: 0 auto 14px;
+    background: #000; position: relative; touch-action: none; cursor: grab;
+  }
+  .cropViewport img { position: absolute; left: 0; top: 0; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; }
+  #cropZoom { width: 100%; margin-bottom: 16px; }
+  .cropActions { display: flex; gap: 10px; justify-content: center; }
+  .profile-avatar { cursor: pointer; }
 
   /* commenti */
   .commentsSection { margin-top: 22px; }
@@ -775,6 +844,12 @@
             <path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>
           </svg>
         </button>
+        <button class="icon-btn" id="modePeopleBtn" onclick="setSearchMode('people')" title="Persone">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/>
+            <circle cx="17" cy="8" r="2.6"/><path d="M16 14.2c2.9.4 4.9 2.5 5 5.8"/>
+          </svg>
+        </button>
       </div>
     </div>
     <div class="section" style="padding-top:14px">
@@ -916,6 +991,39 @@
 </div>
 
 <div class="sheetbg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="sheetbg" id="personBg"><div class="sheet" id="personSheet"></div></div>
+<div class="sheetbg" id="chatBg">
+  <div class="sheet chat-sheet" id="chatSheetInner">
+    <div class="chat-head">
+      <button class="closebtn chat-closebtn" onclick="closeChat()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="chatAvatar" class="chat-head-avatar"></div>
+      <div class="chat-head-name" id="chatHeadName"></div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-inputrow">
+      <textarea id="chatInput" placeholder="Scrivi un messaggio..." maxlength="1000"></textarea>
+      <button class="commentReplySendBtn" onclick="sendChatMessage()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="cropBg" id="cropBg">
+  <div class="cropCard">
+    <div class="cropCard-title">Sposta e ingrandisci</div>
+    <div class="cropViewport" id="cropViewport">
+      <img id="cropImg" alt="">
+    </div>
+    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1">
+    <div class="cropActions">
+      <button class="filebtn" onclick="closeCrop()">Annulla</button>
+      <button class="emptybtn" style="margin-top:0" onclick="saveCroppedAvatar()">Salva</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="avatarFileInput" accept="image/*" style="display:none">
 <div class="toast" id="toast"></div>
 <div class="ach-toast" id="achToast">
   <div class="ach-toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg></div>
@@ -974,7 +1082,33 @@ function scheduleCloudSync() {
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(() => {
     fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
+    syncPublicProfile();
   }, 800);
+}
+
+// Copia un sottoinsieme non sensibile del profilo in una collection leggibile da tutti,
+// così altri utenti possono trovarti e vedere cosa hai visto senza accedere ai tuoi dati privati.
+function syncPublicProfile() {
+  if (!fbDb || !currentUser) return;
+  const shows = Object.values(library).map(s => ({
+    id: s.id, name: s.name || '', image: s.image || null,
+    watched: Object.keys(s.watched || {}).length, total: s.totalEpisodes || 0,
+    next: s.next ? { season: s.next.season, number: s.next.number } : null
+  }));
+  const films = Object.values(filmLibrary).map(f => ({
+    id: f.id, title: f.title || '', image: f.image || null, watched: !!f.watched
+  }));
+  fbDb.collection('publicProfiles').doc(currentUser.uid).set({
+    uid: currentUser.uid,
+    nickname: getNickname() || '',
+    displayName: currentUser.displayName || '',
+    email: currentUser.email || '',
+    emailLower: (currentUser.email || '').toLowerCase(),
+    nicknameLower: (getNickname() || '').toLowerCase(),
+    photoURL: getCustomAvatar() || currentUser.photoURL || null,
+    shows, films,
+    updatedAt: Date.now()
+  }).catch(() => {});
 }
 
 async function signInGoogle() {
@@ -998,9 +1132,12 @@ function renderProfileAuth() {
   if (!c) return;
   if (currentUser) {
     const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
+    const avatarUrl = getCustomAvatar() || currentUser.photoURL;
     c.innerHTML = `
       <div class="profile-top">
-        ${currentUser.photoURL ? `<img class="profile-avatar" src="${currentUser.photoURL}" alt="">` : `<div class="profile-avatar"></div>`}
+        <div onclick="document.getElementById('avatarFileInput').click()">
+          ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="">` : `<div class="profile-avatar"></div>`}
+        </div>
         <div style="min-width:0">
           <div class="profile-name">Benvenuto, ${escapeHtml(firstName)}</div>
           <div class="profile-email" style="margin-bottom:0">${escapeHtml(currentUser.email||'')}</div>
@@ -1058,9 +1195,15 @@ if (fbAuth) {
             const nInput = document.getElementById('nicknameInput');
             if (nInput) nInput.value = data.nickname;
           }
+          if (data.customPhotoURL && data.customPhotoURL !== getCustomAvatar()) {
+            try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
+          }
           applyingRemoteData = false;
+          renderProfileAuth();
+          syncPublicProfile();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
+          syncPublicProfile();
         }
       }, () => showToast('Sync non riuscita'));
     }
@@ -1790,7 +1933,7 @@ function allNotifications() {
   return getLocalNotifications().concat(remoteNotifications).sort((a, b) => notifMillis(b) - notifMillis(a));
 }
 
-const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺' };
+const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️' };
 
 function renderNotifPanel() {
   const list = document.getElementById('notifList');
@@ -2078,9 +2221,17 @@ function setSearchMode(mode) {
   searchMode = mode;
   document.getElementById('modeTvBtn').classList.toggle('active-view', mode === 'tv');
   document.getElementById('modeFilmBtn').classList.toggle('active-view', mode === 'film');
-  document.getElementById('searchInput').placeholder = mode === 'tv' ? 'Cerca una serie TV' : 'Cerca un film';
+  document.getElementById('modePeopleBtn').classList.toggle('active-view', mode === 'people');
+  document.getElementById('searchInput').placeholder = mode === 'tv' ? 'Cerca una serie TV' : mode === 'film' ? 'Cerca un film' : 'Cerca per nickname o email';
   document.getElementById('searchInput').value = '';
-  loadPopular(mode);
+  if (mode === 'people') {
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('searchEmpty').style.display = 'block';
+    document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.';
+  } else {
+    document.getElementById('searchEmpty').querySelector('div').innerHTML = 'Cerca tra migliaia di titoli,<br>aggiornati in automatico.';
+    loadPopular(mode);
+  }
 }
 
 function searchSkeletonGrid(n) {
@@ -2114,11 +2265,167 @@ let searchTimer = null;
 document.getElementById('searchInput').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
+  if (searchMode === 'people') {
+    if (!q) { document.getElementById('searchResults').innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
+    document.getElementById('searchEmpty').style.display = 'none';
+    document.getElementById('searchResults').innerHTML = `<div class="spinner"></div>`;
+    searchTimer = setTimeout(() => doSearchPeople(q), 350);
+    return;
+  }
   if (!q) { loadPopular(searchMode); return; }
   document.getElementById('searchEmpty').style.display = 'none';
   document.getElementById('searchResults').innerHTML = searchSkeletonGrid();
   searchTimer = setTimeout(() => searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q), 350);
 });
+
+async function doSearchPeople(q) {
+  const c = document.getElementById('searchResults');
+  if (!fbDb) { c.innerHTML = '<div class="empty">Ricerca non disponibile.</div>'; return; }
+  const qLower = q.toLowerCase();
+  try {
+    const [byNick, byEmail] = await Promise.all([
+      fbDb.collection('publicProfiles').where('nicknameLower', '>=', qLower).where('nicknameLower', '<', qLower + '').get(),
+      fbDb.collection('publicProfiles').where('emailLower', '==', qLower).get()
+    ]);
+    const map = {};
+    byNick.forEach(d => { if (d.data().nicknameLower) map[d.id] = d.data(); });
+    byEmail.forEach(d => { map[d.id] = d.data(); });
+    const results = Object.values(map).filter(p => !currentUser || p.uid !== currentUser.uid);
+    renderPeopleResults(results);
+  } catch(e) { c.innerHTML = '<div class="empty">Errore nella ricerca.</div>'; }
+}
+
+function renderPeopleResults(results) {
+  const c = document.getElementById('searchResults');
+  if (!results.length) { c.innerHTML = '<div class="empty">Nessuna persona trovata.</div>'; return; }
+  c.innerHTML = results.map(p => `<div class="personcard" onclick="openPerson('${p.uid}')">
+    ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
+    <div class="pc-info">
+      <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
+    </div>
+  </div>`).join('');
+}
+
+// ---------- scheda persona ----------
+let currentPersonProfile = null;
+
+async function openPerson(uid) {
+  if (!fbDb) return;
+  const bg = document.getElementById('personBg');
+  const sheet = document.getElementById('personSheet');
+  sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="spinner"></div></div>`;
+  bg.classList.add('open');
+  try {
+    const doc = await fbDb.collection('publicProfiles').doc(uid).get();
+    if (!doc.exists) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Profilo non trovato.</div></div>`; return; }
+    currentPersonProfile = doc.data();
+    renderPersonSheet(currentPersonProfile);
+  } catch(e) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Errore nel caricamento.</div></div>`; }
+}
+
+function renderPersonSheet(p) {
+  const sheet = document.getElementById('personSheet');
+  const shows = (p.shows||[]).slice().sort((a,b) => (b.watched||0) - (a.watched||0));
+  const films = (p.films||[]).slice();
+  const canMessage = currentUser && currentUser.uid !== p.uid;
+  sheet.innerHTML = `
+    <button class="closebtn" style="position:absolute" onclick="closePerson()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="person-hero">
+      ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
+      <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
+      ${canMessage ? `<button class="person-msg-btn" onclick="openChat('${p.uid}','${escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        Messaggio
+      </button>` : ''}
+    </div>
+    <div class="section">
+      ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
+        const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
+        return `<div class="person-item">
+          ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg-s"></div>`}
+          <div class="pi-info">
+            <div class="pi-name">${escapeHtml(s.name)}</div>
+            <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
+            ${s.total ? `<div class="pi-prog"><i style="width:${pct}%"></i></div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}` : ''}
+      ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => `<div class="person-item">
+        ${f.image ? `<img src="${f.image}" alt="">` : `<div class="noimg-s"></div>`}
+        <div class="pi-info">
+          <div class="pi-name">${escapeHtml(f.title)}</div>
+          <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
+        </div>
+      </div>`).join('')}` : ''}
+      ${!shows.length && !films.length ? `<div class="wrap-note" style="text-align:center;padding:20px">Libreria vuota.</div>` : ''}
+    </div>
+  `;
+}
+
+function closePerson() {
+  document.getElementById('personBg').classList.remove('open');
+  currentPersonProfile = null;
+}
+document.getElementById('personBg').addEventListener('click', e => { if (e.target.id === 'personBg') closePerson(); });
+
+// ---------- chat (base) ----------
+let currentChatUid = null;
+let unsubscribeChat = null;
+
+function chatIdFor(uid) { return [currentUser.uid, uid].sort().join('_'); }
+
+function openChat(uid, name, photoURL) {
+  if (!currentUser) { showToast('Accedi per scrivere un messaggio'); return; }
+  currentChatUid = uid;
+  document.getElementById('chatHeadName').textContent = name;
+  document.getElementById('chatAvatar').innerHTML = photoURL ? `<img src="${photoURL}" alt="">` : '';
+  document.getElementById('chatMessages').innerHTML = `<div class="spinner"></div>`;
+  document.getElementById('chatBg').classList.add('open');
+  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
+  const chatId = chatIdFor(uid);
+  unsubscribeChat = fbDb.collection('chats').doc(chatId).collection('messages')
+    .onSnapshot(snap => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis(a) - chatMillis(b));
+      renderChatMessages(msgs);
+    }, () => { document.getElementById('chatMessages').innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; });
+}
+
+function chatMillis(m) { return (m.createdAt && m.createdAt.toMillis) ? m.createdAt.toMillis() : (m.createdAt || 0); }
+
+function renderChatMessages(msgs) {
+  const el = document.getElementById('chatMessages');
+  el.innerHTML = msgs.length
+    ? msgs.map(m => `<div class="chat-bubble ${m.from === currentUser.uid ? 'mine' : 'theirs'}">${escapeHtml(m.text)}</div>`).join('')
+    : '<div class="commentsEmpty">Nessun messaggio, scrivi il primo!</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChatMessage() {
+  if (!currentUser || !currentChatUid) return;
+  const input = document.getElementById('chatInput');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  if (text.length > 1000) { showToast('Messaggio troppo lungo'); return; }
+  const chatId = chatIdFor(currentChatUid);
+  input.value = '';
+  try {
+    await fbDb.collection('chats').doc(chatId).collection('messages').add({
+      from: currentUser.uid, to: currentChatUid, text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    pushRemoteNotification(currentChatUid, { type: 'message', text: `${commentAuthorName()} ti ha scritto un messaggio` });
+  } catch(e) { showToast('Errore nell\'invio'); }
+}
+
+function closeChat() {
+  document.getElementById('chatBg').classList.remove('open');
+  if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
+  currentChatUid = null;
+}
+document.getElementById('chatBg').addEventListener('click', e => { if (e.target.id === 'chatBg') closeChat(); });
 
 async function doSearchTv(q) {
   const c = document.getElementById('searchResults');
@@ -2989,8 +3296,110 @@ function saveTmdbKey() {
 function saveNickname() {
   const v = document.getElementById('nicknameInput').value.trim();
   try { localStorage.setItem('serietracker_nickname', v); } catch(e) {}
-  if (fbDb && currentUser) fbDb.collection('users').doc(currentUser.uid).set({ nickname: v }, { merge: true }).catch(()=>{});
+  if (fbDb && currentUser) { fbDb.collection('users').doc(currentUser.uid).set({ nickname: v }, { merge: true }).catch(()=>{}); syncPublicProfile(); }
   showToast(v ? 'Nickname salvato' : 'Nickname rimosso');
+}
+
+// ---------- avatar personalizzato (ritaglio + zoom) ----------
+function getCustomAvatar() { try { return localStorage.getItem('serietracker_avatar') || ''; } catch(e) { return ''; } }
+
+let cropState = null;
+
+document.getElementById('avatarFileInput').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => openCrop(reader.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function openCrop(dataUrl) {
+  const img = document.getElementById('cropImg');
+  img.src = dataUrl;
+  img.onload = () => {
+    const vp = 240;
+    const scaleToFill = Math.max(vp / img.naturalWidth, vp / img.naturalHeight);
+    cropState = {
+      naturalW: img.naturalWidth, naturalH: img.naturalHeight,
+      baseScale: scaleToFill, zoom: 1,
+      x: (vp - img.naturalWidth * scaleToFill) / 2,
+      y: (vp - img.naturalHeight * scaleToFill) / 2,
+      dragging: false, startX: 0, startY: 0, origX: 0, origY: 0
+    };
+    document.getElementById('cropZoom').value = 1;
+    applyCropTransform();
+  };
+  document.getElementById('cropBg').classList.add('open');
+}
+
+function applyCropTransform() {
+  const img = document.getElementById('cropImg');
+  const s = cropState.baseScale * cropState.zoom;
+  img.style.width = (cropState.naturalW * s) + 'px';
+  img.style.height = (cropState.naturalH * s) + 'px';
+  img.style.transform = `translate(${cropState.x}px, ${cropState.y}px)`;
+}
+
+function clampCrop() {
+  const vp = 240;
+  const s = cropState.baseScale * cropState.zoom;
+  const w = cropState.naturalW * s, h = cropState.naturalH * s;
+  cropState.x = Math.min(0, Math.max(vp - w, cropState.x));
+  cropState.y = Math.min(0, Math.max(vp - h, cropState.y));
+}
+
+(function() {
+  const vpEl = document.getElementById('cropViewport');
+  const zoomEl = document.getElementById('cropZoom');
+  const onDown = (x, y) => { if (!cropState) return; cropState.dragging = true; cropState.startX = x; cropState.startY = y; cropState.origX = cropState.x; cropState.origY = cropState.y; };
+  const onMove = (x, y) => {
+    if (!cropState || !cropState.dragging) return;
+    cropState.x = cropState.origX + (x - cropState.startX);
+    cropState.y = cropState.origY + (y - cropState.startY);
+    clampCrop();
+    applyCropTransform();
+  };
+  const onUp = () => { if (cropState) cropState.dragging = false; };
+  vpEl.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', onUp);
+  vpEl.addEventListener('touchstart', e => { const t = e.touches[0]; onDown(t.clientX, t.clientY); }, { passive: true });
+  vpEl.addEventListener('touchmove', e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
+  vpEl.addEventListener('touchend', onUp);
+  zoomEl.addEventListener('input', () => {
+    if (!cropState) return;
+    cropState.zoom = Number(zoomEl.value);
+    clampCrop();
+    applyCropTransform();
+  });
+})();
+
+function closeCrop() {
+  document.getElementById('cropBg').classList.remove('open');
+  cropState = null;
+}
+
+async function saveCroppedAvatar() {
+  if (!cropState) return;
+  const img = document.getElementById('cropImg');
+  const out = 400;
+  const canvas = document.createElement('canvas');
+  canvas.width = out; canvas.height = out;
+  const ctx = canvas.getContext('2d');
+  const s = cropState.baseScale * cropState.zoom;
+  const vp = 240;
+  const factor = out / vp;
+  ctx.drawImage(img, cropState.x * factor, cropState.y * factor, cropState.naturalW * s * factor, cropState.naturalH * s * factor);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  try { localStorage.setItem('serietracker_avatar', dataUrl); } catch(e) { showToast('Immagine troppo grande'); return; }
+  if (fbDb && currentUser) {
+    try { await fbDb.collection('users').doc(currentUser.uid).set({ customPhotoURL: dataUrl }, { merge: true }); syncPublicProfile(); }
+    catch(e) { showToast('Salvata solo su questo dispositivo'); }
+  }
+  closeCrop();
+  renderProfileAuth();
+  showToast('Foto profilo aggiornata');
 }
 
 // ---------- installa su home ----------
