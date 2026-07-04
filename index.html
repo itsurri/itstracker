@@ -147,6 +147,7 @@
     background: rgba(10,132,255,0.9); border: none; color: #fff;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
+  .addbtn.in-lib, .searchcard .scadd.in-lib { background: rgba(255,69,58,0.9); }
 
   /* search results grid */
   .searchcard {
@@ -225,13 +226,15 @@
   }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
-  .sheet > .closebtn {
-    position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 5;
+  .sheetbg > .closebtn {
+    position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 101;
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: rgba(0,0,0,0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     display: flex; align-items: center; justify-content: center; color: #fff;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
-  .sheet > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
+  .sheetbg.open > .closebtn { opacity: 1; pointer-events: auto; }
+  .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
@@ -1017,8 +1020,18 @@
   </button>
 </div>
 
-<div class="sheetbg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
-<div class="sheetbg" id="personBg"><div class="sheet" id="personSheet"></div></div>
+<div class="sheetbg" id="sheetBg">
+  <div class="sheet" id="sheet"></div>
+  <button class="closebtn" onclick="closeSheet()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+<div class="sheetbg" id="personBg">
+  <div class="sheet" id="personSheet"></div>
+  <button class="closebtn plain" onclick="closePerson()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
 <div class="sheetbg" id="chatBg">
   <div class="sheet chat-sheet" id="chatSheetInner">
     <div class="chat-head">
@@ -2387,9 +2400,6 @@ function renderPersonSheet(p) {
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
   sheet.innerHTML = `
-    <button class="closebtn plain" onclick="closePerson()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
     <div class="person-hero">
       ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
       <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
@@ -2602,8 +2612,8 @@ async function renderTvResults(results) {
           <div class="li-name">${escapeHtml(s.name)}</div>
           <div class="li-meta">${meta}</div>
         </div>
-        <button class="addbtn" onclick="event.stopPropagation();quickAdd(${s.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
     }).join('')}</div>`;
@@ -2622,8 +2632,8 @@ async function renderTvResults(results) {
     return `<div class="searchcard" onclick="openShow(${s.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <button class="scadd" onclick="event.stopPropagation();quickAdd(${s.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+      <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
       <div class="scinfo">
         <div class="sn">${escapeHtml(s.name)}</div>
@@ -2663,8 +2673,8 @@ function renderFilmResults(results) {
           <div class="li-name">${escapeHtml(f.title)}</div>
           <div class="li-meta">${rating?`★ ${rating} · `:''}${f.release_date?f.release_date.slice(0,4):'—'}</div>
         </div>
-        <button class="addbtn" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
     }).join('')}</div>`;
@@ -2679,8 +2689,8 @@ function renderFilmResults(results) {
     return `<div class="searchcard" onclick="openFilm(${f.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <button class="scadd" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+      <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
       <div class="scinfo">
         <div class="sn">${escapeHtml(f.title)}</div>
@@ -2692,7 +2702,11 @@ function renderFilmResults(results) {
 
 // ---------- quick add ----------
 async function quickAdd(id) {
-  if (library[id]) { showToast('Già in libreria'); return; }
+  if (library[id]) {
+    delete library[id]; saveLibrary(); renderLibrary(); showToast('Rimossa dalla libreria');
+    if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
+    return;
+  }
   if (!hasTmdbKey()) return;
   try {
     const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
@@ -2704,7 +2718,11 @@ async function quickAdd(id) {
 }
 
 async function quickAddFilm(id) {
-  if (filmLibrary[id]) { showToast('Già in libreria'); return; }
+  if (filmLibrary[id]) {
+    delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); showToast('Rimosso dalla libreria');
+    if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
+    return;
+  }
   if (!hasTmdbKey()) return;
   try {
     const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
@@ -2815,9 +2833,6 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
   sheet.innerHTML = `
-    <button class="closebtn" onclick="closeSheet()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
     <div class="hero">
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
@@ -3232,9 +3247,6 @@ async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
   const rawDesc = f.description||'';
   sheet.innerHTML = `
-    <button class="closebtn" onclick="closeSheet()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
