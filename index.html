@@ -249,6 +249,14 @@
     min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
     background: #ff453a; color: #fff; font-size: 12px; font-weight: 800; margin-left: 8px;
   }
+  .wrap-card.ach-details { padding: 0; }
+  .ach-details > summary { list-style: none; cursor: pointer; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .ach-details > summary::-webkit-details-marker { display: none; }
+  .ach-summary-title { font-size: 14.5px; font-weight: 700; }
+  .ach-summary-count { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); margin-left: 8px; }
+  .ach-chevron { transition: transform 0.25s ease; color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0; }
+  .ach-details[open] .ach-chevron { transform: rotate(180deg); }
+  .ach-details .ach-grid-wrap { padding: 0 16px 16px; }
   .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
   .ach { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: 0.4; }
   .ach.unlocked { opacity: 1; }
@@ -310,6 +318,24 @@
   }
   .epdesc.open { display: block; }
   .epdesc .loading { color: rgba(var(--overlay-rgb),0.35); font-style: italic; }
+  .epcommentbtn {
+    display: flex; align-items: center; gap: 4px; margin-top: 10px; padding: 5px 10px 5px 4px;
+    border-radius: 12px; background: transparent; color: rgba(var(--overlay-rgb),0.45); font-size: 11.5px; font-weight: 600; font-family: inherit;
+  }
+  .epcommentbtn svg { flex-shrink: 0; }
+  .epcomments { display: none; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); }
+  .epcomments.open { display: block; }
+  .commentReplies { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 0 34px; }
+  .commentReplyBtn {
+    padding: 2px 0; background: transparent; color: rgba(var(--overlay-rgb),0.45); font-size: 11.5px; font-weight: 600; font-family: inherit;
+  }
+  .commentReplyForm { display: none; gap: 8px; margin-top: 8px; }
+  .commentReplyForm.open { display: flex; }
+  .commentReplyForm textarea {
+    flex: 1; min-height: 36px; resize: vertical; padding: 8px 10px; border-radius: 12px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.06);
+    color: var(--fg); font-family: inherit; font-size: 12.5px; line-height: 1.4;
+  }
 
   /* commenti */
   .commentsSection { margin-top: 22px; }
@@ -508,10 +534,14 @@
   .up-info { flex: 1; min-width: 0; }
   .up-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .up-ep { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
-  .up-date { flex-shrink: 0; text-align: right; min-width: 64px; }
-  .up-date .ud-d { font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
-  .up-date .ud-m { font-size: 12px; font-weight: 400; color: rgba(var(--overlay-rgb),0.65); }
-  .up-date .ud-days { font-size: 11px; color: var(--accent); font-weight: 700; margin-top: 3px; letter-spacing: 0.02em; }
+  .up-date { flex-shrink: 0; text-align: center; min-width: 58px; background: rgba(var(--overlay-rgb),0.06); border-radius: 14px; padding: 7px 8px; }
+  .up-date .ud-d { font-size: 15px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
+  .up-date .ud-m { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; }
+  .up-date .ud-days { display: inline-block; font-size: 10px; color: #0A84FF; background: rgba(10,132,255,0.14); border-radius: 20px; padding: 2px 8px; font-weight: 700; margin-top: 6px; letter-spacing: 0.02em; }
+  .up-item.up-soon .up-date .ud-days { color: #FF9F0A; background: rgba(255,159,10,0.16); }
+  .up-grid-card .badge.up-badge { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .up-grid-card .badge .ud-days-mini { color: #0A84FF; font-weight: 800; }
+  .up-grid-card.up-soon .badge .ud-days-mini { color: #FF9F0A; }
 
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
@@ -664,6 +694,19 @@
   <!-- IMPOSTAZIONI -->
   <div class="view" id="view-settings">
     <div class="section">
+      <h2 class="settings-h2">Profilo</h2>
+      <div class="glass settings-group">
+        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
+          <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
+          <div style="display:flex; gap:8px">
+            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
+              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
+            <button class="filebtn" onclick="saveNickname()">Salva</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:16px">
       <h2 class="settings-h2">Aspetto</h2>
       <div class="glass settings-group">
         <div class="settingsrow">
@@ -890,6 +933,11 @@ if (fbAuth) {
             try { localStorage.setItem('serietracker_tmdb_key', data.tmdbKey); } catch(e) {}
             const input = document.getElementById('tmdbKeyInput');
             if (input) input.value = data.tmdbKey;
+          }
+          if (data.nickname && data.nickname !== getNickname()) {
+            try { localStorage.setItem('serietracker_nickname', data.nickname); } catch(e) {}
+            const nInput = document.getElementById('nicknameInput');
+            if (nInput) nInput.value = data.nickname;
           }
           applyingRemoteData = false;
         } else {
@@ -1278,14 +1326,22 @@ function getAchievements(w) {
 }
 
 function renderAchievements(w) {
-  const items = getAchievements(w).map(a => `
+  const defs = getAchievements(w);
+  const unlockedCount = defs.filter(a => a.unlocked).length;
+  const items = defs.map(a => `
     <div class="ach ${a.unlocked?'unlocked':''}">
       <div class="ach-icon">${a.unlocked
         ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>`}</div>
       <div class="ach-label">${a.label}</div>
     </div>`).join('');
-  return `<div class="ach-grid">${items}</div>`;
+  return `<details class="wrap-card glass ach-details">
+    <summary>
+      <span><span class="ach-summary-title">Achievement</span><span class="ach-summary-count">${unlockedCount}/${defs.length}</span></span>
+      <svg class="ach-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+    <div class="ach-grid-wrap"><div class="ach-grid">${items}</div></div>
+  </details>`;
 }
 
 // ---------- tracciamento sblocco achievement ----------
@@ -1418,7 +1474,7 @@ function renderProfile() {
     return;
   }
 
-  let html = `<div class="wrap-sec-title">Achievement</div><div class="wrap-card glass">${renderAchievements(w)}</div>`;
+  let html = renderAchievements(w);
 
   if (w.genres.length) {
     html += `<div class="wrap-sec-title">Generi preferiti</div><div class="wrap-card glass">${renderDonut(w.genres)}</div>`;
@@ -1569,16 +1625,24 @@ async function renderUpcoming(container) {
     const daysLeft = Math.round((d - today) / 86400000);
     const soon = daysLeft <= 7;
     const daysLabel = daysLeft <= 0 ? 'Oggi' : ('-' + daysLeft);
+    if (viewMode === 'grid') {
+      return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
+        ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg">${escapeHtml(u.name)}</div>`}
+        <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}</span><span class="ud-days-mini">${daysLabel}</span></div>
+      </div>`;
+    }
     return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
         <div class="up-ep">S${u.season}E${u.number}${u.epname ? ' · ' + escapeHtml(u.epname) : ''}</div>
       </div>
-      <div class="up-date"><div class="ud-d">${d.getDate()} · ${MONTHS[d.getMonth()]}</div><div class="ud-days">${daysLabel}</div></div>
+      <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()]}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
   }).join('');
-  container.innerHTML = `<div class="section" style="padding-top:14px">${rows}</div>`;
+  container.innerHTML = viewMode === 'grid'
+    ? `<div class="section" style="padding-top:14px"><div class="grid">${rows}</div></div>`
+    : `<div class="section" style="padding-top:14px">${rows}</div>`;
 }
 
 const RING_C_SM = 2 * Math.PI * 12; // r=12
@@ -2117,25 +2181,9 @@ async function renderSheet(show, episodes, seasons, inLib) {
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
       ${inLib?`<button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>`:''}
-      <div class="commentsSection">
-        <h3 class="commentsTitle">Commenti</h3>
-        ${currentUser ? `
-          <div class="commentForm">
-            <textarea id="commentInput" placeholder="Scrivi un commento..." maxlength="500"></textarea>
-            <button class="commentSendBtn" onclick="postComment(${show.id})">Pubblica</button>
-          </div>
-        ` : `
-          <div class="commentLoginPrompt">
-            <span>Accedi per lasciare un commento</span>
-            <button class="filebtn" onclick="signInGoogle()">Accedi con Google</button>
-          </div>
-        `}
-        <div id="commentsList" class="commentsList"><div class="commentsLoading">Caricamento commenti…</div></div>
-      </div>
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  renderComments(show.id);
   if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
@@ -2168,6 +2216,24 @@ function renderEpisodeList(showId, episodes, season) {
         </button>
       </div>
       <div class="epdesc" id="epdesc-${key}">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
+      <button class="epcommentbtn" onclick="event.stopPropagation();toggleEpisodeComments(${showId},${ep.season},${ep.number})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        Commenti
+      </button>
+      <div class="epcomments" id="epc-${epCommentKey(showId,ep.season,ep.number)}">
+        ${currentUser ? `
+          <div class="commentForm">
+            <textarea id="epcInput-${epCommentKey(showId,ep.season,ep.number)}" placeholder="Scrivi un commento..." maxlength="500"></textarea>
+            <button class="commentSendBtn" onclick="postComment('${epCommentKey(showId,ep.season,ep.number)}')">Pubblica</button>
+          </div>
+        ` : `
+          <div class="commentLoginPrompt">
+            <span>Accedi per lasciare un commento</span>
+            <button class="filebtn" onclick="signInGoogle()">Accedi con Google</button>
+          </div>
+        `}
+        <div id="epcList-${epCommentKey(showId,ep.season,ep.number)}" class="commentsList"></div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -2302,8 +2368,9 @@ async function removeShow(id) {
   delete library[id]; saveLibrary(); renderLibrary(); closeSheet(); showToast('Serie rimossa');
 }
 
-// ---------- commenti serie ----------
+// ---------- commenti episodio ----------
 let commentsCache = {};
+let openEpCommentsKey = null;
 
 function getAnonId() {
   try {
@@ -2317,18 +2384,38 @@ function getAnonId() {
 }
 function getLikeId() { return currentUser ? currentUser.uid : getAnonId(); }
 
-function renderComments(showId) {
-  const list = document.getElementById('commentsList');
-  if (!list) return;
+function getNickname() { try { return localStorage.getItem('serietracker_nickname') || ''; } catch(e) { return ''; } }
+function commentAuthorName() { return getNickname() || (currentUser && (currentUser.displayName || currentUser.email)) || 'Utente'; }
+
+function epCommentKey(showId, season, number) { return `${showId}_${season}x${number}`; }
+
+function toggleEpisodeComments(showId, season, number) {
+  const key = epCommentKey(showId, season, number);
+  const el = document.getElementById(`epc-${key}`);
+  if (!el) return;
+  const wasOpen = el.classList.contains('open');
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
+  document.querySelectorAll('.epcomments.open').forEach(x => x.classList.remove('open'));
+  if (wasOpen) { openEpCommentsKey = null; return; }
+  el.classList.add('open');
+  openEpCommentsKey = key;
+  renderComments(showId, season, number);
+}
+
+function renderComments(showId, season, number) {
+  const key = epCommentKey(showId, season, number);
+  const list = document.getElementById(`epcList-${key}`);
+  if (!list) return;
   if (!fbDb) { list.innerHTML = '<div class="commentsEmpty">Commenti non disponibili.</div>'; return; }
-  unsubscribeComments = fbDb.collection('comments').where('showId', '==', showId)
+  list.innerHTML = '<div class="commentsLoading">Caricamento commenti…</div>';
+  unsubscribeComments = fbDb.collection('comments').where('epKey', '==', key)
     .onSnapshot(snap => {
       commentsCache = {};
-      const comments = snap.docs.map(d => { const c = { id: d.id, ...d.data() }; commentsCache[d.id] = c; return c; })
-        .sort((a, b) => commentMillis(b) - commentMillis(a));
-      list.innerHTML = comments.length
-        ? comments.map(renderCommentItem).join('')
+      const all = snap.docs.map(d => { const c = { id: d.id, ...d.data() }; commentsCache[d.id] = c; return c; });
+      const top = all.filter(c => !c.parentId).sort((a, b) => commentMillis(b) - commentMillis(a));
+      const replies = all.filter(c => c.parentId);
+      list.innerHTML = top.length
+        ? top.map(c => renderCommentItem(c, key, replies.filter(r => r.parentId === c.id).sort((a,b) => commentMillis(a) - commentMillis(b)))).join('')
         : '<div class="commentsEmpty">Nessun commento, sii il primo!</div>';
     }, () => { list.innerHTML = '<div class="commentsEmpty">Errore nel caricamento dei commenti.</div>'; });
 }
@@ -2337,7 +2424,7 @@ function commentMillis(c) {
   return (c.createdAt && c.createdAt.toMillis) ? c.createdAt.toMillis() : (c.createdAt || 0);
 }
 
-function renderCommentItem(c) {
+function renderCommentItem(c, epKey, replies) {
   const mine = currentUser && currentUser.uid === c.uid;
   const when = (c.createdAt && c.createdAt.toDate) ? formatDateIT(c.createdAt.toDate().toISOString().slice(0, 10)) : '';
   const likedBy = c.likedBy || [];
@@ -2355,12 +2442,24 @@ function renderCommentItem(c) {
     </div>
     <div class="commentText">${escapeHtml(c.text)}</div>
     <div class="commentActions">
+      <button class="commentReplyBtn" onclick="toggleReplyForm('${c.id}')">Rispondi</button>
       <button class="commentLikeBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
         <span>${likedBy.length || ''}</span>
       </button>
     </div>
+    <div class="commentReplyForm" id="replyForm-${c.id}">
+      <textarea id="replyInput-${c.id}" placeholder="Scrivi una risposta..." maxlength="500"></textarea>
+      <button class="commentSendBtn" onclick="postComment('${epKey}', '${c.id}')">Invia</button>
+    </div>
+    ${replies.length ? `<div class="commentReplies">${replies.map(r => renderCommentItem(r, epKey, [])).join('')}</div>` : ''}
   </div>`;
+}
+
+function toggleReplyForm(commentId) {
+  if (!currentUser) { showToast('Accedi per rispondere'); return; }
+  const form = document.getElementById(`replyForm-${commentId}`);
+  if (form) form.classList.toggle('open');
 }
 
 function toggleLikeComment(commentId) {
@@ -2373,26 +2472,27 @@ function toggleLikeComment(commentId) {
   fbDb.collection('comments').doc(commentId).update({ likedBy: op }).catch(() => { showToast('Errore'); });
 }
 
-async function postComment(showId) {
+async function postComment(epKey, parentId) {
   if (!currentUser || !fbDb) { showToast('Accedi per commentare'); return; }
-  const input = document.getElementById('commentInput');
+  const input = document.getElementById(parentId ? `replyInput-${parentId}` : `epcInput-${epKey}`);
   const text = (input.value || '').trim();
   if (!text) return;
   if (text.length > 500) { showToast('Commento troppo lungo'); return; }
-  const btn = document.querySelector('.commentSendBtn');
-  if (btn) btn.disabled = true;
+  input.disabled = true;
   try {
     await fbDb.collection('comments').add({
-      showId,
+      epKey,
+      parentId: parentId || null,
       uid: currentUser.uid,
-      displayName: currentUser.displayName || currentUser.email || 'Utente',
+      displayName: commentAuthorName(),
       photoURL: currentUser.photoURL || null,
       text,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
+    if (parentId) { const f = document.getElementById(`replyForm-${parentId}`); if (f) f.classList.remove('open'); }
   } catch (e) { showToast('Errore nell\'invio del commento'); }
-  if (btn) btn.disabled = false;
+  input.disabled = false;
 }
 
 async function deleteComment(commentId) {
@@ -2612,6 +2712,14 @@ function saveTmdbKey() {
   showToast(v ? 'API key salvata' : 'API key rimossa');
 }
 
+// ---------- nickname ----------
+function saveNickname() {
+  const v = document.getElementById('nicknameInput').value.trim();
+  try { localStorage.setItem('serietracker_nickname', v); } catch(e) {}
+  if (fbDb && currentUser) fbDb.collection('users').doc(currentUser.uid).set({ nickname: v }, { merge: true }).catch(()=>{});
+  showToast(v ? 'Nickname salvato' : 'Nickname rimosso');
+}
+
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
@@ -2625,6 +2733,7 @@ updateLogo();
 })();
 updateThemeButtons();
 document.getElementById('tmdbKeyInput').value = getTmdbKey();
+document.getElementById('nicknameInput').value = getNickname();
 document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='grid');
 document.getElementById('btnList').classList.toggle('active-view', viewMode==='list');
 renderLibrary();
