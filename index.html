@@ -185,9 +185,13 @@
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
   }
-  .card-ring { position: absolute; top: 6px; right: 6px; }
   .card .badge-green { background: rgba(48,209,88,0.85); }
   .card .badge-blue  { background: rgba(10,132,255,0.85); }
+  .card-prog {
+    position: absolute; left: 5px; right: 5px; bottom: 32px; height: 4px; border-radius: 2px;
+    background: rgba(0,0,0,0.6); overflow: hidden;
+  }
+  .card-prog i { display: block; height: 100%; background: #0A84FF; }
 
   /* LIST */
   .list-item {
@@ -592,13 +596,11 @@
   .dl-row .dl-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
   .dl-row .dl-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
   .dl-row .dl-val { color: rgba(var(--overlay-rgb),0.5); font-variant-numeric: tabular-nums; }
-  .bars { display: flex; align-items: flex-end; gap: 7px; height: 96px; padding-top: 6px; }
-  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; cursor: pointer; }
+  .bars { display: flex; align-items: flex-end; gap: 7px; height: 112px; padding-top: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
   .bar-col .bar-fill { width: 100%; max-width: 26px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg,#0A84FF,#5E5CE6); min-height: 3px; transition: height 0.5s ease; }
   .bar-col .bar-lbl { font-size: 10px; color: rgba(var(--overlay-rgb),0.45); font-variant-numeric: tabular-nums; }
-  .month-detail { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-  .month-detail.open { max-height: 220px; overflow-y: auto; margin-top: 14px; padding-top: 12px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); }
-  .month-item { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.7); padding: 5px 0; }
+  .bar-col .bar-detail { font-size: 8.5px; color: rgba(var(--overlay-rgb),0.4); text-align: center; line-height: 1.2; }
   .gs-list { display: flex; flex-direction: column; gap: 10px; }
   .gs-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
   .gs-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
@@ -712,7 +714,7 @@
       </button>
     </div>
   </div>
-  <a class="donateBar" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">Ti piace l'app? Offrimi un caffè ☕️</a>
+  <a class="donateBar" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">Ti piace l'app? Puoi offrirmi un caffé! Grazie del supporto ☕️😊</a>
   </div>
 
   <div class="notifOverlay" id="notifOverlay" onclick="closeNotifPanel()"></div>
@@ -1324,8 +1326,8 @@ function computeWrapped() {
   shows.forEach(x => { const w = Object.keys(x.watched||{}).length; if (w && (!top || w > top.w)) top = { name: x.name, image: x.image, w, total: x.totalEpisodes||0 }; });
 
   const events = [];
-  shows.forEach(x => Object.entries(x.watched||{}).forEach(([key,v]) => { if (typeof v === 'number') events.push({ t: v, label: `${x.name||'Serie'} · S${key.split('x')[0]} E${key.split('x')[1]}` }); }));
-  films.forEach(f => { if (f.watched && typeof f.watchedAt === 'number') events.push({ t: f.watchedAt, label: f.title || 'Film' }); });
+  shows.forEach(x => Object.entries(x.watched||{}).forEach(([key,v]) => { if (typeof v === 'number') events.push({ t: v, type: 'ep', label: `${x.name||'Serie'} · S${key.split('x')[0]} E${key.split('x')[1]}` }); }));
+  films.forEach(f => { if (f.watched && typeof f.watchedAt === 'number') events.push({ t: f.watchedAt, type: 'film', label: f.title || 'Film' }); });
   const times = events.map(e => e.t);
 
   const days = [...new Set(times.map(t => { const d = new Date(t); d.setHours(0,0,0,0); return d.getTime(); }))].sort((a,b) => a-b);
@@ -1334,34 +1336,24 @@ function computeWrapped() {
 
   const months = [];
   const now = new Date();
-  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({ y: d.getFullYear(), m: d.getMonth(), count: 0, items: [] }); }
-  events.forEach(e => { const d = new Date(e.t); const mo = months.find(x => x.y === d.getFullYear() && x.m === d.getMonth()); if (mo) { mo.count++; mo.items.push(e.label); } });
+  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({ y: d.getFullYear(), m: d.getMonth(), count: 0, epCount: 0, filmCount: 0, items: [] }); }
+  events.forEach(e => { const d = new Date(e.t); const mo = months.find(x => x.y === d.getFullYear() && x.m === d.getMonth()); if (mo) { mo.count++; if (e.type === 'film') mo.filmCount++; else mo.epCount++; mo.items.push(e.label); } });
 
   return { totalShows, episodesWatched, filmsWatched, hours, genres, genreHours, distinctGenres: Object.keys(gTally).length, top, streak: best, months, hasActivity: times.length > 0 };
 }
 
-let wrappedMonthsCache = [];
 function renderBars(months) {
-  wrappedMonthsCache = months;
   const max = Math.max(1, ...months.map(m => m.count));
   const MON = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  const cols = months.map((m,i) => {
+  const cols = months.map(m => {
     const h = Math.round(m.count/max * 72);
-    return `<div class="bar-col" onclick="toggleMonthDetail(${i})"><div class="bar-fill" style="height:${h}px" title="${m.count} episodi in ${MON[m.m]}"></div><div class="bar-lbl">${MON[m.m]}</div></div>`;
+    return `<div class="bar-col">
+      <div class="bar-fill" style="height:${h}px" title="${m.epCount} episodi, ${m.filmCount} film in ${MON[m.m]}"></div>
+      <div class="bar-lbl">${MON[m.m]}</div>
+      <div class="bar-detail">${m.epCount} ep · ${m.filmCount} film</div>
+    </div>`;
   }).join('');
-  return `<div class="bars">${cols}</div><div class="month-detail" id="monthDetail"></div>`;
-}
-
-function toggleMonthDetail(i) {
-  const m = wrappedMonthsCache[i];
-  const el = document.getElementById('monthDetail');
-  if (!m || !el) return;
-  if (el.dataset.open === String(i)) { el.classList.remove('open'); el.dataset.open = ''; return; }
-  el.dataset.open = String(i);
-  el.innerHTML = m.items.length
-    ? m.items.slice(0,30).map(label => `<div class="month-item">${escapeHtml(label)}</div>`).join('')
-    : `<div class="month-item" style="opacity:.5">Nessuna attività questo mese.</div>`;
-  el.classList.add('open');
+  return `<div class="bars">${cols}</div>`;
 }
 
 function animateCountUp(el) {
@@ -1614,9 +1606,9 @@ function renderProfile() {
 
   statsRow.innerHTML = `
     <div class="stat"><div class="v" data-count="${w.totalShows}">0</div><div class="l">serie</div></div>
-    <div class="stat"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi visti</div></div>
+    <div class="stat"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi</div></div>
     <div class="stat"><div class="v" data-count="${w.filmsWatched}">0</div><div class="l">film visti</div></div>
-    <div class="stat"><div class="v" data-count="${w.hours}">0</div><div class="l">ore viste</div></div>
+    <div class="stat"><div class="v" data-count="${w.hours}">0</div><div class="l">ore</div></div>
   `;
   statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
 
@@ -1629,7 +1621,6 @@ function renderProfile() {
 
   if (w.hasActivity) {
     html += `<div class="wrap-sec-title">Attività recente</div><div class="wrap-card glass">${renderBars(w.months)}</div>`;
-    if (w.streak > 1) html += `<div class="wrap-card glass" style="text-align:center"><span style="color:rgba(var(--overlay-rgb),0.55);font-size:13px">giorni di fila</span><span class="streak-badge">${w.streak}</span></div>`;
   } else {
     html += `<div class="wrap-note">Segna gli episodi come visti per costruire il grafico di attività e la tua streak.</div>`;
   }
@@ -1892,20 +1883,6 @@ async function renderUpcoming(container) {
     : `<div class="section" style="padding-top:14px">${rows}</div>`;
 }
 
-const RING_C_SM = 2 * Math.PI * 12; // r=12
-
-function renderProgressRing(pct, color) {
-  if (!pct) return '';
-  const off = RING_C_SM * (1 - Math.min(100,pct)/100);
-  return `<div class="card-ring" title="${pct}%">
-    <svg width="30" height="30" viewBox="0 0 30 30">
-      <circle cx="15" cy="15" r="15" fill="rgba(0,0,0,0.55)"/>
-      <circle class="ring-track" cx="15" cy="15" r="12" fill="none" stroke-width="2.5"/>
-      <circle class="ring-fill" cx="15" cy="15" r="12" fill="none" stroke-width="2.5" stroke-linecap="round"
-        style="stroke:${color}" stroke-dasharray="${RING_C_SM.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 15 15)"/>
-    </svg>
-  </div>`;
-}
 
 function renderCardTv(key, s) {
   const id = validId(s, key);
@@ -1914,9 +1891,10 @@ function renderCardTv(key, s) {
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const cat = categorizeShow(s);
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
+  const showBar = cat === 'continua' && total > 0;
   return `<div class="card" data-poster="${s.image||''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${s.image}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-    ${renderProgressRing(pct, cat === 'inpari' ? '#30D158' : '#0A84FF')}
+    ${showBar ? `<div class="card-prog"><i style="width:${pct}%"></i></div>` : ''}
     <div class="badge ${badgeClass}">${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}</div>
   </div>`;
 }
