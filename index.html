@@ -304,7 +304,7 @@
   .epitem .noimg { width: 76px; height: 48px; border-radius: 10px; background: rgba(var(--overlay-rgb),0.06); flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
   .epitem .et { flex: 1; min-width: 0; }
   .epitem .et .en { font-size: 11px; color: rgba(var(--overlay-rgb),0.45); font-weight: 600; }
-  .epitem .et .tt { font-size: 13.5px; font-weight: 600; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .epitem .et .tt { font-size: 13.5px; font-weight: 600; margin-top: 1px; line-height: 1.3; }
   .epitem .et .dd { font-size: 11px; color: rgba(var(--overlay-rgb),0.4); margin-top: 2px; }
   .ep-actions { display: flex; flex-direction: row; align-items: center; gap: 10px; flex-shrink: 0; }
   .checkbtn {
@@ -313,8 +313,8 @@
   }
   .checkbtn.checked { background: #30D158; border-color: #30D158; }
   .checkbtn.not-aired { opacity: 0.3; }
-  .ep-actions .checkbtn { width: 24px; height: 24px; }
-  .ep-actions .checkbtn svg { width: 11px; height: 11px; }
+  .ep-actions .checkbtn { width: 34px; height: 34px; }
+  .ep-actions .checkbtn svg { width: 15px; height: 15px; }
   .epdesc {
     font-size: 12.5px; line-height: 1.5; color: rgba(var(--overlay-rgb),0.55);
     margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); display: none;
@@ -625,6 +625,42 @@
     font-size: 12.5px; font-weight: 700; font-family: inherit;
   }
   .ib-close { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.4); }
+
+  /* notifiche */
+  .notif-badge {
+    display: none; position: absolute; top: -3px; right: -3px; min-width: 15px; height: 15px; padding: 0 3px;
+    border-radius: 8px; background: #ff453a; color: #fff; font-size: 9.5px; font-weight: 800;
+    align-items: center; justify-content: center; line-height: 1;
+  }
+  .notif-badge.show { display: flex; }
+  .notifOverlay {
+    display: none; position: fixed; inset: 0; z-index: 69; background: transparent;
+  }
+  .notifOverlay.open { display: block; }
+  .notifPanel {
+    position: fixed; top: calc(env(safe-area-inset-top) + 54px); right: 14px; z-index: 70;
+    width: min(340px, calc(100vw - 28px)); max-height: 60vh; display: flex; flex-direction: column;
+    background: var(--sheet-bg); border-radius: 20px; box-shadow: var(--shadow-card);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.1);
+    opacity: 0; transform: translateY(-8px) scale(0.97); pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .notifPanel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .notifPanel-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; flex-shrink: 0; }
+  .notifPanel-title { font-size: 14px; font-weight: 700; }
+  .notifMarkRead { font-size: 11.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); background: transparent; }
+  .notifList { overflow-y: auto; padding: 0 16px 14px; }
+  .notifItem { display: flex; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); }
+  .notifList .notifItem:last-child { border-bottom: none; }
+  .notifItem.unread { position: relative; }
+  .notifItem.unread::before { content: ''; position: absolute; left: -10px; top: 18px; width: 6px; height: 6px; border-radius: 50%; background: #0A84FF; }
+  .notifIcon {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--overlay-rgb),0.08); font-size: 14px;
+  }
+  .notifBody { flex: 1; min-width: 0; }
+  .notifText { font-size: 12.5px; line-height: 1.4; }
+  .notifTime { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -653,6 +689,10 @@
       <span class="topbar-by">by itsurri</span>
     </div>
     <div class="topbar-right" id="topbarRight">
+      <button class="icon-btn" id="btnNotif" title="Notifiche" onclick="toggleNotifPanel(event)" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge"></span>
+      </button>
       <button class="icon-btn active-view" id="btnGrid" title="Griglia" onclick="setView('grid')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       </button>
@@ -660,6 +700,15 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="6" x2="19" y2="6"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/><line x1="2" y1="6" x2="2.01" y2="6"/><line x1="2" y1="12" x2="2.01" y2="12"/><line x1="2" y1="18" x2="2.01" y2="18"/></svg>
       </button>
     </div>
+  </div>
+
+  <div class="notifOverlay" id="notifOverlay" onclick="closeNotifPanel()"></div>
+  <div class="notifPanel" id="notifPanel">
+    <div class="notifPanel-head">
+      <span class="notifPanel-title">Notifiche</span>
+      <button class="notifMarkRead" onclick="markAllNotificationsRead()">Segna tutte come lette</button>
+    </div>
+    <div class="notifList" id="notifList"></div>
   </div>
 
   <!-- SERIE TV -->
@@ -734,6 +783,14 @@
           <div style="font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
       </div>
+      <div class="settingsrow glass" style="flex-direction:column; align-items:stretch; gap:8px; margin-bottom:18px">
+        <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
+            style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
+          <button class="filebtn" onclick="saveNickname()">Salva</button>
+        </div>
+      </div>
       <div class="settingsrow glass" style="margin-bottom:18px">
         <div class="st"><div class="sn">Confronta con un amico</div><div class="sd">Genera un link con le tue statistiche da confrontare</div></div>
         <button class="filebtn" onclick="shareCompareLink()">Condividi</button>
@@ -745,19 +802,6 @@
   <!-- IMPOSTAZIONI -->
   <div class="view" id="view-settings">
     <div class="section">
-      <h2 class="settings-h2">Profilo</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
-          <div style="display:flex; gap:8px">
-            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
-              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
-            <button class="filebtn" onclick="saveNickname()">Salva</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:16px">
       <h2 class="settings-h2">Aspetto</h2>
       <div class="glass settings-group">
         <div class="settingsrow">
@@ -911,6 +955,8 @@ let applyingRemoteData = false;
 let cloudSyncTimer = null;
 let unsubscribeCloud = null;
 let unsubscribeComments = null;
+let unsubscribeNotifications = null;
+let remoteNotifications = [];
 
 function scheduleCloudSync() {
   if (!fbDb || !currentUser || applyingRemoteData) return;
@@ -969,6 +1015,17 @@ if (fbAuth) {
   fbAuth.onAuthStateChanged((user) => {
     currentUser = user;
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
+    if (unsubscribeNotifications) { unsubscribeNotifications(); unsubscribeNotifications = null; }
+    if (user) {
+      unsubscribeNotifications = fbDb.collection('notifications').where('toUid', '==', user.uid)
+        .onSnapshot(snap => {
+          remoteNotifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderNotifPanel();
+        }, () => {});
+    } else {
+      remoteNotifications = [];
+      renderNotifPanel();
+    }
     if (user) {
       const ref = fbDb.collection('users').doc(user.uid);
       unsubscribeCloud = ref.onSnapshot((snap) => {
@@ -1064,6 +1121,11 @@ function normalizeLibrary() {
     if (!library[k]) { delete library[k]; return; }
     if (library[k].id == null || isNaN(Number(library[k].id))) library[k].id = Number(k);
     if (!library[k].watched) library[k].watched = {};
+    // Le versioni precedenti segnavano gli episodi visti con "true" invece di un timestamp:
+    // senza data non comparivano nell'attività recente. Li convertiamo assegnando la data odierna.
+    Object.keys(library[k].watched).forEach(ek => {
+      if (typeof library[k].watched[ek] !== 'number') library[k].watched[ek] = Date.now();
+    });
   });
 }
 function normalizeFilmLibrary() {
@@ -1263,30 +1325,6 @@ function computeWrapped() {
   events.forEach(e => { const d = new Date(e.t); const mo = months.find(x => x.y === d.getFullYear() && x.m === d.getMonth()); if (mo) { mo.count++; mo.items.push(e.label); } });
 
   return { totalShows, episodesWatched, filmsWatched, hours, genres, genreHours, distinctGenres: Object.keys(gTally).length, top, streak: best, months, hasActivity: times.length > 0 };
-}
-
-function renderDonut(genres) {
-  const total = genres.reduce((s,[,v]) => s+v, 0) || 1;
-  const r = 52, C = 2 * Math.PI * r; let acc = 0;
-  const segs = genres.map(([,v], i) => {
-    const frac = v/total; const dash = Math.max(0.5, C*frac - 2);
-    const seg = `<circle cx="60" cy="60" r="${r}" fill="none" stroke="${GENRE_PALETTE[i%GENRE_PALETTE.length]}" stroke-width="16" stroke-dasharray="${dash.toFixed(1)} ${(C-dash).toFixed(1)}" stroke-dashoffset="${(-C*acc).toFixed(1)}" transform="rotate(-90 60 60)"/>`;
-    acc += frac; return seg;
-  }).join('');
-  const legend = genres.map(([name,v], i) => `<div class="dl-row"><span class="dl-dot" style="background:${GENRE_PALETTE[i%GENRE_PALETTE.length]}"></span><span class="dl-name">${escapeHtml(name)}</span><span class="dl-val">${v}</span></div>`).join('');
-  return `<div class="donut-wrap"><svg width="120" height="120" viewBox="0 0 120 120">${segs}</svg><div class="donut-legend">${legend}</div></div>`;
-}
-
-function renderGenreStats(genres, genreHours) {
-  const rows = genres.map(([name], i) => {
-    const h = genreHours[name] || 0;
-    return `<div class="gs-row">
-      <span class="dl-dot" style="background:${GENRE_PALETTE[i%GENRE_PALETTE.length]}"></span>
-      <span class="gs-name">${escapeHtml(name)}</span>
-      <span class="gs-val">${h} h</span>
-    </div>`;
-  }).join('');
-  return `<div class="gs-list">${rows}</div>`;
 }
 
 let wrappedMonthsCache = [];
@@ -1576,11 +1614,6 @@ function renderProfile() {
 
   let html = renderAchievements(w);
 
-  if (w.genres.length) {
-    html += `<div class="wrap-sec-title">Generi preferiti</div><div class="wrap-card glass">${renderDonut(w.genres)}</div>`;
-    html += `<div class="wrap-sec-title">Ore per genere</div><div class="wrap-card glass">${renderGenreStats(w.genres, w.genreHours)}</div>`;
-  }
-
   if (w.hasActivity) {
     html += `<div class="wrap-sec-title">Attività recente</div><div class="wrap-card glass">${renderBars(w.months)}</div>`;
     if (w.streak > 1) html += `<div class="wrap-card glass" style="text-align:center"><span style="color:rgba(var(--overlay-rgb),0.55);font-size:13px">giorni di fila</span><span class="streak-badge">${w.streak}</span></div>`;
@@ -1703,7 +1736,107 @@ async function ensureUpcomingCache() {
   upcomingCache = results.filter(Boolean).sort((a,b) => a.date.localeCompare(b.date));
   upcomingCacheAt = now;
   updateUpcomingBadge();
+  checkAiredEpisodeNotifications(upcomingCache);
   return upcomingCache;
+}
+
+// Rileva episodi appena usciti confrontando il "prossimo episodio" di ogni serie
+// con quello dell'ultimo controllo: se è cambiato, quello precedente è andato in onda.
+function checkAiredEpisodeNotifications(list) {
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem('serietracker_last_upcoming') || '{}'); } catch(e) {}
+  const hadPrev = Object.keys(prev).length > 0;
+  const nowMap = {};
+  list.forEach(u => { nowMap[u.id] = `${u.season}x${u.number}`; });
+  if (hadPrev) {
+    Object.keys(prev).forEach(showId => {
+      const prevKey = prev[showId];
+      const newKey = nowMap[showId];
+      if (prevKey && newKey && prevKey !== newKey && library[showId]) {
+        const [s, n] = prevKey.split('x');
+        addLocalNotification({ type: 'episode', text: `È uscito l'episodio S${s}E${n} di ${library[showId].name || 'una serie'}`, showId: Number(showId) });
+      }
+    });
+  }
+  try { localStorage.setItem('serietracker_last_upcoming', JSON.stringify(nowMap)); } catch(e) {}
+}
+
+// ---------- notifiche ----------
+function getLocalNotifications() {
+  try { return JSON.parse(localStorage.getItem('serietracker_notifications') || '[]'); } catch(e) { return []; }
+}
+function saveLocalNotifications(list) {
+  try { localStorage.setItem('serietracker_notifications', JSON.stringify(list.slice(0, 100))); } catch(e) {}
+}
+function addLocalNotification(n) {
+  const list = getLocalNotifications();
+  list.unshift(Object.assign({ id: 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2), read: false, createdAt: Date.now() }, n));
+  saveLocalNotifications(list);
+  renderNotifPanel();
+}
+
+async function pushRemoteNotification(toUid, payload) {
+  if (!fbDb) return;
+  try { await fbDb.collection('notifications').add(Object.assign({ toUid, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, payload)); }
+  catch(e) {}
+}
+
+function notifMillis(n) {
+  if (typeof n.createdAt === 'number') return n.createdAt;
+  return (n.createdAt && n.createdAt.toMillis) ? n.createdAt.toMillis() : 0;
+}
+
+function allNotifications() {
+  return getLocalNotifications().concat(remoteNotifications).sort((a, b) => notifMillis(b) - notifMillis(a));
+}
+
+const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺' };
+
+function renderNotifPanel() {
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  if (!list || !badge) return;
+  const items = allNotifications();
+  const unread = items.filter(n => !n.read).length;
+  badge.textContent = unread > 9 ? '9+' : unread;
+  badge.classList.toggle('show', unread > 0);
+  list.innerHTML = items.length
+    ? items.slice(0, 50).map(n => `<div class="notifItem${n.read ? '' : ' unread'}">
+        <div class="notifIcon">${NOTIF_ICONS[n.type] || '🔔'}</div>
+        <div class="notifBody">
+          <div class="notifText">${escapeHtml(n.text || '')}</div>
+          <div class="notifTime">${notifMillis(n) ? formatDateIT(new Date(notifMillis(n)).toISOString().slice(0,10)) : ''}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="commentsEmpty">Nessuna notifica</div>';
+}
+
+function toggleNotifPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('notifPanel');
+  const overlay = document.getElementById('notifOverlay');
+  const opening = !panel.classList.contains('open');
+  if (opening) { renderNotifPanel(); panel.classList.add('open'); overlay.classList.add('open'); }
+  else closeNotifPanel();
+}
+
+function closeNotifPanel() {
+  document.getElementById('notifPanel').classList.remove('open');
+  document.getElementById('notifOverlay').classList.remove('open');
+}
+
+async function markAllNotificationsRead() {
+  const local = getLocalNotifications().map(n => Object.assign({}, n, { read: true }));
+  saveLocalNotifications(local);
+  if (fbDb && currentUser) {
+    const unread = remoteNotifications.filter(n => !n.read);
+    if (unread.length) {
+      const batch = fbDb.batch();
+      unread.forEach(n => batch.update(fbDb.collection('notifications').doc(n.id), { read: true }));
+      try { await batch.commit(); } catch(e) {}
+    }
+  }
+  renderNotifPanel();
 }
 
 async function renderUpcoming(container) {
@@ -2492,7 +2625,15 @@ function getAnonId() {
 function getLikeId() { return currentUser ? currentUser.uid : getAnonId(); }
 
 function getNickname() { try { return localStorage.getItem('serietracker_nickname') || ''; } catch(e) { return ''; } }
-function commentAuthorName() { return getNickname() || (currentUser && (currentUser.displayName || currentUser.email)) || 'Utente'; }
+function nameFromEmail(email) {
+  if (!email) return '';
+  return email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+}
+function commentAuthorName() {
+  const nick = getNickname();
+  if (nick) return nick;
+  return (currentUser && nameFromEmail(currentUser.email)) || 'Utente';
+}
 
 function epCommentKey(showId, season, number) { return `${showId}_${season}x${number}`; }
 
@@ -2595,8 +2736,12 @@ function toggleLikeComment(commentId) {
   if (!c) return;
   const id = getLikeId();
   const likedBy = c.likedBy || [];
-  const op = likedBy.includes(id) ? firebase.firestore.FieldValue.arrayRemove(id) : firebase.firestore.FieldValue.arrayUnion(id);
+  const nowLiking = !likedBy.includes(id);
+  const op = nowLiking ? firebase.firestore.FieldValue.arrayUnion(id) : firebase.firestore.FieldValue.arrayRemove(id);
   fbDb.collection('comments').doc(commentId).update({ likedBy: op }).catch(() => { showToast('Errore'); });
+  if (nowLiking && currentUser && c.uid && c.uid !== currentUser.uid) {
+    pushRemoteNotification(c.uid, { type: 'like', text: `${commentAuthorName()} ha messo mi piace al tuo commento` });
+  }
 }
 
 async function postComment(epKey, parentId) {
@@ -2617,7 +2762,13 @@ async function postComment(epKey, parentId) {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     input.value = '';
-    if (parentId) { const f = document.getElementById(`replyForm-${parentId}`); if (f) f.classList.remove('open'); }
+    if (parentId) {
+      const f = document.getElementById(`replyForm-${parentId}`); if (f) f.classList.remove('open');
+      const parent = commentsCache[parentId];
+      if (parent && parent.uid && parent.uid !== currentUser.uid) {
+        pushRemoteNotification(parent.uid, { type: 'reply', text: `${commentAuthorName()} ha risposto al tuo commento` });
+      }
+    }
   } catch (e) { showToast('Errore nell\'invio del commento'); }
   input.disabled = false;
 }
@@ -2914,6 +3065,7 @@ checkIncomingCompare();
 ensureUpcomingCache();
 initPullToRefresh();
 initInstallBanner();
+renderNotifPanel();
 </script>
 </body>
 </html>
