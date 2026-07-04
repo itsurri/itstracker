@@ -1242,6 +1242,11 @@ if (fbAuth) {
           applyingRemoteData = false;
           renderProfileAuth();
           syncPublicProfile();
+          // I dati appena arrivati dal cloud potrebbero essere una versione precedente
+          // a quella corretta automaticamente all'avvio (i due processi corrono in
+          // parallelo): ricontrolla e correggi di nuovo dopo ogni sync dal cloud,
+          // altrimenti la vecchia versione sovrascrive silenziosamente la correzione.
+          refreshInPariShows();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
           syncPublicProfile();
