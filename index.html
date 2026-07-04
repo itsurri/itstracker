@@ -767,15 +767,13 @@
       <span class="topbar-by">by itsurri</span>
     </div>
     <div class="topbar-right" id="topbarRight">
+      <button class="icon-btn" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        <span class="notif-badge" id="chatListBadge"></span>
+      </button>
       <button class="icon-btn" id="btnNotif" title="Notifiche" onclick="toggleNotifPanel(event)" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         <span class="notif-badge" id="notifBadge"></span>
-      </button>
-      <button class="icon-btn active-view" id="btnGrid" title="Griglia" onclick="setView('grid')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      </button>
-      <button class="icon-btn" id="btnList" title="Lista" onclick="setView('list')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="6" x2="19" y2="6"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="18" x2="19" y2="18"/><line x1="2" y1="6" x2="2.01" y2="6"/><line x1="2" y1="12" x2="2.01" y2="12"/><line x1="2" y1="18" x2="2.01" y2="18"/></svg>
       </button>
     </div>
   </div>
@@ -789,6 +787,14 @@
       <button class="notifMarkRead" onclick="markAllNotificationsRead()">Segna tutte come lette</button>
     </div>
     <div class="notifList" id="notifList"></div>
+  </div>
+
+  <div class="notifOverlay" id="chatListOverlay" onclick="closeChatListPanel()"></div>
+  <div class="notifPanel" id="chatListPanel">
+    <div class="notifPanel-head">
+      <span class="notifPanel-title">Messaggi</span>
+    </div>
+    <div class="notifList" id="chatListBody"></div>
   </div>
 
   <!-- SERIE TV -->
@@ -891,10 +897,17 @@
       <h2 class="settings-h2">Aspetto</h2>
       <div class="glass settings-group">
         <div class="settingsrow">
-          <div class="st"><div class="sn">Tema</div><div class="sd">Chiaro o scuro</div></div>
+          <div class="st"><div class="sn">Tema</div></div>
           <div style="display:flex; gap:8px">
             <button class="filebtn" id="themeLightBtn" onclick="setTheme('light')">Chiaro</button>
             <button class="filebtn" id="themeDarkBtn" onclick="setTheme('dark')">Scuro</button>
+          </div>
+        </div>
+        <div class="settingsrow">
+          <div class="st"><div class="sn">Visualizzazione</div></div>
+          <div style="display:flex; gap:8px">
+            <button class="filebtn" id="viewGridBtn" onclick="setView('grid')">Griglia</button>
+            <button class="filebtn" id="viewListBtn" onclick="setView('list')">Lista</button>
           </div>
         </div>
       </div>
@@ -1174,6 +1187,7 @@ if (fbAuth) {
       remoteNotifications = [];
       renderNotifPanel();
     }
+    startChatList();
     if (user) {
       const ref = fbDb.collection('users').doc(user.uid);
       unsubscribeCloud = ref.onSnapshot((snap) => {
@@ -1389,14 +1403,19 @@ async function refreshInPariShows() {
 function setView(mode) {
   viewMode = mode;
   localStorage.setItem('serietracker_view', mode);
-  document.getElementById('btnGrid').classList.toggle('active-view', mode === 'grid');
-  document.getElementById('btnList').classList.toggle('active-view', mode === 'list');
+  updateViewButtons();
   renderLibrary();
   renderFilmLibrary();
-  if (currentTab === 'search') {
+  if (currentTab === 'search' && searchMode !== 'people') {
     const q = document.getElementById('searchInput').value.trim();
     if (q) { searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q); } else { loadPopular(searchMode); }
   }
+}
+
+function updateViewButtons() {
+  const g = document.getElementById('viewGridBtn'), l = document.getElementById('viewListBtn');
+  if (g) g.classList.toggle('active', viewMode === 'grid');
+  if (l) l.classList.toggle('active', viewMode === 'list');
 }
 
 // ---------- tabs ----------
@@ -2374,13 +2393,20 @@ document.getElementById('personBg').addEventListener('click', e => { if (e.targe
 
 // ---------- chat (base) ----------
 let currentChatUid = null;
+let currentChatPeerName = '';
+let currentChatPeerPhoto = '';
 let unsubscribeChat = null;
+let unsubscribeChatList = null;
+let chatListCache = [];
 
 function chatIdFor(uid) { return [currentUser.uid, uid].sort().join('_'); }
 
 function openChat(uid, name, photoURL) {
   if (!currentUser) { showToast('Accedi per scrivere un messaggio'); return; }
+  closeChatListPanel();
   currentChatUid = uid;
+  currentChatPeerName = name;
+  currentChatPeerPhoto = photoURL || '';
   document.getElementById('chatHeadName').textContent = name;
   document.getElementById('chatAvatar').innerHTML = photoURL ? `<img src="${photoURL}" alt="">` : '';
   document.getElementById('chatMessages').innerHTML = `<div class="spinner"></div>`;
@@ -2392,6 +2418,7 @@ function openChat(uid, name, photoURL) {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis(a) - chatMillis(b));
       renderChatMessages(msgs);
     }, () => { document.getElementById('chatMessages').innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; });
+  fbDb.collection('chats').doc(chatId).set({ readBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) }, { merge: true }).catch(()=>{});
 }
 
 function chatMillis(m) { return (m.createdAt && m.createdAt.toMillis) ? m.createdAt.toMillis() : (m.createdAt || 0); }
@@ -2412,11 +2439,21 @@ async function sendChatMessage() {
   if (text.length > 1000) { showToast('Messaggio troppo lungo'); return; }
   const chatId = chatIdFor(currentChatUid);
   input.value = '';
+  const myName = commentAuthorName();
+  const myPhoto = getCustomAvatar() || currentUser.photoURL || '';
   try {
     await fbDb.collection('chats').doc(chatId).collection('messages').add({
       from: currentUser.uid, to: currentChatUid, text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    pushRemoteNotification(currentChatUid, { type: 'message', text: `${commentAuthorName()} ti ha scritto un messaggio` });
+    await fbDb.collection('chats').doc(chatId).set({
+      participants: [currentUser.uid, currentChatUid],
+      names: { [currentUser.uid]: myName, [currentChatUid]: currentChatPeerName },
+      photos: { [currentUser.uid]: myPhoto, [currentChatUid]: currentChatPeerPhoto },
+      lastMessage: text, lastSender: currentUser.uid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      readBy: [currentUser.uid]
+    }, { merge: true });
+    pushRemoteNotification(currentChatUid, { type: 'message', text: `${myName} ti ha scritto un messaggio` });
   } catch(e) { showToast('Errore nell\'invio'); }
 }
 
@@ -2426,6 +2463,59 @@ function closeChat() {
   currentChatUid = null;
 }
 document.getElementById('chatBg').addEventListener('click', e => { if (e.target.id === 'chatBg') closeChat(); });
+
+function startChatList() {
+  if (unsubscribeChatList) { unsubscribeChatList(); unsubscribeChatList = null; }
+  if (!fbDb || !currentUser) { chatListCache = []; renderChatListBadge(); return; }
+  unsubscribeChatList = fbDb.collection('chats').where('participants', 'array-contains', currentUser.uid)
+    .onSnapshot(snap => {
+      chatListCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis2(b) - chatMillis2(a));
+      renderChatListBadge();
+      if (document.getElementById('chatListPanel').classList.contains('open')) renderChatListPanel();
+    }, () => {});
+}
+function chatMillis2(c) { return (c.updatedAt && c.updatedAt.toMillis) ? c.updatedAt.toMillis() : (c.updatedAt || 0); }
+
+function renderChatListBadge() {
+  const badge = document.getElementById('chatListBadge');
+  if (!badge) return;
+  const unread = chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid)).length;
+  badge.textContent = unread > 9 ? '9+' : unread;
+  badge.classList.toggle('show', unread > 0);
+}
+
+function renderChatListPanel() {
+  const el = document.getElementById('chatListBody');
+  if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
+  if (!chatListCache.length) { el.innerHTML = '<div class="commentsEmpty">Nessuna conversazione ancora.</div>'; return; }
+  el.innerHTML = chatListCache.map(c => {
+    const peerUid = (c.participants||[]).find(u => u !== currentUser.uid);
+    const name = (c.names && c.names[peerUid]) || 'Utente';
+    const photo = (c.photos && c.photos[peerUid]) || '';
+    const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
+    return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${peerUid}','${escapeHtml(name).replace(/'/g,"\\'")}','${photo.replace(/'/g,"\\'")}')">
+      <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+      <div class="notifBody">
+        <div class="notifText"><b>${escapeHtml(name)}</b></div>
+        <div class="notifTime">${escapeHtml(c.lastMessage || '')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChatListPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('chatListPanel');
+  const overlay = document.getElementById('chatListOverlay');
+  const opening = !panel.classList.contains('open');
+  if (opening) { renderChatListPanel(); panel.classList.add('open'); overlay.classList.add('open'); }
+  else closeChatListPanel();
+}
+
+function closeChatListPanel() {
+  document.getElementById('chatListPanel').classList.remove('open');
+  document.getElementById('chatListOverlay').classList.remove('open');
+}
 
 async function doSearchTv(q) {
   const c = document.getElementById('searchResults');
@@ -3459,8 +3549,7 @@ updateLogo();
 updateThemeButtons();
 document.getElementById('tmdbKeyInput').value = getTmdbKey();
 document.getElementById('nicknameInput').value = getNickname();
-document.getElementById('btnGrid').classList.toggle('active-view', viewMode==='grid');
-document.getElementById('btnList').classList.toggle('active-view', viewMode==='list');
+updateViewButtons();
 renderLibrary();
 renderFilmLibrary();
 refreshInPariShows();
