@@ -430,10 +430,25 @@
   .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
   .person-hero .ph-name { font-size: 19px; font-weight: 700; }
   .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-hero-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
   .person-msg-btn {
-    margin: 10px auto 0; display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 16px;
+    display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 16px;
     background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 700; font-family: inherit;
   }
+  .follow-btn {
+    padding: 9px 18px; border-radius: 16px; font-size: 13px; font-weight: 700; font-family: inherit;
+    background: #0A84FF; color: #fff;
+  }
+  .follow-btn.following { background: rgba(var(--overlay-rgb),0.1); color: var(--fg); }
+  /* feed attività amici */
+  .feed-item { display: flex; gap: 11px; align-items: center; padding: 11px 2px; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); cursor: pointer; }
+  .feed-item .fi-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .feed-item .fi-body { flex: 1; min-width: 0; }
+  .feed-item .fi-text { font-size: 13px; line-height: 1.4; }
+  .feed-item .fi-text b { font-weight: 700; }
+  .feed-item .fi-time { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 2px; }
+  .feed-item .fi-thumb { width: 34px; height: 48px; border-radius: 7px; object-fit: cover; background: rgba(var(--overlay-rgb),0.1); flex-shrink: 0; }
+  .feed-icon { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 2px; }
   .person-item {
     display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
@@ -1226,7 +1241,7 @@ function scheduleCloudSync() {
   if (!fbDb || !currentUser || applyingRemoteData) return;
   clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(() => {
-    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
+    fbDb.collection('users').doc(currentUser.uid).set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
     syncPublicProfile();
   }, 800);
 }
@@ -1344,6 +1359,7 @@ if (fbAuth) {
           if (data.customPhotoURL && data.customPhotoURL !== getCustomAvatar()) {
             try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
           }
+          followingList = data.following || [];
           applyingRemoteData = false;
           renderProfileAuth();
           syncPublicProfile();
@@ -1353,7 +1369,7 @@ if (fbAuth) {
           // altrimenti la vecchia versione sovrascrive silenziosamente la correzione.
           refreshInPariShows();
         } else {
-          ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }).catch(()=>{});
+          ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
           syncPublicProfile();
         }
       }, () => showToast('Sync non riuscita'));
@@ -2448,7 +2464,7 @@ async function refreshCurrentTab() {
     } else if (currentTab === 'search') {
       const q = document.getElementById('searchInput').value.trim();
       if (searchMode === 'people') {
-        await (q ? doSearchPeople(q) : loadSuggestedPeople());
+        await (q ? doSearchPeople(q) : loadPeopleHome());
       } else if (q) {
         await (searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q));
       } else {
@@ -2524,7 +2540,7 @@ function setSearchMode(mode) {
   document.getElementById('searchInput').placeholder = mode === 'tv' ? 'Cerca una serie TV' : mode === 'film' ? 'Cerca un film' : 'Cerca per nickname o email';
   document.getElementById('searchInput').value = '';
   if (mode === 'people') {
-    loadSuggestedPeople();
+    loadPeopleHome();
   } else {
     document.getElementById('searchEmpty').querySelector('div').innerHTML = 'Cerca tra migliaia di titoli,<br>aggiornati in automatico.';
     loadPopular(mode);
@@ -2563,7 +2579,7 @@ document.getElementById('searchInput').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
   if (searchMode === 'people') {
-    if (!q) { loadSuggestedPeople(); return; }
+    if (!q) { loadPeopleHome(); return; }
     document.getElementById('searchEmpty').style.display = 'none';
     document.getElementById('searchResults').innerHTML = `<div class="spinner"></div>`;
     searchTimer = setTimeout(() => doSearchPeople(q), 350);
@@ -2623,6 +2639,95 @@ async function loadSuggestedPeople() {
   }
 }
 
+// ---------- segui / feed amici ----------
+let followingList = [];
+function isFollowing(uid) { return followingList.includes(uid); }
+async function toggleFollow(uid) {
+  if (!currentUser || !fbDb) { showToast('Accedi per seguire'); return; }
+  const following = isFollowing(uid);
+  if (following) followingList = followingList.filter(u => u !== uid); else followingList = [...followingList, uid];
+  const op = following ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
+  try { await fbDb.collection('users').doc(currentUser.uid).set({ following: op }, { merge: true }); } catch(e) {}
+  if (currentPersonProfile && currentPersonProfile.uid === uid) renderPersonSheet(currentPersonProfile);
+}
+
+async function logActivity(payload) {
+  if (!fbDb || !currentUser) return;
+  try {
+    await fbDb.collection('activity').add(Object.assign({
+      uid: currentUser.uid, name: commentAuthorName(),
+      photo: getCustomAvatar() || currentUser.photoURL || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, payload));
+  } catch(e) {}
+}
+function actMillis(a) { return (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : (a.createdAt || 0); }
+
+function personCardHtml(p) {
+  return `<div class="personcard" onclick="openPerson('${p.uid}')">
+    ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
+    <div class="pc-info">
+      <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
+    </div>
+  </div>`;
+}
+
+const FEED_ICONS = { finished_show: '🏁', watched_film: '🎬', commented: '💬' };
+function feedActionText(a) {
+  if (a.type === 'finished_show') return `ha finito <b>${escapeHtml(a.title||'una serie')}</b>`;
+  if (a.type === 'watched_film') return `ha visto <b>${escapeHtml(a.title||'un film')}</b>`;
+  if (a.type === 'commented') return `ha commentato <b>${escapeHtml(a.title||'un episodio')}</b>`;
+  return 'ha aggiornato la libreria';
+}
+function feedItemHtml(a) {
+  const onclick = a.type === 'watched_film'
+    ? `openFilm(${a.showId})`
+    : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
+  return `<div class="feed-item" onclick="${onclick}">
+    ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}
+    <div class="fi-body">
+      <div class="fi-text"><span class="feed-icon">${FEED_ICONS[a.type]||'✨'}</span><b>${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
+      <div class="fi-time">${actMillis(a) ? formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10)) : ''}</div>
+    </div>
+    ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
+  </div>`;
+}
+
+async function renderFriendFeed() {
+  if (!fbDb || !currentUser || !followingList.length) return '';
+  const chunks = [];
+  for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
+  const snaps = await Promise.all(chunks.map(ch =>
+    fbDb.collection('activity').where('uid', 'in', ch).limit(60).get().catch(() => null)
+  ));
+  let items = [];
+  snaps.forEach(s => { if (s) s.forEach(d => items.push(d.data())); });
+  items.sort((a, b) => actMillis(b) - actMillis(a));
+  items = items.slice(0, 40);
+  if (!items.length) return `<div class="wrap-sec-title" style="margin-top:0">Attività amici</div><div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`;
+  return `<div class="wrap-sec-title" style="margin-top:0">Attività amici</div>` + items.map(feedItemHtml).join('');
+}
+
+// Home della tab Persone: feed di chi segui + suggerimenti.
+async function loadPeopleHome() {
+  const c = document.getElementById('searchResults');
+  if (!fbDb) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
+  document.getElementById('searchEmpty').style.display = 'none';
+  c.innerHTML = `<div class="spinner"></div>`;
+  let feedHtml = '';
+  try { feedHtml = await renderFriendFeed(); } catch(e) {}
+  let sugHtml = '';
+  try {
+    const snap = await fbDb.collection('publicProfiles').orderBy('updatedAt', 'desc').limit(30).get();
+    const results = snap.docs.map(d => d.data()).filter(p => (!currentUser || p.uid !== currentUser.uid) && !isFollowing(p.uid));
+    if (results.length) sugHtml = `<div class="wrap-sec-title"${feedHtml ? '' : ' style="margin-top:0"'}>Potresti conoscere</div>` + results.map(personCardHtml).join('');
+  } catch(e) {}
+  const html = (feedHtml || '') + (sugHtml || '');
+  if (html) c.innerHTML = html;
+  else { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.'; }
+}
+
 // ---------- scheda persona ----------
 let currentPersonProfile = null;
 
@@ -2650,10 +2755,13 @@ function renderPersonSheet(p) {
       ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
       <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
-      ${canMessage ? `<button class="person-msg-btn" onclick="openChat('${p.uid}','${escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-        Messaggio
-      </button>` : ''}
+      ${canMessage ? `<div class="person-hero-btns">
+        <button class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
+        <button class="person-msg-btn" onclick="openChat('${p.uid}','${escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Messaggio
+        </button>
+      </div>` : ''}
     </div>
     <div class="section">
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
@@ -3336,6 +3444,7 @@ function applyToggleEpisode(showId, season, number) {
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
   if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
     celebrateShowComplete();
+    logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
     refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
   }
   if (!wasWatched) checkAchievements();
@@ -3393,6 +3502,7 @@ async function markNext(id) {
   if (btn) { btn.classList.add('justchecked'); btn.addEventListener('animationend', () => btn.classList.remove('justchecked'), { once: true }); }
   if (categorizeShow(s) === 'inpari') {
     celebrateShowComplete();
+    logActivity({ type: 'finished_show', showId: Number(id), title: s.name || '', image: s.image || null });
     refreshShowTotals(id).then(changed => { if (changed) renderLibrary(); });
   }
   checkAchievements();
@@ -3721,9 +3831,9 @@ async function postComment(epKey, parentId) {
         pushRemoteNotification(parent.uid, { type: 'reply', text: `${myName} ha risposto al tuo commento` });
       }
     }
+    const [showIdStr, seasonEp] = epKey.split('_');
+    const [season, number] = seasonEp.split('x');
     if (mentionUids.length) {
-      const [showIdStr, seasonEp] = epKey.split('_');
-      const [season, number] = seasonEp.split('x');
       mentionUids.forEach(uid => {
         if (uid !== currentUser.uid) {
           pushRemoteNotification(uid, {
@@ -3732,6 +3842,11 @@ async function postComment(epKey, parentId) {
           });
         }
       });
+    }
+    if (!parentId) {
+      const sid = Number(showIdStr);
+      const sh = library[sid];
+      logActivity({ type: 'commented', showId: sid, title: sh ? (sh.name||'') : '', image: sh ? (sh.image||null) : null });
     }
   } catch (e) { showToast('Errore nell\'invio del commento'); }
   input.disabled = false;
@@ -3803,7 +3918,10 @@ async function toggleFilmWatched(id) {
   filmLibrary[id].watched = !filmLibrary[id].watched;
   if (filmLibrary[id].watched) { filmLibrary[id].watchedAt = Date.now(); haptic(); }
   saveFilmLibrary(); renderFilmLibrary(); openFilm(id);
-  if (filmLibrary[id].watched) checkAchievements();
+  if (filmLibrary[id].watched) {
+    checkAchievements();
+    logActivity({ type: 'watched_film', showId: Number(id), title: filmLibrary[id].title || '', image: filmLibrary[id].image || null });
+  }
 }
 async function removeFilm(id) { delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); closeSheet(); showToast('Film rimosso'); }
 
