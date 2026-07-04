@@ -1129,12 +1129,13 @@
       <h2 class="settings-h2">TMDb</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">API Key</div><div class="sd">Gratuita su themoviedb.org</div></div>
+          <div class="st"><div class="sn">API Key</div><div class="sd">Opzionale: l'app funziona già con una chiave condivisa. Incollane una tua se preferisci</div></div>
           <div style="display:flex; gap:8px">
-            <input type="text" id="tmdbKeyInput" placeholder="Incolla qui la tua API key" autocomplete="off"
+            <input type="text" id="tmdbKeyInput" placeholder="Usa quella predefinita (opzionale)" autocomplete="off"
               style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
             <button class="filebtn" onclick="saveTmdbKey()">Salva</button>
           </div>
+          <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
         </div>
       </div>
     </div>
@@ -1500,7 +1501,10 @@ if (fbAuth) {
   });
 }
 
-function getTmdbKey() { try { return localStorage.getItem('serietracker_tmdb_key') || ''; } catch(e) { return ''; } }
+// Chiave TMDb condivisa usata come fallback per chi non ne ha impostata una propria in Impostazioni.
+const DEFAULT_TMDB_KEY = 'ce2fbadc2573923538584f69154d32e6';
+function getOwnTmdbKey() { try { return localStorage.getItem('serietracker_tmdb_key') || ''; } catch(e) { return ''; } }
+function getTmdbKey() { return getOwnTmdbKey() || DEFAULT_TMDB_KEY; }
 function hasTmdbKey() {
   const has = !!getTmdbKey();
   if (!has) showToast('Aggiungi la tua API key TMDb in Impostazioni');
@@ -4584,7 +4588,7 @@ updateLogo();
   if (splash) splash.addEventListener('animationend', e => { if (e.animationName === 'splashOut') { splash.remove(); document.body.classList.remove('splash-active'); } });
 })();
 updateThemeButtons();
-document.getElementById('tmdbKeyInput').value = getTmdbKey();
+document.getElementById('tmdbKeyInput').value = getOwnTmdbKey();
 document.getElementById('nicknameInput').value = getNickname();
 updateViewButtons();
 renderLibrary();
