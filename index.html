@@ -311,6 +311,43 @@
   .epdesc.open { display: block; }
   .epdesc .loading { color: rgba(var(--overlay-rgb),0.35); font-style: italic; }
 
+  /* commenti */
+  .commentsSection { margin-top: 22px; }
+  .commentsTitle { font-size: 15px; font-weight: 700; margin: 0 0 12px; }
+  .commentForm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .commentForm textarea {
+    width: 100%; min-height: 64px; resize: vertical; padding: 12px; border-radius: 16px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.06);
+    color: var(--fg); font-family: inherit; font-size: 13.5px; line-height: 1.4;
+  }
+  .commentSendBtn {
+    align-self: flex-end; padding: 9px 18px; border-radius: 16px; border: 0;
+    background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 600; font-family: inherit;
+  }
+  .commentSendBtn:disabled { opacity: 0.5; }
+  .commentLoginPrompt {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 12px 14px; border-radius: 16px; background: rgba(var(--overlay-rgb),0.06); margin-bottom: 16px;
+  }
+  .commentLoginPrompt span { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); }
+  .commentsList { display: flex; flex-direction: column; gap: 8px; }
+  .commentsEmpty, .commentsLoading { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.4); font-style: italic; padding: 4px 2px; }
+  .commentItem { padding: 12px; }
+  .commentTop { display: flex; align-items: center; gap: 10px; }
+  .commentAvatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .commentMeta { flex: 1; min-width: 0; }
+  .commentAuthor { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .commentDate { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 1px; }
+  .commentDeleteBtn { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.4); background: transparent; }
+  .commentText { font-size: 13px; line-height: 1.45; margin-top: 8px; white-space: pre-wrap; word-break: break-word; }
+  .commentActions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .commentLikeBtn {
+    display: flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 12px;
+    background: transparent; color: rgba(var(--overlay-rgb),0.45); font-size: 12px; font-weight: 600; font-family: inherit;
+  }
+  .commentLikeBtn svg { flex-shrink: 0; }
+  .commentLikeBtn.liked { color: #ff453a; }
+
   /* tab bar */
   .tabbar {
     position: fixed; bottom: 30px; left: 14px; right: 14px; z-index: 50;
@@ -779,6 +816,7 @@ let currentUser = null;
 let applyingRemoteData = false;
 let cloudSyncTimer = null;
 let unsubscribeCloud = null;
+let unsubscribeComments = null;
 
 function scheduleCloudSync() {
   if (!fbDb || !currentUser || applyingRemoteData) return;
@@ -2006,6 +2044,7 @@ async function fetchTvEpisodes(id, seasonNumbers) {
 }
 
 async function openShow(id) {
+  if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
   currentShowId = id;
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
@@ -2078,9 +2117,25 @@ async function renderSheet(show, episodes, seasons, inLib) {
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
       ${inLib?`<button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>`:''}
+      <div class="commentsSection">
+        <h3 class="commentsTitle">Commenti</h3>
+        ${currentUser ? `
+          <div class="commentForm">
+            <textarea id="commentInput" placeholder="Scrivi un commento..." maxlength="500"></textarea>
+            <button class="commentSendBtn" onclick="postComment(${show.id})">Pubblica</button>
+          </div>
+        ` : `
+          <div class="commentLoginPrompt">
+            <span>Accedi per lasciare un commento</span>
+            <button class="filebtn" onclick="signInGoogle()">Accedi con Google</button>
+          </div>
+        `}
+        <div id="commentsList" class="commentsList"><div class="commentsLoading">Caricamento commenti…</div></div>
+      </div>
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
+  renderComments(show.id);
   if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
 }
 
@@ -2247,6 +2302,105 @@ async function removeShow(id) {
   delete library[id]; saveLibrary(); renderLibrary(); closeSheet(); showToast('Serie rimossa');
 }
 
+// ---------- commenti serie ----------
+let commentsCache = {};
+
+function getAnonId() {
+  try {
+    let id = localStorage.getItem('serietracker_anon_id');
+    if (!id) {
+      id = 'anon_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('serietracker_anon_id', id);
+    }
+    return id;
+  } catch (e) { return 'anon_fallback'; }
+}
+function getLikeId() { return currentUser ? currentUser.uid : getAnonId(); }
+
+function renderComments(showId) {
+  const list = document.getElementById('commentsList');
+  if (!list) return;
+  if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
+  if (!fbDb) { list.innerHTML = '<div class="commentsEmpty">Commenti non disponibili.</div>'; return; }
+  unsubscribeComments = fbDb.collection('comments').where('showId', '==', showId)
+    .onSnapshot(snap => {
+      commentsCache = {};
+      const comments = snap.docs.map(d => { const c = { id: d.id, ...d.data() }; commentsCache[d.id] = c; return c; })
+        .sort((a, b) => commentMillis(b) - commentMillis(a));
+      list.innerHTML = comments.length
+        ? comments.map(renderCommentItem).join('')
+        : '<div class="commentsEmpty">Nessun commento, sii il primo!</div>';
+    }, () => { list.innerHTML = '<div class="commentsEmpty">Errore nel caricamento dei commenti.</div>'; });
+}
+
+function commentMillis(c) {
+  return (c.createdAt && c.createdAt.toMillis) ? c.createdAt.toMillis() : (c.createdAt || 0);
+}
+
+function renderCommentItem(c) {
+  const mine = currentUser && currentUser.uid === c.uid;
+  const when = (c.createdAt && c.createdAt.toDate) ? formatDateIT(c.createdAt.toDate().toISOString().slice(0, 10)) : '';
+  const likedBy = c.likedBy || [];
+  const liked = likedBy.includes(getLikeId());
+  return `<div class="commentItem glass" id="comment-${c.id}">
+    <div class="commentTop">
+      ${c.photoURL ? `<img class="commentAvatar" src="${c.photoURL}" alt="">` : `<div class="commentAvatar"></div>`}
+      <div class="commentMeta">
+        <div class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}</div>
+        <div class="commentDate">${when}</div>
+      </div>
+      ${mine ? `<button class="commentDeleteBtn" onclick="deleteComment('${c.id}')" title="Elimina">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>` : ''}
+    </div>
+    <div class="commentText">${escapeHtml(c.text)}</div>
+    <div class="commentActions">
+      <button class="commentLikeBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>${likedBy.length || ''}</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function toggleLikeComment(commentId) {
+  if (!fbDb) return;
+  const c = commentsCache[commentId];
+  if (!c) return;
+  const id = getLikeId();
+  const likedBy = c.likedBy || [];
+  const op = likedBy.includes(id) ? firebase.firestore.FieldValue.arrayRemove(id) : firebase.firestore.FieldValue.arrayUnion(id);
+  fbDb.collection('comments').doc(commentId).update({ likedBy: op }).catch(() => { showToast('Errore'); });
+}
+
+async function postComment(showId) {
+  if (!currentUser || !fbDb) { showToast('Accedi per commentare'); return; }
+  const input = document.getElementById('commentInput');
+  const text = (input.value || '').trim();
+  if (!text) return;
+  if (text.length > 500) { showToast('Commento troppo lungo'); return; }
+  const btn = document.querySelector('.commentSendBtn');
+  if (btn) btn.disabled = true;
+  try {
+    await fbDb.collection('comments').add({
+      showId,
+      uid: currentUser.uid,
+      displayName: currentUser.displayName || currentUser.email || 'Utente',
+      photoURL: currentUser.photoURL || null,
+      text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    input.value = '';
+  } catch (e) { showToast('Errore nell\'invio del commento'); }
+  if (btn) btn.disabled = false;
+}
+
+async function deleteComment(commentId) {
+  if (!currentUser || !fbDb) return;
+  try { await fbDb.collection('comments').doc(commentId).delete(); }
+  catch (e) { showToast('Errore nell\'eliminazione'); }
+}
+
 // ---------- film detail ----------
 async function openFilm(id) {
   const sheetBg = document.getElementById('sheetBg');
@@ -2309,6 +2463,7 @@ function closeSheet() {
   document.getElementById('sheetBg').classList.remove('open');
   const sheet = document.getElementById('sheet');
   sheet.style.transition = ''; sheet.style.transform = '';
+  if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
 }
 document.getElementById('sheetBg').addEventListener('click', e => { if(e.target.id==='sheetBg') closeSheet(); });
 
