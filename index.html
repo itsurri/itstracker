@@ -175,11 +175,13 @@
   .searchcard .scinfo .sm { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* GRID */
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; perspective: 800px; }
   .card {
     border-radius: 20px; overflow: hidden; position: relative; cursor: pointer;
     aspect-ratio: 2/3; background: rgba(var(--overlay-rgb),0.06);
+    transform-style: preserve-3d; transition: transform 0.18s cubic-bezier(.22,.61,.36,1);
   }
+  .card.tilting { transition: transform 0.05s linear; }
   .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.3); font-size: 10px; text-align: center; padding: 8px; }
   .card .badge {
@@ -235,8 +237,34 @@
   }
   .sheetbg.open > .closebtn { opacity: 1; pointer-events: auto; }
   .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
-  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; will-change: transform; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
+  /* dove si guarda */
+  .watch-providers { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+  .watch-providers .wp-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.4); width: 100%; margin-bottom: -2px; }
+  .watch-providers img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+  /* stima tempo rimanente */
+  .time-left { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-tv, #0A84FF); background: rgba(10,132,255,0.12); padding: 6px 12px; border-radius: 14px; margin-bottom: 16px; }
+  /* cinema mode episodio */
+  .cinemaBg {
+    display: none; position: fixed; inset: 0; z-index: 130; background: #000;
+    opacity: 0; transition: opacity 0.3s; overflow-y: auto;
+  }
+  .cinemaBg.open { display: block; opacity: 1; }
+  .cinema-hero { position: relative; width: 100%; aspect-ratio: 16/9; background: #0a0a0a; }
+  .cinema-hero img { width: 100%; height: 100%; object-fit: cover; }
+  .cinema-hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, #000 100%); }
+  .cinema-close {
+    position: fixed; top: calc(env(safe-area-inset-top) + 12px); right: 14px; z-index: 5;
+    width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cinema-body { padding: 0 24px calc(env(safe-area-inset-bottom) + 40px); margin-top: -50px; position: relative; color: #fff; }
+  .cinema-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+  .cinema-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 6px; line-height: 1.15; }
+  .cinema-date { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 22px; }
+  .cinema-synopsis { font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.85); max-width: 40em; }
   .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -1104,6 +1132,18 @@
 </div>
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
 <div class="mentionDropdown" id="mentionDropdown"></div>
+<div class="cinemaBg" id="cinemaBg">
+  <button class="cinema-close" onclick="closeCinema()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="cinema-hero"><img id="cinemaImg" alt=""><div class="fade"></div></div>
+  <div class="cinema-body">
+    <div class="cinema-eyebrow" id="cinemaEyebrow"></div>
+    <div class="cinema-title" id="cinemaTitle"></div>
+    <div class="cinema-date" id="cinemaDate"></div>
+    <div class="cinema-synopsis" id="cinemaSynopsis"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="ach-toast" id="achToast">
   <div class="ach-toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg></div>
@@ -3024,6 +3064,8 @@ async function renderSheet(show, episodes, seasons, inLib) {
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato</div>
+      ${renderTimeLeft(show, episodes, watchedCount)}
+      <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
@@ -3033,7 +3075,43 @@ async function renderSheet(show, episodes, seasons, inLib) {
   renderEpisodeList(show.id, episodes, currentSeason);
   if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
   runPosterFlip();
+  loadWatchProviders('tv', show.id);
 }
+
+// Stima del tempo che manca per finire una serie: episodi rimanenti (usciti) × durata media.
+function renderTimeLeft(show, episodes, watchedCount) {
+  const runtime = (Array.isArray(show.episode_run_time) && show.episode_run_time.length)
+    ? Math.round(show.episode_run_time.reduce((a,b)=>a+b,0)/show.episode_run_time.length)
+    : (show.last_episode_to_air && show.last_episode_to_air.runtime) || 42;
+  const aired = episodes.filter(e => e.airdate && !isFutureEpisode(e)).length;
+  const remaining = Math.max(0, aired - watchedCount);
+  if (remaining <= 0 || !runtime) return '';
+  const mins = remaining * runtime;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const label = h > 0 ? `${h} h${m ? ' ' + m + ' min' : ''}` : `${m} min`;
+  return `<div class="time-left">⏳ Ti servono ~${label} per finirla (${remaining} ep)</div>`;
+}
+
+// Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
+async function loadWatchProviders(type, id) {
+  const box = document.getElementById('watchProviders');
+  if (!box || !hasTmdbKeySilent()) return;
+  try {
+    const r = await fetch(tmdbUrl(`/${type}/${id}/watch/providers`, {}));
+    const data = await r.json();
+    const it = (data.results && data.results.IT) || null;
+    const seen = new Set();
+    const providers = [...((it && it.flatrate) || []), ...((it && it.free) || [])]
+      .filter(p => { if (seen.has(p.provider_id)) return false; seen.add(p.provider_id); return true; })
+      .slice(0, 6);
+    if (!providers.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `<span class="wp-label">Dove si guarda</span>` + providers.map(p =>
+      `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${escapeHtml(p.provider_name)}" title="${escapeHtml(p.provider_name)}">`
+    ).join('');
+  } catch(e) { box.innerHTML = ''; }
+}
+
+function hasTmdbKeySilent() { return !!getTmdbKey(); }
 
 function selectSeason(showId, season) {
   currentSeason = season;
@@ -3054,7 +3132,7 @@ function renderEpisodeList(showId, episodes, season) {
     const epKey = epCommentKey(showId,ep.season,ep.number);
     return `<div class="epitem glass" id="ep-${key}">
       <div class="epitop" onclick="toggleDesc('${key}')">
-        ${thumb?`<img src="${thumb}" alt="">`:`<div class="noimg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
+        ${thumb?`<img src="${thumb}" alt="" onclick="event.stopPropagation();openCinema(${showId},${ep.season},${ep.number})">`:`<div class="noimg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
         <div class="et">
           <div class="en">Stagione ${ep.season} · Episodio ${ep.number}</div>
           <div class="tt">${escapeHtml(ep.name||'Senza titolo')}</div>
@@ -3096,6 +3174,67 @@ function toggleDesc(key) {
   const el = document.getElementById('epdesc-'+key);
   if (!el) return;
   el.classList.toggle('open');
+}
+
+// ---------- cinema mode (lettura immersiva episodio) ----------
+function openCinema(showId, season, number) {
+  const eps = episodesCache[showId];
+  const ep = eps && eps.find(e => e.season === season && e.number === number);
+  if (!ep) return;
+  const desc = ep.summary ? ep.summary.replace(/<[^>]+>/g,'') : '';
+  document.getElementById('cinemaImg').src = ep.image || '';
+  document.getElementById('cinemaEyebrow').textContent = `Stagione ${ep.season} · Episodio ${ep.number}`;
+  document.getElementById('cinemaTitle').textContent = ep.name || 'Senza titolo';
+  document.getElementById('cinemaDate').textContent = ep.airdate ? formatDateIT(ep.airdate) : '';
+  document.getElementById('cinemaSynopsis').textContent = desc || 'Nessuna descrizione disponibile.';
+  const bg = document.getElementById('cinemaBg');
+  bg.scrollTop = 0;
+  bg.classList.add('open');
+  haptic();
+}
+function closeCinema() { document.getElementById('cinemaBg').classList.remove('open'); }
+
+// ---------- parallax hero della scheda ----------
+function initSheetParallax() {
+  const sheet = document.getElementById('sheet');
+  if (!sheet) return;
+  sheet.addEventListener('scroll', () => {
+    const img = sheet.querySelector('.hero img');
+    if (!img) return;
+    const y = sheet.scrollTop;
+    if (y > 260) return; // oltre l'hero non serve aggiornare
+    img.style.transform = `translateY(${y * 0.4}px) scale(${1 + Math.min(y, 260) * 0.0006})`;
+  }, { passive: true });
+}
+
+// ---------- tilt 3D delle card alla pressione ----------
+function initCardTilt() {
+  let active = null, sx = 0, sy = 0;
+  const MAX = 10;
+  function onDown(e) {
+    const card = e.target.closest('.card');
+    if (!card || !card.closest('.grid')) return;
+    active = card; sx = e.clientX; sy = e.clientY;
+    card.classList.add('tilting');
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(800px) rotateY(${px * MAX}deg) rotateX(${-py * MAX}deg) scale(0.98)`;
+  }
+  function move(e) {
+    // se il dito si sposta (scroll), annulla il tilt per non disturbare
+    if (active && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) reset();
+  }
+  function reset() {
+    if (!active) return;
+    active.classList.remove('tilting');
+    active.style.transform = '';
+    active = null;
+  }
+  document.addEventListener('pointerdown', onDown, { passive: true });
+  document.addEventListener('pointermove', move, { passive: true });
+  document.addEventListener('pointerup', reset, { passive: true });
+  document.addEventListener('pointercancel', reset, { passive: true });
 }
 
 function isFutureEpisode(ep) {
@@ -3543,6 +3682,8 @@ async function renderFilmSheet(f, inLib) {
         ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
+      ${f.runtime?`<div class="time-left">⏱️ Durata ~${Math.floor(f.runtime/60)?Math.floor(f.runtime/60)+' h ':''}${f.runtime%60} min</div>`:''}
+      <div class="watch-providers" id="watchProviders"></div>
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">Aggiungi alla libreria</button>`
         : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
@@ -3550,6 +3691,7 @@ async function renderFilmSheet(f, inLib) {
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
   runPosterFlip();
+  loadWatchProviders('movie', f.id);
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -3896,6 +4038,8 @@ initPullToRefresh();
 initInstallBanner();
 renderNotifPanel();
 moveTabIndicator(document.querySelector('.tabbtn.active'));
+initSheetParallax();
+initCardTilt();
 </script>
 </body>
 </html>
