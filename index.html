@@ -1376,8 +1376,6 @@ function syncPublicProfile() {
     uid: currentUser.uid,
     nickname: getNickname() || '',
     displayName: currentUser.displayName || '',
-    email: currentUser.email || '',
-    emailLower: (currentUser.email || '').toLowerCase(),
     nicknameLower: (getNickname() || '').toLowerCase(),
     photoURL: getCustomAvatar() || currentUser.photoURL || null,
     coverImage: getCoverImage() || null,
@@ -2865,13 +2863,9 @@ async function doSearchPeople(q) {
   if (!fbDb) { c.innerHTML = '<div class="empty">Ricerca non disponibile.</div>'; return; }
   const qLower = q.toLowerCase();
   try {
-    const [byNick, byEmail] = await Promise.all([
-      fbDb.collection('publicProfiles').where('nicknameLower', '>=', qLower).where('nicknameLower', '<', qLower + '').get(),
-      fbDb.collection('publicProfiles').where('emailLower', '==', qLower).get()
-    ]);
+    const byNick = await fbDb.collection('publicProfiles').where('nicknameLower', '>=', qLower).where('nicknameLower', '<', qLower + '').get();
     const map = {};
     byNick.forEach(d => { if (d.data().nicknameLower) map[d.id] = d.data(); });
-    byEmail.forEach(d => { map[d.id] = d.data(); });
     const results = Object.values(map).filter(p => !currentUser || p.uid !== currentUser.uid);
     renderPeopleResults(results);
   } catch(e) { c.innerHTML = '<div class="empty">Errore nella ricerca.</div>'; }
