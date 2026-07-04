@@ -324,11 +324,12 @@
   .epcommentbtn { background: transparent; flex-shrink: 0; }
   .epc-emoji {
     position: relative; display: flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; font-size: 22px; line-height: 1;
+    width: 36px; height: 36px; color: rgba(var(--overlay-rgb),0.35);
   }
+  .epc-emoji svg { width: 100%; height: 100%; }
   .epc-num {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 800; color: #000;
+    position: absolute; inset: 0 0 4px 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: var(--fg);
   }
   .epcomments { display: none; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); }
   .epcomments.open { display: block; }
@@ -606,11 +607,40 @@
   #splashLogo { height: 48px; width: auto; animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
   @keyframes splashIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
   @keyframes splashOut { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+
+  /* install banner */
+  .installBanner {
+    display: none; align-items: center; gap: 10px; position: relative; z-index: 60;
+    padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top));
+    background: rgba(var(--overlay-rgb),0.06); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.1);
+  }
+  .installBanner.show { display: flex; }
+  .installBanner img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
+  .ib-text { flex: 1; min-width: 0; }
+  .ib-title { font-size: 12.5px; font-weight: 700; }
+  .ib-sub { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; }
+  .ib-action {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 14px; background: var(--fg); color: var(--bg);
+    font-size: 12.5px; font-weight: 700; font-family: inherit;
+  }
+  .ib-close { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.4); }
 </style>
 </head>
 <body>
 <div id="splash">
   <img id="splashLogo" src="logo-header.png" alt="its tracker.">
+</div>
+<div class="installBanner" id="installBanner">
+  <img src="logo.png" alt="">
+  <div class="ib-text">
+    <div class="ib-title">Installa its tracker</div>
+    <div class="ib-sub" id="installBannerSub">Aggiungila alla schermata Home per aprirla più velocemente</div>
+  </div>
+  <button class="ib-action" id="installBannerAction" onclick="handleInstallClick()">Installa</button>
+  <button class="ib-close" onclick="dismissInstallBanner()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
 </div>
 <div id="app">
   <div class="ptr-indicator" id="ptrIndicator">
@@ -1298,50 +1328,99 @@ function animateCountUp(el) {
 
 function getAchievements(w) {
   const completedShows = Object.values(library).filter(s => categorizeShow(s) === 'inpari').length;
+  const filmLibCount = Object.values(filmLibrary).length;
+  const topWatched = (w.top && w.top.w) || 0;
   const defs = [
     // episodi visti
     { id:'ep1',   label: 'Primo episodio',        unlocked: w.episodesWatched >= 1 },
+    { id:'ep5',   label: '5 episodi visti',       unlocked: w.episodesWatched >= 5 },
     { id:'ep10',  label: '10 episodi visti',       unlocked: w.episodesWatched >= 10 },
+    { id:'ep25',  label: '25 episodi visti',       unlocked: w.episodesWatched >= 25 },
     { id:'ep50',  label: '50 episodi visti',       unlocked: w.episodesWatched >= 50 },
     { id:'ep100', label: '100 episodi visti',      unlocked: w.episodesWatched >= 100 },
+    { id:'ep150', label: '150 episodi visti',      unlocked: w.episodesWatched >= 150 },
     { id:'ep250', label: '250 episodi visti',      unlocked: w.episodesWatched >= 250 },
     { id:'ep500', label: '500 episodi visti',      unlocked: w.episodesWatched >= 500 },
+    { id:'ep750', label: '750 episodi visti',      unlocked: w.episodesWatched >= 750 },
     { id:'ep1000',label: '1000 episodi visti',     unlocked: w.episodesWatched >= 1000 },
+    { id:'ep1500',label: '1500 episodi visti',     unlocked: w.episodesWatched >= 1500 },
     { id:'ep2000',label: '2000 episodi visti',     unlocked: w.episodesWatched >= 2000 },
+    { id:'ep3000',label: '3000 episodi visti',     unlocked: w.episodesWatched >= 3000 },
     // serie completate
     { id:'sc1',   label: 'Prima serie completata', unlocked: completedShows >= 1 },
+    { id:'sc2',   label: '2 serie completate',     unlocked: completedShows >= 2 },
     { id:'sc3',   label: '3 serie completate',     unlocked: completedShows >= 3 },
     { id:'sc5',   label: '5 serie completate',     unlocked: completedShows >= 5 },
     { id:'sc10',  label: '10 serie completate',    unlocked: completedShows >= 10 },
+    { id:'sc15',  label: '15 serie completate',    unlocked: completedShows >= 15 },
+    { id:'sc20',  label: '20 serie completate',    unlocked: completedShows >= 20 },
     { id:'sc25',  label: '25 serie completate',    unlocked: completedShows >= 25 },
-    // libreria
+    { id:'sc35',  label: '35 serie completate',    unlocked: completedShows >= 35 },
+    { id:'sc50',  label: '50 serie completate',    unlocked: completedShows >= 50 },
+    // libreria serie
+    { id:'lib3',  label: '3 serie in libreria',    unlocked: w.totalShows >= 3 },
     { id:'lib5',  label: '5 serie in libreria',    unlocked: w.totalShows >= 5 },
     { id:'lib10', label: '10 serie in libreria',   unlocked: w.totalShows >= 10 },
+    { id:'lib15', label: '15 serie in libreria',   unlocked: w.totalShows >= 15 },
     { id:'lib25', label: '25 serie in libreria',   unlocked: w.totalShows >= 25 },
+    { id:'lib40', label: '40 serie in libreria',   unlocked: w.totalShows >= 40 },
     { id:'lib50', label: '50 serie in libreria',   unlocked: w.totalShows >= 50 },
-    // film
+    { id:'lib75', label: '75 serie in libreria',   unlocked: w.totalShows >= 75 },
+    { id:'lib100',label: '100 serie in libreria',  unlocked: w.totalShows >= 100 },
+    // film visti
     { id:'f1',    label: 'Primo film visto',       unlocked: w.filmsWatched >= 1 },
+    { id:'f2',    label: '2 film visti',           unlocked: w.filmsWatched >= 2 },
     { id:'f5',    label: '5 film visti',           unlocked: w.filmsWatched >= 5 },
     { id:'f10',   label: '10 film visti',          unlocked: w.filmsWatched >= 10 },
+    { id:'f15',   label: '15 film visti',          unlocked: w.filmsWatched >= 15 },
     { id:'f25',   label: '25 film visti',          unlocked: w.filmsWatched >= 25 },
     { id:'f50',   label: '50 film visti',          unlocked: w.filmsWatched >= 50 },
+    { id:'f75',   label: '75 film visti',          unlocked: w.filmsWatched >= 75 },
+    { id:'f100',  label: '100 film visti',         unlocked: w.filmsWatched >= 100 },
+    // film in libreria
+    { id:'fl5',   label: '5 film in libreria',     unlocked: filmLibCount >= 5 },
+    { id:'fl10',  label: '10 film in libreria',    unlocked: filmLibCount >= 10 },
+    { id:'fl25',  label: '25 film in libreria',    unlocked: filmLibCount >= 25 },
+    { id:'fl50',  label: '50 film in libreria',    unlocked: filmLibCount >= 50 },
     // ore guardate
     { id:'h5',    label: '5 ore guardate',         unlocked: w.hours >= 5 },
+    { id:'h10',   label: '10 ore guardate',        unlocked: w.hours >= 10 },
     { id:'h24',   label: '24 ore guardate',        unlocked: w.hours >= 24 },
+    { id:'h50',   label: '50 ore guardate',        unlocked: w.hours >= 50 },
     { id:'h100',  label: '100 ore guardate',       unlocked: w.hours >= 100 },
+    { id:'h150',  label: '150 ore guardate',       unlocked: w.hours >= 150 },
     { id:'h250',  label: '250 ore guardate',       unlocked: w.hours >= 250 },
     { id:'h500',  label: '500 ore guardate',       unlocked: w.hours >= 500 },
+    { id:'h750',  label: '750 ore guardate',       unlocked: w.hours >= 750 },
     { id:'h1000', label: '1000 ore guardate',      unlocked: w.hours >= 1000 },
+    { id:'h1500', label: '1500 ore guardate',      unlocked: w.hours >= 1500 },
+    { id:'h2000', label: '2000 ore guardate',      unlocked: w.hours >= 2000 },
     // streak
     { id:'st3',   label: '3 giorni di fila',       unlocked: w.streak >= 3 },
+    { id:'st5',   label: '5 giorni di fila',       unlocked: w.streak >= 5 },
     { id:'st7',   label: '7 giorni di fila',       unlocked: w.streak >= 7 },
+    { id:'st10',  label: '10 giorni di fila',      unlocked: w.streak >= 10 },
     { id:'st14',  label: '14 giorni di fila',      unlocked: w.streak >= 14 },
+    { id:'st21',  label: '21 giorni di fila',      unlocked: w.streak >= 21 },
     { id:'st30',  label: '30 giorni di fila',      unlocked: w.streak >= 30 },
+    { id:'st45',  label: '45 giorni di fila',      unlocked: w.streak >= 45 },
     { id:'st60',  label: '60 giorni di fila',      unlocked: w.streak >= 60 },
+    { id:'st90',  label: '90 giorni di fila',      unlocked: w.streak >= 90 },
+    { id:'st180', label: '180 giorni di fila',     unlocked: w.streak >= 180 },
+    { id:'st365', label: '365 giorni di fila',     unlocked: w.streak >= 365 },
     // generi
     { id:'g3',    label: '3 generi diversi',       unlocked: w.distinctGenres >= 3 },
+    { id:'g4',    label: '4 generi diversi',       unlocked: w.distinctGenres >= 4 },
     { id:'g5',    label: '5 generi diversi',       unlocked: w.distinctGenres >= 5 },
-    { id:'g8',    label: '8 generi diversi',       unlocked: w.distinctGenres >= 8 }
+    { id:'g6',    label: '6 generi diversi',       unlocked: w.distinctGenres >= 6 },
+    { id:'g7',    label: '7 generi diversi',       unlocked: w.distinctGenres >= 7 },
+    { id:'g8',    label: '8 generi diversi',       unlocked: w.distinctGenres >= 8 },
+    { id:'g10',   label: '10 generi diversi',      unlocked: w.distinctGenres >= 10 },
+    // serie preferita
+    { id:'bs25',  label: '25 episodi di una serie', unlocked: topWatched >= 25 },
+    { id:'bs50',  label: '50 episodi di una serie', unlocked: topWatched >= 50 },
+    { id:'bs100', label: '100 episodi di una serie', unlocked: topWatched >= 100 },
+    { id:'bs200', label: '200 episodi di una serie', unlocked: topWatched >= 200 }
   ];
   return defs;
 }
@@ -2235,7 +2314,10 @@ function renderEpisodeList(showId, episodes, season) {
         </div>
         <div class="ep-actions">
           <button class="epcommentbtn" onclick="event.stopPropagation();toggleEpisodeComments(${showId},${ep.season},${ep.number})">
-            <span class="epc-emoji">💬<span class="epc-num" id="epcCount-${epKey}">${commentCounts[epKey] || 0}</span></span>
+            <span class="epc-emoji">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+              <span class="epc-num" id="epcCount-${epKey}">${commentCounts[epKey] || 0}</span>
+            </span>
           </button>
           <button class="checkbtn ${isW?'checked':''}${notAired?' not-aired':''}" onclick="event.stopPropagation();toggleEpisode(${showId},${ep.season},${ep.number})">
             ${isW?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
@@ -2467,7 +2549,7 @@ function commentMillis(c) {
   return (c.createdAt && c.createdAt.toMillis) ? c.createdAt.toMillis() : (c.createdAt || 0);
 }
 
-function renderCommentItem(c, epKey, replies) {
+function renderCommentItem(c, epKey, replies, isReply) {
   const mine = currentUser && currentUser.uid === c.uid;
   let when = '';
   if (c.createdAt && c.createdAt.toDate) {
@@ -2477,14 +2559,15 @@ function renderCommentItem(c, epKey, replies) {
   }
   const likedBy = c.likedBy || [];
   const liked = likedBy.includes(getLikeId());
+  const replyBtn = `<button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')"><span class="emo">💬</span><span>${replies.length}</span></button>`;
+  const likeBtn = `<button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')"><span class="emo">❤️</span><span>${likedBy.length}</span></button>`;
   return `<div class="commentItem" id="comment-${c.id}">
     <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
     <div class="commentBody">
       <div class="commentHeadline"><span class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${escapeHtml(c.text)}</div>
       <div class="commentActions">
-        <button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')"><span class="emo">💬</span><span>${replies.length}</span></button>
-        <button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')"><span class="emo">❤️</span><span>${likedBy.length}</span></button>
+        ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
       </div>
       <div class="commentReplyForm" id="replyForm-${c.id}">
         <textarea id="replyInput-${c.id}" placeholder="Scrivi una risposta..." maxlength="500"></textarea>
@@ -2492,7 +2575,7 @@ function renderCommentItem(c, epKey, replies) {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
         </button>
       </div>
-      ${replies.length ? `<div class="commentReplies">${replies.map(r => renderCommentItem(r, epKey, [])).join('')}</div>` : ''}
+      ${replies.length ? `<div class="commentReplies">${replies.map(r => renderCommentItem(r, epKey, [], true)).join('')}</div>` : ''}
     </div>
     ${mine ? `<button class="commentDeleteBtn" onclick="deleteComment('${c.id}')" title="Elimina">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -2764,6 +2847,49 @@ function saveNickname() {
   showToast(v ? 'Nickname salvato' : 'Nickname rimosso');
 }
 
+// ---------- installa su home ----------
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+
+function isStandaloneApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function initInstallBanner() {
+  if (isStandaloneApp()) return;
+  const banner = document.getElementById('installBanner');
+  const sub = document.getElementById('installBannerSub');
+  const action = document.getElementById('installBannerAction');
+  if (!banner) return;
+  if (isIOSDevice()) {
+    sub.textContent = 'Tocca Condividi, poi "Aggiungi alla schermata Home"';
+    action.style.display = 'none';
+  }
+  banner.classList.add('show');
+}
+
+async function handleInstallClick() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    dismissInstallBanner();
+  } else {
+    showToast('Usa il menu del browser per installare l\'app');
+  }
+}
+
+function dismissInstallBanner() {
+  const banner = document.getElementById('installBanner');
+  if (banner) banner.classList.remove('show');
+}
+
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
@@ -2787,6 +2913,7 @@ checkAchievements(false);
 checkIncomingCompare();
 ensureUpcomingCache();
 initPullToRefresh();
+initInstallBanner();
 </script>
 </body>
 </html>
