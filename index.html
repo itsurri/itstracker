@@ -407,6 +407,7 @@
     background: #0d3320; color: #7fe89a; font-size: 13px; font-weight: 700;
     font-family: inherit; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 10px;
   }
+  .markallbtn.danger { border-color: #ff8a80; background: #3a0f0f; color: #ff8a80; }
 
   .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; touch-action: pan-x; }
   .seasontabs::-webkit-scrollbar { display: none; }
@@ -3462,7 +3463,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
-      ${inLib?`<button class="markallbtn" onclick="markAllAired(${show.id})">Segna come vista</button>`:''}
+      ${inLib?`<button class="markallbtn${allAiredWatched(show,episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(show,episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
       ${inLib?`<button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>`:''}
@@ -3696,6 +3697,7 @@ function applyToggleEpisode(showId, season, number) {
   const tot = episodesCache[showId] ? episodesCache[showId].length : 0;
   const sw = document.getElementById('statW'); if(sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if(sp) sp.textContent = (tot?Math.round(wc/tot*100):0)+'%';
+  updateMarkAllBtn(showId);
 
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
   if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
@@ -3706,16 +3708,41 @@ function applyToggleEpisode(showId, season, number) {
   if (!wasWatched) checkAchievements();
 }
 
-function markAllAired(showId) {
+function allAiredWatched(show, episodes) {
+  if (!episodes || !episodes.length) return false;
+  const aired = episodes.filter(e => !isFutureEpisode(e));
+  if (!aired.length) return false;
+  const w = (show && show.watched) || {};
+  return aired.every(e => w[`${e.season}x${e.number}`]);
+}
+
+function updateMarkAllBtn(showId) {
+  const btn = document.getElementById('markAllBtn');
+  if (!btn) return;
+  const isAll = allAiredWatched(library[showId], episodesCache[showId]);
+  btn.textContent = isAll ? 'Rimuovi tutti gli episodi' : 'Segna come vista';
+  btn.classList.toggle('danger', isAll);
+}
+
+function toggleMarkAll(showId) {
   const eps = episodesCache[showId];
   if (!eps) return;
-  if (!library[showId].watched) library[showId].watched = {};
-  const w = library[showId].watched;
-  let changed = false;
-  eps.forEach(e => { if (!isFutureEpisode(e)) { const k = `${e.season}x${e.number}`; if (!w[k]) { w[k] = Date.now(); changed = true; } } });
-  if (!changed) { showToast('Già tutto segnato come visto'); return; }
-  library[showId].lastWatchedAt = Date.now();
-  library[showId].next = computeNextEp(eps, w);
+  const show = library[showId];
+  if (!show.watched) show.watched = {};
+  const w = show.watched;
+  const aired = eps.filter(e => !isFutureEpisode(e));
+  const wasAll = allAiredWatched(show, eps);
+  if (wasAll) {
+    aired.forEach(e => { delete w[`${e.season}x${e.number}`]; });
+    showToast('Episodi rimossi');
+  } else {
+    let changed = false;
+    aired.forEach(e => { const k = `${e.season}x${e.number}`; if (!w[k]) { w[k] = Date.now(); changed = true; } });
+    if (!changed) { showToast('Già tutto segnato come visto'); return; }
+    showToast('Episodi usciti segnati come visti');
+  }
+  show.lastWatchedAt = Date.now();
+  show.next = computeNextEp(eps, w);
   saveLibrary();
   renderEpisodeList(showId, eps, currentSeason);
   renderLibrary();
@@ -3723,12 +3750,12 @@ function markAllAired(showId) {
   const wc = Object.keys(w).length;
   const sw = document.getElementById('statW'); if (sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if (sp) sp.textContent = (eps.length?Math.round(wc/eps.length*100):0)+'%';
-  if (categorizeShow(library[showId]) === 'inpari') {
+  updateMarkAllBtn(showId);
+  if (!wasAll && categorizeShow(show) === 'inpari') {
     celebrateShowComplete();
-    logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
+    logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
     refreshShowTotals(showId).then(ch => { if (ch) renderLibrary(); });
   }
-  showToast('Episodi usciti segnati come visti');
 }
 
 function askMarkPrevious(showId, priorUnwatched, season, number) {
@@ -3744,6 +3771,7 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     renderEpisodeList(showId, episodesCache[showId], currentSeason);
     renderLibrary();
     checkAchievements();
+    updateMarkAllBtn(showId);
     okBtn.textContent = 'Elimina';
     closeConfirm();
   };
