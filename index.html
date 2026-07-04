@@ -259,7 +259,7 @@
   /* anno in rassegna (storie) */
   .wrappedBg {
     display: none; position: fixed; inset: 0; z-index: 140; overflow: hidden;
-    color: #fff; -webkit-tap-highlight-color: transparent;
+    color: var(--fg); -webkit-tap-highlight-color: transparent;
   }
   .wrappedBg.open { display: block; }
   .wrapped-slide {
@@ -272,28 +272,28 @@
     position: absolute; top: calc(env(safe-area-inset-top) + 12px); left: 14px; right: 14px; z-index: 3;
     display: flex; gap: 5px;
   }
-  .wrapped-progress .wp-bar { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.3); overflow: hidden; }
-  .wrapped-progress .wp-bar i { display: block; height: 100%; width: 0; background: #fff; }
+  .wrapped-progress .wp-bar { flex: 1; height: 3px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.2); overflow: hidden; }
+  .wrapped-progress .wp-bar i { display: block; height: 100%; width: 0; background: var(--fg); }
   .wrapped-progress .wp-bar.done i { width: 100%; }
   .wrapped-progress .wp-bar.active i { animation: wpFill 5s linear forwards; }
   @keyframes wpFill { from { width: 0; } to { width: 100%; } }
   .wrapped-close {
     position: absolute; top: calc(env(safe-area-inset-top) + 22px); right: 16px; z-index: 4;
-    width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(0,0,0,0.25);
-    display: flex; align-items: center; justify-content: center; color: #fff;
+    width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(var(--overlay-rgb),0.1);
+    display: flex; align-items: center; justify-content: center; color: var(--fg);
   }
   .wrapped-nav { position: absolute; top: 0; bottom: 0; width: 34%; z-index: 2; }
   .wrapped-nav.wn-prev { left: 0; } .wrapped-nav.wn-next { right: 0; }
-  .w-eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; margin-bottom: 18px; }
+  .w-eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.6; margin-bottom: 18px; }
   .w-big { font-size: 88px; font-weight: 900; letter-spacing: -0.03em; line-height: 0.95; }
   .w-mid { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 6px 0; }
-  .w-sub { font-size: 17px; font-weight: 600; opacity: 0.9; margin-top: 14px; line-height: 1.45; }
+  .w-sub { font-size: 17px; font-weight: 600; opacity: 0.75; margin-top: 14px; line-height: 1.45; }
   .w-poster { width: 150px; aspect-ratio: 2/3; border-radius: 16px; object-fit: cover; margin: 0 auto 22px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
   .w-share {
     margin: 30px auto 0; display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px;
-    border-radius: 30px; background: #fff; color: #111; font-size: 15px; font-weight: 800; font-family: inherit;
+    border-radius: 30px; background: var(--fg); color: var(--bg); font-size: 15px; font-weight: 800; font-family: inherit;
   }
-  .w-logo { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 26px); left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 700; opacity: 0.6; letter-spacing: 0.04em; }
+  .w-logo { position: absolute; bottom: calc(env(safe-area-inset-bottom) + 26px); left: 0; right: 0; text-align: center; font-size: 12px; font-weight: 700; opacity: 0.5; letter-spacing: 0.04em; }
 
   /* cinema mode episodio */
   .cinemaBg {
@@ -329,7 +329,7 @@
   .mini-stats b { color: var(--fg); font-weight: 700; }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
   .profile-cover {
-    height: 108px; background-size: cover; background-position: center; position: relative;
+    aspect-ratio: 16/9; background-size: cover; background-position: center; position: relative;
     background-color: rgba(var(--overlay-rgb),0.08);
     background-image: linear-gradient(120deg, rgba(123,47,247,0.5), rgba(241,7,163,0.4));
   }
@@ -1836,34 +1836,34 @@ function gatherWrappedData() {
     month: bestMonth !== null ? WRAP_MONTHS[bestMonth] : null, monthCount: bestC, level };
 
   const slides = [];
-  slides.push({ bg: 'linear-gradient(160deg,#7b2ff7,#f107a3)', html: `
+  slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">itstracker</div>
     <div class="w-mid">Il tuo anno<br>in rassegna</div>
     <div class="w-sub">Un riassunto di tutto quello<br>che hai guardato. Tocca a destra →</div>` });
-  slides.push({ bg: 'linear-gradient(160deg,#0A84FF,#5E5CE6)', html: `
+  slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Hai passato</div>
     <div class="w-big" data-count="${w.hours}">0</div>
     <div class="w-mid">ore a guardare</div>
     <div class="w-sub">Praticamente ${Math.max(1,Math.round(w.hours/24))} giorni interi 🍿</div>` });
-  slides.push({ bg: 'linear-gradient(160deg,#30D158,#0A84FF)', html: `
+  slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">In totale</div>
     <div class="w-big" data-count="${w.episodesWatched}">0</div>
     <div class="w-mid">episodi visti</div>
     <div class="w-sub">${w.filmsWatched} film · ${w.totalShows} serie in libreria</div>` });
-  if (w.top && w.top.w) slides.push({ bg: 'linear-gradient(160deg,#FF9F0A,#FF375F)', html: `
+  if (w.top && w.top.w) slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">La tua serie n.1</div>
     ${w.top.image ? `<img class="w-poster" src="${w.top.image}" alt="">` : ''}
     <div class="w-mid">${escapeHtml(w.top.name||'')}</div>
     <div class="w-sub">${w.top.w} episodi visti — la più bingeata</div>` });
-  if (topGenre) slides.push({ bg: 'linear-gradient(160deg,#FF375F,#7b2ff7)', html: `
+  if (topGenre) slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il tuo genere</div>
     <div class="w-mid" style="font-size:40px">${escapeHtml(topGenre[0])}</div>
     <div class="w-sub">Il filo conduttore di ${topGenre[1]} titoli</div>` });
-  if (bestMonth !== null && bestC > 0) slides.push({ bg: 'linear-gradient(160deg,#64D2FF,#5E5CE6)', html: `
+  if (bestMonth !== null && bestC > 0) slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il mese più intenso</div>
     <div class="w-mid" style="font-size:44px">${WRAP_MONTHS[bestMonth]}</div>
     <div class="w-sub">${bestC} titoli in un solo mese 🔥</div>` });
-  slides.push({ bg: 'linear-gradient(160deg,#5E5CE6,#111)', html: `
+  slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il tuo livello</div>
     <div class="w-mid" style="font-size:46px">${level.emoji} ${level.label}</div>
     <div class="w-sub">${w.hours} ore totali guardate su itstracker</div>
