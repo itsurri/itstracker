@@ -2071,7 +2071,7 @@ function renderListTv(key, s) {
         s.rating ? `★ ${s.rating}` : null,
         s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
         s.next ? `S${s.next.season} E${s.next.number}` : null,
-        `Episodio ${watched}${total?'/'+total:''}`
+        watched > 0 ? `Episodio ${watched}${total?'/'+total:''}` : (total ? `${total} Episodi` : null)
       ].filter(Boolean).join(' · ')}</div>
       ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
     </div>
@@ -2244,9 +2244,7 @@ function setSearchMode(mode) {
   document.getElementById('searchInput').placeholder = mode === 'tv' ? 'Cerca una serie TV' : mode === 'film' ? 'Cerca un film' : 'Cerca per nickname o email';
   document.getElementById('searchInput').value = '';
   if (mode === 'people') {
-    document.getElementById('searchResults').innerHTML = '';
-    document.getElementById('searchEmpty').style.display = 'block';
-    document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.';
+    loadSuggestedPeople();
   } else {
     document.getElementById('searchEmpty').querySelector('div').innerHTML = 'Cerca tra migliaia di titoli,<br>aggiornati in automatico.';
     loadPopular(mode);
@@ -2285,7 +2283,7 @@ document.getElementById('searchInput').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
   if (searchMode === 'people') {
-    if (!q) { document.getElementById('searchResults').innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
+    if (!q) { loadSuggestedPeople(); return; }
     document.getElementById('searchEmpty').style.display = 'none';
     document.getElementById('searchResults').innerHTML = `<div class="spinner"></div>`;
     searchTimer = setTimeout(() => doSearchPeople(q), 350);
@@ -2314,16 +2312,35 @@ async function doSearchPeople(q) {
   } catch(e) { c.innerHTML = '<div class="empty">Errore nella ricerca.</div>'; }
 }
 
-function renderPeopleResults(results) {
+function renderPeopleResults(results, title) {
   const c = document.getElementById('searchResults');
+  document.getElementById('searchEmpty').style.display = 'none';
   if (!results.length) { c.innerHTML = '<div class="empty">Nessuna persona trovata.</div>'; return; }
-  c.innerHTML = results.map(p => `<div class="personcard" onclick="openPerson('${p.uid}')">
+  const cards = results.map(p => `<div class="personcard" onclick="openPerson('${p.uid}')">
     ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
     <div class="pc-info">
       <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
     </div>
   </div>`).join('');
+  c.innerHTML = title ? `<div class="wrap-sec-title" style="margin-top:0">${title}</div>${cards}` : cards;
+}
+
+// Suggerisce persone iscritte all'app senza dover cercare, tipo "potresti conoscere".
+async function loadSuggestedPeople() {
+  const c = document.getElementById('searchResults');
+  if (!fbDb) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
+  c.innerHTML = `<div class="spinner"></div>`;
+  document.getElementById('searchEmpty').style.display = 'none';
+  try {
+    const snap = await fbDb.collection('publicProfiles').orderBy('updatedAt', 'desc').limit(30).get();
+    const results = snap.docs.map(d => d.data()).filter(p => !currentUser || p.uid !== currentUser.uid);
+    renderPeopleResults(results, 'Potresti conoscere');
+  } catch(e) {
+    c.innerHTML = '';
+    document.getElementById('searchEmpty').style.display = 'block';
+    document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.';
+  }
 }
 
 // ---------- scheda persona ----------
