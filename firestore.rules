@@ -18,9 +18,13 @@ service cloud.firestore {
 
     // ---- Profili pubblici: lettura libera, scrittura solo del proprietario ----
     // Usati per ricerca persone, menzioni @, feed e scheda profilo pubblica.
+    // Eccezione: chi segue/smette di seguire questo utente può aggiornare
+    // SOLO il campo "followers" (tramite arrayUnion/arrayRemove del proprio uid).
     match /publicProfiles/{uid} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followers']);
     }
 
     // ---- Commenti agli episodi ----

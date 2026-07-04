@@ -1448,14 +1448,21 @@ if (fbAuth) {
     currentUser = user;
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
     if (unsubscribeNotifications) { unsubscribeNotifications(); unsubscribeNotifications = null; }
+    if (unsubscribePublicProfile) { unsubscribePublicProfile(); unsubscribePublicProfile = null; }
     if (user) {
       unsubscribeNotifications = fbDb.collection('notifications').where('toUid', '==', user.uid)
         .onSnapshot(snap => {
           remoteNotifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           renderNotifPanel();
-        }, () => {});
+        }, err => console.error('notifications onSnapshot', err));
+      unsubscribePublicProfile = fbDb.collection('publicProfiles').doc(user.uid)
+        .onSnapshot(snap => {
+          followerUids = (snap.exists && snap.data().followers) || [];
+          if (currentTab === 'profile') renderProfile();
+        }, err => console.error('publicProfile onSnapshot', err));
     } else {
       remoteNotifications = [];
+      followerUids = [];
       renderNotifPanel();
     }
     startChatList();
@@ -2285,11 +2292,12 @@ function renderProfile() {
   statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
 
   if (!w.episodesWatched && !w.filmsWatched) {
-    c.innerHTML = `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
+    c.innerHTML = currentUser ? renderFollowStats() : `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
     return;
   }
 
-  let html = `<div class="wrapped-cta" onclick="openWrapped()">
+  let html = currentUser ? renderFollowStats() : '';
+  html += `<div class="wrapped-cta" onclick="openWrapped()">
     <div class="wc-icon">🎬</div>
     <div class="wc-text"><div class="wc-title">Il tuo anno in rassegna</div><div class="wc-sub">Scopri e condividi le tue statistiche</div></div>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.6"><path d="M9 18l6-6-6-6"/></svg>
@@ -2904,14 +2912,47 @@ async function loadSuggestedPeople() {
 
 // ---------- segui / feed amici ----------
 let followingList = [];
+let followerUids = [];
+let unsubscribePublicProfile = null;
 function isFollowing(uid) { return followingList.includes(uid); }
 async function toggleFollow(uid) {
   if (!currentUser || !fbDb) { showToast('Accedi per seguire'); return; }
   const following = isFollowing(uid);
   if (following) followingList = followingList.filter(u => u !== uid); else followingList = [...followingList, uid];
   const op = following ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
-  try { await fbDb.collection('users').doc(currentUser.uid).set({ following: op }, { merge: true }); } catch(e) {}
+  try {
+    await fbDb.collection('users').doc(currentUser.uid).set({ following: op }, { merge: true });
+    await fbDb.collection('publicProfiles').doc(uid).set({ followers: op }, { merge: true });
+  } catch(e) {}
   if (currentPersonProfile && currentPersonProfile.uid === uid) renderPersonSheet(currentPersonProfile);
+  if (currentTab === 'profile') renderProfile();
+}
+
+function renderFollowStats() {
+  return `<div class="statrow" style="margin-top:14px;margin-bottom:0">
+    <div class="stat" style="cursor:pointer" onclick="toggleFollowList('following')"><div class="v">${followingList.length}</div><div class="l">Seguiti</div></div>
+    <div class="stat" style="cursor:pointer" onclick="toggleFollowList('followers')"><div class="v">${followerUids.length}</div><div class="l">Follower</div></div>
+  </div>
+  <div id="followListBody"></div>`;
+}
+
+let followListOpenMode = null;
+async function toggleFollowList(mode) {
+  const body = document.getElementById('followListBody');
+  if (!body) return;
+  if (followListOpenMode === mode) { followListOpenMode = null; body.innerHTML = ''; return; }
+  followListOpenMode = mode;
+  const uids = mode === 'following' ? followingList : followerUids;
+  if (!uids.length) {
+    body.innerHTML = `<div class="commentsEmpty">${mode === 'following' ? 'Non segui ancora nessuno.' : 'Nessun follower ancora.'}</div>`;
+    return;
+  }
+  body.innerHTML = `<div class="spinner"></div>`;
+  try {
+    const docs = await Promise.all(uids.map(u => fbDb.collection('publicProfiles').doc(u).get()));
+    const people = docs.filter(d => d.exists).map(d => d.data());
+    body.innerHTML = people.length ? people.map(personCardHtml).join('') : `<div class="commentsEmpty">Nessun profilo trovato.</div>`;
+  } catch (e) { body.innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; }
 }
 
 async function logActivity(payload) {
@@ -3083,7 +3124,7 @@ function openChat(uid, name, photoURL) {
     .onSnapshot(snap => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis(a) - chatMillis(b));
       renderChatMessages(msgs);
-    }, () => { document.getElementById('chatMessages').innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; });
+    }, err => { console.error('chat messages onSnapshot', err); document.getElementById('chatMessages').innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; });
   fbDb.collection('chats').doc(chatId).set({ readBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) }, { merge: true }).catch(()=>{});
 }
 
@@ -3138,7 +3179,7 @@ function startChatList() {
       chatListCache = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis2(b) - chatMillis2(a));
       renderChatListBadge();
       if (document.getElementById('chatListPanel').classList.contains('open')) renderChatListPanel();
-    }, () => {});
+    }, err => console.error('chat list onSnapshot', err));
 }
 function chatMillis2(c) { return (c.updatedAt && c.updatedAt.toMillis) ? c.updatedAt.toMillis() : (c.updatedAt || 0); }
 
