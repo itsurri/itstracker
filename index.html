@@ -1388,11 +1388,7 @@ function applyCardGlows(container) {
 // ---------- categorize show ----------
 function categorizeShow(s) {
   const watched = Object.keys(s.watched || {}).length;
-  let total = s.totalEpisodes || 0;
-  // Se il prossimo episodio TMDb non è ancora uscito, l'ultimo episodio del conteggio
-  // totale non è ancora disponibile: non contarlo, altrimenti la serie risulta "Continua"
-  // (nuovo episodio da vedere) mentre in realtà l'utente è già in pari.
-  if (s.nextAirDate && isFutureDateStr(s.nextAirDate)) total = Math.max(0, total - 1);
+  const total = s.totalEpisodes || 0;
   if (watched === 0) return 'davedere';
   if (total > 0 && watched >= total) return 'inpari';
   return 'continua';
@@ -1412,11 +1408,22 @@ async function refreshShowTotals(id) {
   try {
     const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await r.json();
-    // Somma degli episodi per stagione (esclusa la stagione 0/speciali), non il numero
-    // grezzo di TMDb: quello include gli speciali, che non vengono mai conteggiati tra
-    // i "visti", quindi il totale non coincideva mai col conteggio reale (es. 63/73).
-    const newTotal = (show.seasons||[]).filter(se=>se.season_number>0).reduce((sum,se)=>sum+(se.episode_count||0),0) || show.number_of_episodes || 0;
-    const newSeasons = (show.seasons||[]).filter(se=>se.season_number>0).length || show.number_of_seasons || library[id].totalSeasons;
+    const realSeasons = (show.seasons||[]).filter(se=>se.season_number>0);
+    // Il campo episode_count di ogni stagione è il totale PREVISTO, non quello uscito finora:
+    // per la stagione più recente (ancora in corso) va contato solo ciò che è già andato in
+    // onda, altrimenti il totale resta sempre più alto del conteggio "visti" anche quando si
+    // è perfettamente in pari (mancano solo episodi futuri).
+    let newTotal = show.number_of_episodes || 0;
+    if (realSeasons.length) {
+      const latest = realSeasons.reduce((a,b) => b.season_number > a.season_number ? b : a);
+      const priorTotal = realSeasons.filter(se => se.season_number !== latest.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
+      try {
+        const latestEps = await fetchTvEpisodes(id, [latest.season_number]);
+        const airedInLatest = latestEps.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
+        newTotal = priorTotal + airedInLatest;
+      } catch(e) { newTotal = realSeasons.reduce((sum,se)=>sum+(se.episode_count||0),0); }
+    }
+    const newSeasons = realSeasons.length || show.number_of_seasons || library[id].totalSeasons;
     const newRating = show.vote_average ? Math.round(show.vote_average*10)/10 : library[id].rating;
     const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
     const newNextAirDate = (show.next_episode_to_air && show.next_episode_to_air.air_date) || null;
@@ -2825,7 +2832,9 @@ async function openShow(id) {
 
   const inLib = !!library[id];
   if (inLib) {
-    library[id].totalEpisodes = episodes.length;
+    // Conta solo gli episodi già usciti: "episodes" può includere episodi futuri già
+    // annunciati (con data di uscita) della stagione in corso.
+    library[id].totalEpisodes = episodes.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
     library[id].nextAirDate = (show.next_episode_to_air && show.next_episode_to_air.air_date) || null;
     library[id].image = tmdbImg(show.poster_path, 'original') || library[id].image;
     library[id].backdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
@@ -3341,7 +3350,7 @@ async function enrichImportedLibrary() {
         const seasons = (show.seasons||[]).map(s => s.season_number).filter(n => n > 0).sort((a,b)=>a-b);
         const eps = await fetchTvEpisodes(id, seasons);
         episodesCache[id] = eps;
-        entry.totalEpisodes = eps.length;
+        entry.totalEpisodes = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
       }
       entry.watched = entry.watched||{};
       if (episodesCache[id]) entry.next = computeNextEp(episodesCache[id], entry.watched);
