@@ -402,6 +402,11 @@
   }
   .btnrow { display: flex; gap: 10px; margin-bottom: 14px; }
   .btnrow button { width: auto; flex: 1; margin: 0; }
+  .markallbtn {
+    width: 100%; padding: 7px 16px; border-radius: 18px; border: 1px solid #5fd97a;
+    background: #0d3320; color: #7fe89a; font-size: 13px; font-weight: 700;
+    font-family: inherit; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 10px;
+  }
 
   .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; touch-action: pan-x; }
   .seasontabs::-webkit-scrollbar { display: none; }
@@ -874,7 +879,7 @@
   #splash {
     position: fixed; top: -10vh; left: 0; right: 0; bottom: -10vh; z-index: 500; background: var(--bg);
     display: flex; align-items: center; justify-content: center;
-    animation: splashOut 0.4s ease 0.7s forwards;
+    animation: splashOut 0.4s ease 2.5s forwards;
   }
   body.splash-active .tabbar { visibility: hidden; }
   #splashLogo { height: 48px; width: auto; display: block; margin: 0 auto; animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
@@ -3457,6 +3462,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
+      ${inLib?`<button class="markallbtn" onclick="markAllAired(${show.id})">Segna come vista</button>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
       ${inLib?`<button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>`:''}
@@ -3698,6 +3704,31 @@ function applyToggleEpisode(showId, season, number) {
     refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
   }
   if (!wasWatched) checkAchievements();
+}
+
+function markAllAired(showId) {
+  const eps = episodesCache[showId];
+  if (!eps) return;
+  if (!library[showId].watched) library[showId].watched = {};
+  const w = library[showId].watched;
+  let changed = false;
+  eps.forEach(e => { if (!isFutureEpisode(e)) { const k = `${e.season}x${e.number}`; if (!w[k]) { w[k] = Date.now(); changed = true; } } });
+  if (!changed) { showToast('Già tutto segnato come visto'); return; }
+  library[showId].lastWatchedAt = Date.now();
+  library[showId].next = computeNextEp(eps, w);
+  saveLibrary();
+  renderEpisodeList(showId, eps, currentSeason);
+  renderLibrary();
+  checkAchievements();
+  const wc = Object.keys(w).length;
+  const sw = document.getElementById('statW'); if (sw) sw.textContent = wc;
+  const sp = document.getElementById('statP'); if (sp) sp.textContent = (eps.length?Math.round(wc/eps.length*100):0)+'%';
+  if (categorizeShow(library[showId]) === 'inpari') {
+    celebrateShowComplete();
+    logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
+    refreshShowTotals(showId).then(ch => { if (ch) renderLibrary(); });
+  }
+  showToast('Episodi usciti segnati come visti');
 }
 
 function askMarkPrevious(showId, priorUnwatched, season, number) {
