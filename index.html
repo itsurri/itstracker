@@ -946,6 +946,10 @@
   .hm-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
   .hm-wrap { overflow-x: auto; scrollbar-width: none; }
   .hm-wrap::-webkit-scrollbar { display: none; }
+  .hm-inner { display: inline-block; }
+  .hm-months { display: grid; grid-template-columns: repeat(26, 12px); gap: 3px; margin-bottom: 5px; }
+  .hm-months span { font-size: 9px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); white-space: nowrap; overflow: visible; }
+  .hm-sub { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 10px; line-height: 1.4; }
   .hm-grid { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; }
   .hm-cell, .hm-legend i { background: rgba(var(--overlay-rgb),0.07); }
   .hm-cell { width: 12px; height: 12px; border-radius: 2px; }
@@ -1714,6 +1718,9 @@ let lastTvResults = [];
 let lastFilmResults = [];
 let lastTvResultsChips = null;
 let lastFilmResultsChips = null;
+// Cache dei titoli "popolari/consigliati" per non farli cambiare a ogni
+// apertura della sezione (la popolarità TMDb fluttua di continuo).
+let popularCache = {};
 let tvGenreMap = null;
 let filmGenreMap = null;
 
@@ -2172,12 +2179,16 @@ async function shareProfileImage() {
   if (typeof html2canvas === 'undefined') { showToast('Funzione non disponibile'); return; }
   const target = document.getElementById('profileShareTarget');
   if (!target) return;
-  const hideEls = target.querySelectorAll('.cover-edit, .profile-share-btn, .profile-signout-x');
-  hideEls.forEach(el => el.style.visibility = 'hidden');
+  showToast('Preparo l\'immagine…');
   try {
-    const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: 2 });
-    hideEls.forEach(el => el.style.visibility = '');
+    const canvas = await html2canvas(target, {
+      backgroundColor: null, useCORS: true, allowTaint: false, scale: 2, logging: false, imageTimeout: 15000,
+      // Rimuove del tutto i comandi (copertina, condividi, esci) dalla copia
+      // che viene renderizzata, così l'immagine mostra solo il profilo.
+      onclone: (doc) => { doc.querySelectorAll('.cover-edit, .profile-share-btn, .profile-signout-x').forEach(e => e.remove()); }
+    });
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!blob) { showToast('Errore nella creazione dell\'immagine'); return; }
     const file = new File([blob], 'itstracker-profilo.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], text: 'Il mio profilo su itstracker' });
@@ -2186,7 +2197,6 @@ async function shareProfileImage() {
       showToast('Immagine salvata');
     }
   } catch(e) {
-    hideEls.forEach(el => el.style.visibility = '');
     showToast('Errore nella creazione dell\'immagine');
   }
 }
@@ -2303,11 +2313,20 @@ function watchDayCounts() {
 function renderHeatmap() {
   const counts = watchDayCounts();
   const WEEKS = 26;
+  const MON = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   const today = new Date(); today.setHours(0,0,0,0);
   const dow = (today.getDay()+6)%7; // 0 = lunedì
   const gridEnd = new Date(today); gridEnd.setDate(gridEnd.getDate() + (6-dow)); // domenica di questa settimana
   const totalDays = WEEKS*7;
   const start = new Date(gridEnd); start.setDate(start.getDate() - (totalDays-1));
+  // Etichette mese: una per colonna, mostrata solo quando cambia il mese.
+  let labels = '', lastM = -1;
+  for (let c = 0; c < WEEKS; c++) {
+    const d = new Date(start); d.setDate(start.getDate() + c*7);
+    let lab = '';
+    if (d.getMonth() !== lastM) { lab = MON[d.getMonth()]; lastM = d.getMonth(); }
+    labels += `<span>${lab}</span>`;
+  }
   let cells = '';
   for (let i = 0; i < totalDays; i++) {
     const d = new Date(start); d.setDate(start.getDate()+i); d.setHours(0,0,0,0);
@@ -2317,10 +2336,14 @@ function renderHeatmap() {
     if (cnt >= 8) lvl = 4; else if (cnt >= 5) lvl = 3; else if (cnt >= 3) lvl = 2; else if (cnt >= 1) lvl = 1;
     cells += `<div class="hm-cell hm-l${lvl}${future?' hm-future':''}" title="${d.toLocaleDateString('it-IT')}: ${cnt} ${cnt===1?'titolo':'titoli'}"></div>`;
   }
-  return `<div class="hm-head"><span class="hm-title">Attività</span>
+  return `<div class="hm-head"><span class="hm-title">Attività · ultimi 6 mesi</span>
       <span class="hm-legend">meno <i class="hm-l0"></i><i class="hm-l1"></i><i class="hm-l2"></i><i class="hm-l3"></i><i class="hm-l4"></i> più</span>
     </div>
-    <div class="hm-wrap"><div class="hm-grid">${cells}</div></div>`;
+    <div class="hm-wrap"><div class="hm-inner">
+      <div class="hm-months">${labels}</div>
+      <div class="hm-grid">${cells}</div>
+    </div></div>
+    <div class="hm-sub">Ogni quadratino è un giorno · più è acceso, più episodi/film hai visto</div>`;
 }
 
 // ---------- classifica amici (ore viste questo mese) ----------
@@ -3356,17 +3379,26 @@ function searchSkeletonGrid(n) {
 async function loadPopular(mode) {
   const c = document.getElementById('searchResults');
   if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
-  c.innerHTML = searchSkeletonGrid();
   document.getElementById('searchEmpty').style.display = 'none';
   try {
     const type = mode === 'tv' ? 'tv' : 'movie';
     const map = await ensureGenreMap(type);
     const activeGenre = mode === 'tv' ? tvSearchGenreFilter : filmSearchGenreFilter;
-    // Se è selezionato un genere, non filtriamo il campione già scaricato (troppo
-    // piccolo per contenere abbastanza titoli di quel genere): richiediamo
-    // direttamente a TMDB solo quel genere, così i risultati sono tanti quanti
-    // dovrebbero essere davvero.
     const genreId = activeGenre ? Object.keys(map).find(id => map[id] === activeGenre) : null;
+    const chipGenres = Object.values(map).sort();
+    const chips = renderGenreChips(chipGenres, activeGenre, mode === 'tv' ? 'setTvPopularGenre' : 'setFilmPopularGenre');
+    const cacheKey = mode + ':' + (genreId || 'all');
+    const cached = popularCache[cacheKey];
+    // Riuso i risultati per 30 minuti: stessa sezione = stessi titoli, niente
+    // "shuffle" percepito a ogni riapertura.
+    if (cached && Date.now() - cached.at < 30*60*1000) {
+      if (mode === 'tv') { lastTvResults = cached.results; lastTvResultsChips = chips; renderTvResultsFromCache(); }
+      else { lastFilmResults = cached.results; lastFilmResultsChips = chips; renderFilmResultsFromCache(); }
+      return;
+    }
+    c.innerHTML = searchSkeletonGrid();
+    // Se è selezionato un genere, richiediamo direttamente a TMDB solo quel
+    // genere, così i risultati sono tanti quanti dovrebbero essere davvero.
     const path = mode === 'tv' ? '/discover/tv' : '/discover/movie';
     const extraParams = genreId ? { with_genres: genreId } : {};
     const pages = await Promise.all([1,2,3,4,5].map(p => fetch(tmdbUrl(path, Object.assign({ sort_by: 'popularity.desc', page: p }, extraParams))).then(r => r.json())));
@@ -3377,9 +3409,8 @@ async function loadPopular(mode) {
       seen.add(r.id);
       return mode === 'tv' ? !library[r.id] : !filmLibrary[r.id];
     });
-    const chipGenres = Object.values(map).sort();
-    const chips = renderGenreChips(chipGenres, activeGenre, mode === 'tv' ? 'setTvPopularGenre' : 'setFilmPopularGenre');
-    if (mode === 'tv') renderTvResults(results, chips); else renderFilmResults(results, chips);
+    if (mode === 'tv') { await renderTvResults(results, chips); popularCache[cacheKey] = { results: lastTvResults, at: Date.now() }; }
+    else { await renderFilmResults(results, chips); popularCache[cacheKey] = { results: lastFilmResults, at: Date.now() }; }
   } catch(e) { c.innerHTML = ''; showToast('Errore di connessione'); }
 }
 
@@ -3867,7 +3898,11 @@ async function renderTvResults(results, chips) {
   if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun risultato.</div>'; lastTvResults = []; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,30);
+  // Sezione "popolari/consigliati" (chips presenti): mantieni l'ordine di
+  // popolarità di TMDB. Ricerca per query: riordina per rilevanza (voti).
+  const ranked = chips
+    ? results.slice(0, 30)
+    : results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,30);
   c.innerHTML = (chips||'') + searchSkeletonGrid(Math.min(ranked.length, 9));
 
   const [enriched] = await Promise.all([
@@ -3978,7 +4013,9 @@ async function renderFilmResults(results, chips) {
   document.getElementById('searchEmpty').style.display = 'none';
 
   await ensureGenreMap('movie');
-  lastFilmResults = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
+  lastFilmResults = chips
+    ? results.slice(0, 60)
+    : results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
   renderFilmResultsFromCache();
 }
 
