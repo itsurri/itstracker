@@ -961,7 +961,7 @@
   /* classifica amici */
   .lb-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.5); margin-bottom: 10px; }
   .lb-row { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 12px; cursor: pointer; }
-  .lb-row.me { background: rgba(10,132,255,0.1); cursor: default; }
+  .lb-row.me { background: rgba(10,132,255,0.1); }
   .lb-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); flex-shrink: 0; }
   .lb-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
@@ -1515,6 +1515,7 @@ function syncPublicProfile() {
     shows, films,
     monthKey: currentMonthKey(),
     monthHours: hoursInMonth(new Date().getFullYear(), new Date().getMonth()),
+    totalHours: computeWrapped().hours,
     updatedAt: Date.now()
   }, { merge: true }).catch(() => {});
 }
@@ -2357,29 +2358,43 @@ function hoursInMonth(year, month) {
 }
 function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${n.getMonth()}`; }
 
-async function renderLeaderboard() {
-  const el = document.getElementById('leaderboardBody');
-  if (!el || !fbDb || !currentUser || !followingList.length) return;
-  const mk = currentMonthKey();
-  const now = new Date();
-  const myHours = hoursInMonth(now.getFullYear(), now.getMonth());
-  const rows = [{ uid: currentUser.uid, name: 'Tu', photo: getAvatarUrl(), hours: myHours, me: true }];
-  try {
-    const uids = followingList.slice(0, 30);
-    const chunks = [];
-    for (let i = 0; i < uids.length; i += 10) chunks.push(uids.slice(i, i+10));
-    const snaps = await Promise.all(chunks.map(ch => fbDb.collection('publicProfiles').where('uid','in',ch).get()));
-    snaps.forEach(s => s.forEach(d => { const p = d.data(); rows.push({ uid: p.uid, name: p.nickname || p.displayName || 'Utente', photo: p.photoURL || '', hours: (p.monthKey === mk ? (p.monthHours||0) : 0) }); }));
-  } catch(e) {}
-  rows.sort((a,b) => b.hours - a.hours);
+function leaderboardRowsHtml(rows) {
   const medals = ['🥇','🥈','🥉'];
-  el.innerHTML = rows.slice(0, 10).map((r,i) => `
-    <div class="lb-row${r.me?' me':''}"${r.me?'':` onclick="openPerson('${r.uid}')"`}>
+  return rows.slice(0, 10).map((r,i) => `
+    <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
       ${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}
       <div class="lb-name">${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
+}
+
+async function renderLeaderboard() {
+  const totalEl = document.getElementById('leaderboardTotalBody');
+  const monthEl = document.getElementById('leaderboardBody');
+  if ((!totalEl && !monthEl) || !fbDb || !currentUser || !followingList.length) return;
+  const mk = currentMonthKey();
+  const myName = getNickname() || (currentUser.displayName || '').split(' ')[0] || 'Tu';
+  const myPhoto = getAvatarUrl();
+  const myMonthHours = hoursInMonth(new Date().getFullYear(), new Date().getMonth());
+  const myTotalHours = computeWrapped().hours;
+  const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, hours: myTotalHours, me: true }];
+  const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, hours: myMonthHours, me: true }];
+  try {
+    // Carico per ID documento (= uid): più affidabile di where('uid','in',...).
+    const docs = await Promise.all(followingList.slice(0, 30).map(u => fbDb.collection('publicProfiles').doc(u).get()));
+    docs.filter(d => d.exists).forEach(d => {
+      const p = d.data();
+      const name = p.nickname || p.displayName || 'Utente';
+      const photo = p.photoURL || '';
+      totalRows.push({ uid: p.uid || d.id, name, photo, hours: p.totalHours || 0 });
+      monthRows.push({ uid: p.uid || d.id, name, photo, hours: (p.monthKey === mk ? (p.monthHours||0) : 0) });
+    });
+  } catch(e) {}
+  totalRows.sort((a,b) => b.hours - a.hours);
+  monthRows.sort((a,b) => b.hours - a.hours);
+  if (totalEl) totalEl.innerHTML = leaderboardRowsHtml(totalRows);
+  if (monthEl) monthEl.innerHTML = leaderboardRowsHtml(monthRows);
 }
 
 function animateCountUp(el) {
@@ -2672,6 +2687,7 @@ function renderProfile() {
 
   let html = '';
   if (currentUser && followingList.length) {
+    html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · di sempre</div><div id="leaderboardTotalBody"></div></div>`;
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
   }
   html += renderWrappedCard();
