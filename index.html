@@ -342,7 +342,8 @@
     background: rgba(255,69,58,0.14); color: #ff453a;
     display: flex; align-items: center; justify-content: center;
   }
-  .profile-level-line { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); font-weight: 600; margin-top: 2px; }
+  .profile-level-line { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); font-weight: 600; margin-top: 2px; text-align: left; }
+  .profile-level-line .plvl-emoji { display: inline-flex; align-items: center; line-height: 1; }
   /* picker copertina */
   .coverPickerBg {
     display: none; position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,0.75);
@@ -1521,7 +1522,7 @@ function renderProfileAuth() {
           </div>
           <div style="min-width:0; flex:1">
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
-            <div class="profile-level-line">${getUserLevel(computeWrapped().hours).emoji} ${getUserLevel(computeWrapped().hours).label}</div>
+            <div class="profile-level-line">Livello: <span class="plvl-emoji">${getUserLevel(computeWrapped().hours).emoji}</span> ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1796,7 +1797,16 @@ function runPosterFlip() {
     clone.style.width = endRect.width + 'px'; clone.style.height = endRect.height + 'px';
     clone.style.borderRadius = '0px';
   });
-  setTimeout(() => { clone.remove(); heroImg.style.opacity = ''; heroImg.style.transition = 'opacity 0.2s'; }, 430);
+  setTimeout(() => {
+    clone.remove();
+    const reveal = () => { heroImg.style.transition = 'opacity 0.2s'; heroImg.style.opacity = ''; };
+    // Decodifica l'immagine finale PRIMA di rivelarla: altrimenti lo scambio
+    // clone -> immagine reale forza la decodifica proprio nel frame dello
+    // scambio (l'immagine hero e' molto piu' grande/pesante del thumbnail
+    // animato), causando lo scatto lamentato all'apertura della scheda.
+    if (heroImg.decode) heroImg.decode().then(reveal).catch(reveal);
+    else reveal();
+  }, 430);
 }
 
 function posterAccent(url) {
@@ -4622,7 +4632,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   return `<div class="commentItem" id="comment-${c.id}">
     <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
     <div class="commentBody">
-      <div class="commentHeadline"><span class="commentAuthor">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${c.authorLevelEmoji||''} ${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
+      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${c.authorLevelEmoji||''} ${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
