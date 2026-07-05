@@ -1192,10 +1192,6 @@
         </button>
       </div>
     </div>
-    <div class="seasontabs cat-tabs" id="peopleHomeTabs" style="display:none; padding:16px 20px 14px">
-      <button class="seasontab active" data-ptab="feed" onclick="setPeopleHomeTab('feed')">Attività amici</button>
-      <button class="seasontab" data-ptab="suggestions" onclick="setPeopleHomeTab('suggestions')">Potresti conoscere</button>
-    </div>
     <div class="section" style="padding-top:14px">
       <div id="searchResults"></div>
       <div class="empty" id="searchEmpty">
@@ -1643,7 +1639,7 @@ if (fbAuth) {
             try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
           }
           followingList = data.following || [];
-          if (currentTab === 'search' && searchMode === 'people' && !document.getElementById('searchInput').value.trim()) loadPeopleHome();
+          if (currentTab === 'profile') loadProfilePeople();
           if (data.coverImage && data.coverImage !== getCoverImage()) {
             try { localStorage.setItem('serietracker_cover', data.coverImage); } catch(e) {}
           }
@@ -2689,6 +2685,13 @@ function renderProfile() {
   }
 
   let html = '';
+  if (currentUser) {
+    html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
+      <button class="seasontab active" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
+      <button class="seasontab" data-ptab="suggestions" onclick="setProfilePeopleTab('suggestions')">Amici suggeriti</button>
+    </div>
+    <div class="wrap-card glass" style="padding:14px 16px; margin-bottom:16px"><div id="profilePeopleBody"></div></div>`;
+  }
   if (currentUser && followingList.length) {
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · di sempre</div><div id="leaderboardTotalBody"></div></div>`;
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
@@ -2704,6 +2707,7 @@ function renderProfile() {
 
   c.innerHTML = html;
   renderLeaderboard();
+  if (currentUser) loadProfilePeople();
 }
 
 // ---------- render library TV ----------
@@ -3299,7 +3303,7 @@ async function refreshCurrentTab() {
     } else if (currentTab === 'search') {
       const q = document.getElementById('searchInput').value.trim();
       if (searchMode === 'people') {
-        await (q ? doSearchPeople(q) : loadPeopleHome());
+        if (q) await doSearchPeople(q);
       } else if (q) {
         await (searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q));
       } else {
@@ -3396,19 +3400,13 @@ function setSearchMode(mode) {
   document.getElementById('searchInput').placeholder = mode === 'tv' ? 'Cerca una serie TV' : mode === 'film' ? 'Cerca un film' : 'Cerca per nickname o email';
   document.getElementById('searchInput').value = '';
   if (mode === 'people') {
-    loadPeopleHome();
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('searchEmpty').style.display = 'block';
+    document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.';
   } else {
-    document.getElementById('peopleHomeTabs').style.display = 'none';
     document.getElementById('searchEmpty').querySelector('div').innerHTML = 'Cerca tra migliaia di titoli,<br>aggiornati in automatico.';
     loadPopular(mode);
   }
-}
-
-let peopleHomeTab = 'feed';
-function setPeopleHomeTab(tab) {
-  peopleHomeTab = tab;
-  document.querySelectorAll('#peopleHomeTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
-  loadPeopleHome();
 }
 
 function searchSkeletonGrid(n) {
@@ -3461,7 +3459,12 @@ document.getElementById('searchInput').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
   if (searchMode === 'people') {
-    if (!q) { loadPeopleHome(); return; }
+    if (!q) {
+      document.getElementById('searchResults').innerHTML = '';
+      document.getElementById('searchEmpty').style.display = 'block';
+      document.getElementById('searchEmpty').querySelector('div').textContent = 'Cerca una persona per nickname o email.';
+      return;
+    }
     document.getElementById('searchEmpty').style.display = 'none';
     document.getElementById('searchResults').innerHTML = `<div class="spinner"></div>`;
     searchTimer = setTimeout(() => doSearchPeople(q), 350);
@@ -3475,7 +3478,6 @@ document.getElementById('searchInput').addEventListener('input', () => {
 
 async function doSearchPeople(q) {
   const c = document.getElementById('searchResults');
-  document.getElementById('peopleHomeTabs').style.display = 'none';
   if (!fbDb) { c.innerHTML = '<div class="empty">Ricerca non disponibile.</div>'; return; }
   const qLower = q.toLowerCase();
   try {
@@ -3613,8 +3615,8 @@ function feedItemHtml(a) {
   </div>`;
 }
 
-async function renderFriendFeed() {
-  if (!fbDb || !currentUser || !followingList.length) return '';
+async function fetchFriendFeedItems() {
+  if (!fbDb || !currentUser || !followingList.length) return [];
   const chunks = [];
   for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
   const snaps = await Promise.all(chunks.map(ch =>
@@ -3623,30 +3625,47 @@ async function renderFriendFeed() {
   let items = [];
   snaps.forEach(s => { if (s) s.forEach(d => items.push(d.data())); });
   items.sort((a, b) => actMillis(b) - actMillis(a));
-  items = items.slice(0, 40);
-  if (!items.length) return `<div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`;
-  return items.map(feedItemHtml).join('');
+  return items.slice(0, 40);
 }
 
-// Home della tab Persone: feed di chi segui + suggerimenti, divisi in due tab.
-async function loadPeopleHome() {
-  const c = document.getElementById('searchResults');
-  if (!fbDb) { c.innerHTML = ''; document.getElementById('peopleHomeTabs').style.display = 'none'; document.getElementById('searchEmpty').style.display = 'block'; return; }
-  document.getElementById('peopleHomeTabs').style.display = 'flex';
-  document.getElementById('searchEmpty').style.display = 'none';
-  c.innerHTML = `<div class="spinner"></div>`;
-  let html = '';
+// Sezione persone nel profilo: feed di chi segui + amici suggeriti, divisi in due tab.
+let profilePeopleTab = 'feed';
+let profileFeedShown = 10;
+let profileFeedItemsCache = [];
+
+function setProfilePeopleTab(tab) {
+  profilePeopleTab = tab;
+  profileFeedShown = 10;
+  document.querySelectorAll('#profilePeopleTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+  loadProfilePeople();
+}
+
+async function loadProfilePeople() {
+  const body = document.getElementById('profilePeopleBody');
+  if (!body || !fbDb || !currentUser) return;
+  body.innerHTML = `<div class="spinner"></div>`;
   try {
-    if (peopleHomeTab === 'feed') {
-      html = await renderFriendFeed();
+    if (profilePeopleTab === 'feed') {
+      profileFeedItemsCache = await fetchFriendFeedItems();
+      renderProfileFeedBody();
     } else {
       const snap = await fbDb.collection('publicProfiles').orderBy('updatedAt', 'desc').limit(30).get();
       const results = snap.docs.map(d => d.data()).filter(p => (!currentUser || p.uid !== currentUser.uid) && !isFollowing(p.uid));
-      html = results.length ? results.map(personCardHtml).join('') : '';
+      body.innerHTML = results.length ? results.map(personCardHtml).join('') : `<div class="wrap-note" style="padding:6px 2px">Nessun suggerimento disponibile.</div>`;
     }
-  } catch(e) {}
-  if (html) c.innerHTML = html;
-  else { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; document.getElementById('searchEmpty').querySelector('div').textContent = peopleHomeTab === 'feed' ? 'Ancora nessuna attività dai profili che segui.' : 'Nessun suggerimento disponibile.'; }
+  } catch(e) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Errore nel caricamento.</div>`; }
+}
+
+function renderProfileFeedBody() {
+  const body = document.getElementById('profilePeopleBody');
+  if (!body) return;
+  if (!profileFeedItemsCache.length) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`; return; }
+  const shown = profileFeedItemsCache.slice(0, profileFeedShown);
+  let html = shown.map(feedItemHtml).join('');
+  if (profileFeedItemsCache.length > profileFeedShown) {
+    html += `<button class="filebtn" style="width:100%; margin-top:10px" onclick="profileFeedShown+=10; renderProfileFeedBody()">Mostra altro</button>`;
+  }
+  body.innerHTML = html;
 }
 
 // ---------- scheda persona ----------
