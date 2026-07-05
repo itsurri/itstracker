@@ -3358,7 +3358,22 @@ function renderListFilm(key, f) {
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
       <div class="li-meta">${f.year||'—'}${f.genre?' · '+escapeHtml(f.genre):''}</div>
     </div>
+    <button class="checkbtn ${f.watched?'checked':''}" onclick="event.stopPropagation();quickToggleFilmWatched(${id})">
+      ${f.watched?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
+    </button>
   </div>`;
+}
+
+// Spunta rapida dalla lista: segna visto/da vedere senza aprire la scheda del film.
+function quickToggleFilmWatched(id) {
+  if (!filmLibrary[id]) return;
+  filmLibrary[id].watched = !filmLibrary[id].watched;
+  if (filmLibrary[id].watched) { filmLibrary[id].watchedAt = Date.now(); haptic(); }
+  saveFilmLibrary(); renderFilmLibrary();
+  if (filmLibrary[id].watched) {
+    checkAchievements();
+    logActivity({ type: 'watched_film', showId: Number(id), title: filmLibrary[id].title || '', image: filmLibrary[id].image || null });
+  }
 }
 
 function validId(obj, key) {
