@@ -1522,7 +1522,7 @@ function renderProfileAuth() {
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
-            <div class="profile-level-line">Livello: <span class="plvl-emoji">${getUserLevel(computeWrapped().hours).emoji}</span> ${getUserLevel(computeWrapped().hours).label}</div>
+            <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1742,7 +1742,7 @@ function normalizeFilmLibrary() {
 }
 
 // ---------- metadata helpers ----------
-function showGenres(obj) { return (obj && obj.genres || []).map(g => g.name).filter(Boolean); }
+function showGenres(obj) { return (obj && obj.genres || []).map(g => (typeof GENRE_IT_OVERRIDE !== 'undefined' && GENRE_IT_OVERRIDE[g.id]) || g.name).filter(Boolean); }
 function showRuntime(show) {
   const rt = show && show.episode_run_time;
   if (Array.isArray(rt) && rt.length) return Math.round(rt.reduce((a,b)=>a+b,0)/rt.length);
@@ -1942,13 +1942,27 @@ function celebrateShowComplete() {
 }
 
 const USER_LEVELS = [
-  { min: 0,    label: 'Novizio',      emoji: '🌱' },
-  { min: 10,   label: 'Curioso',      emoji: '👀' },
-  { min: 50,   label: 'Appassionato', emoji: '🎬' },
-  { min: 150,  label: 'Binger',       emoji: '🍿' },
-  { min: 400,  label: 'Maratoneta',   emoji: '🏃' },
-  { min: 800,  label: 'Leggenda',     emoji: '🏆' },
-  { min: 1500, label: 'Mito',         emoji: '👑' }
+  { min: 0,    label: 'Novizio' },
+  { min: 5,    label: 'Spettatore' },
+  { min: 10,   label: 'Curioso' },
+  { min: 20,   label: 'Appassionato' },
+  { min: 35,   label: 'Divoratore' },
+  { min: 50,   label: 'Bingewatcher' },
+  { min: 75,   label: 'Nottambulo' },
+  { min: 100,  label: 'Cinefilo' },
+  { min: 150,  label: 'Serialista' },
+  { min: 200,  label: 'Maratoneta' },
+  { min: 300,  label: 'Fan Sfegatato' },
+  { min: 400,  label: 'Veterano' },
+  { min: 550,  label: 'Collezionista' },
+  { min: 700,  label: 'Esperto' },
+  { min: 900,  label: 'Maestro' },
+  { min: 1100, label: 'Leggenda' },
+  { min: 1400, label: 'Mito' },
+  { min: 1750, label: 'Icona' },
+  { min: 2200, label: 'Immortale' },
+  { min: 2800, label: 'Leggenda Vivente' },
+  { min: 3500, label: 'itstracker Supremo' }
 ];
 function getUserLevel(hours) {
   let level = USER_LEVELS[0];
@@ -1957,7 +1971,7 @@ function getUserLevel(hours) {
 }
 function renderLevelBadge(hours) {
   const level = getUserLevel(hours);
-  return `<span class="level-badge" title="${level.min}+ ore guardate">${level.emoji} ${level.label}</span>`;
+  return `<span class="level-badge" title="${level.min}+ ore guardate">${level.label}</span>`;
 }
 
 // ---------- anno in rassegna (storie) ----------
@@ -2007,7 +2021,7 @@ function gatherWrappedData() {
     <div class="w-sub">${bestC} titoli in un solo mese 🔥</div>` });
   slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il tuo livello</div>
-    <div class="w-mid" style="font-size:46px">${level.emoji} ${level.label}</div>
+    <div class="w-mid" style="font-size:46px">${level.label}</div>
     <div class="w-sub">${w.hours} ore totali guardate su itstracker</div>
     <button class="w-share" onclick="shareWrapped()">📤 Condividi</button>` });
   return slides;
@@ -2064,7 +2078,7 @@ async function shareWrapped() {
     [`${s.films}`, 'film visti'],
     [s.top && s.top.name ? s.top.name : '—', 'serie n.1'],
     [s.genre || '—', 'genere preferito'],
-    [`${s.level.emoji} ${s.level.label}`, 'livello']
+    [`${s.level.label}`, 'livello']
   ];
   let y = 480;
   rows.forEach(([big, lab]) => {
@@ -2180,6 +2194,8 @@ function getAchievements(w) {
     { id:'ep1500',label: '1500 episodi visti',     unlocked: w.episodesWatched >= 1500 },
     { id:'ep2000',label: '2000 episodi visti',     unlocked: w.episodesWatched >= 2000 },
     { id:'ep3000',label: '3000 episodi visti',     unlocked: w.episodesWatched >= 3000 },
+    { id:'ep4000',label: '4000 episodi visti',     unlocked: w.episodesWatched >= 4000 },
+    { id:'ep5000',label: '5000 episodi visti',     unlocked: w.episodesWatched >= 5000 },
     // serie completate
     { id:'sc1',   label: 'Prima serie completata', unlocked: completedShows >= 1 },
     { id:'sc2',   label: '2 serie completate',     unlocked: completedShows >= 2 },
@@ -2191,6 +2207,9 @@ function getAchievements(w) {
     { id:'sc25',  label: '25 serie completate',    unlocked: completedShows >= 25 },
     { id:'sc35',  label: '35 serie completate',    unlocked: completedShows >= 35 },
     { id:'sc50',  label: '50 serie completate',    unlocked: completedShows >= 50 },
+    { id:'sc60',  label: '60 serie completate',    unlocked: completedShows >= 60 },
+    { id:'sc75',  label: '75 serie completate',    unlocked: completedShows >= 75 },
+    { id:'sc100', label: '100 serie completate',   unlocked: completedShows >= 100 },
     // libreria serie
     { id:'lib3',  label: '3 serie in libreria',    unlocked: w.totalShows >= 3 },
     { id:'lib5',  label: '5 serie in libreria',    unlocked: w.totalShows >= 5 },
@@ -2201,6 +2220,8 @@ function getAchievements(w) {
     { id:'lib50', label: '50 serie in libreria',   unlocked: w.totalShows >= 50 },
     { id:'lib75', label: '75 serie in libreria',   unlocked: w.totalShows >= 75 },
     { id:'lib100',label: '100 serie in libreria',  unlocked: w.totalShows >= 100 },
+    { id:'lib150',label: '150 serie in libreria',  unlocked: w.totalShows >= 150 },
+    { id:'lib200',label: '200 serie in libreria',  unlocked: w.totalShows >= 200 },
     // film visti
     { id:'f1',    label: 'Primo film visto',       unlocked: w.filmsWatched >= 1 },
     { id:'f2',    label: '2 film visti',           unlocked: w.filmsWatched >= 2 },
@@ -2211,11 +2232,15 @@ function getAchievements(w) {
     { id:'f50',   label: '50 film visti',          unlocked: w.filmsWatched >= 50 },
     { id:'f75',   label: '75 film visti',          unlocked: w.filmsWatched >= 75 },
     { id:'f100',  label: '100 film visti',         unlocked: w.filmsWatched >= 100 },
+    { id:'f150',  label: '150 film visti',         unlocked: w.filmsWatched >= 150 },
+    { id:'f200',  label: '200 film visti',         unlocked: w.filmsWatched >= 200 },
     // film in libreria
     { id:'fl5',   label: '5 film in libreria',     unlocked: filmLibCount >= 5 },
     { id:'fl10',  label: '10 film in libreria',    unlocked: filmLibCount >= 10 },
     { id:'fl25',  label: '25 film in libreria',    unlocked: filmLibCount >= 25 },
     { id:'fl50',  label: '50 film in libreria',    unlocked: filmLibCount >= 50 },
+    { id:'fl75',  label: '75 film in libreria',    unlocked: filmLibCount >= 75 },
+    { id:'fl100', label: '100 film in libreria',   unlocked: filmLibCount >= 100 },
     // ore guardate
     { id:'h5',    label: '5 ore guardate',         unlocked: w.hours >= 5 },
     { id:'h10',   label: '10 ore guardate',        unlocked: w.hours >= 10 },
@@ -2229,6 +2254,10 @@ function getAchievements(w) {
     { id:'h1000', label: '1000 ore guardate',      unlocked: w.hours >= 1000 },
     { id:'h1500', label: '1500 ore guardate',      unlocked: w.hours >= 1500 },
     { id:'h2000', label: '2000 ore guardate',      unlocked: w.hours >= 2000 },
+    { id:'h3000', label: '3000 ore guardate',      unlocked: w.hours >= 3000 },
+    { id:'h4000', label: '4000 ore guardate',      unlocked: w.hours >= 4000 },
+    { id:'h5000', label: '5000 ore guardate',      unlocked: w.hours >= 5000 },
+    { id:'h6000', label: '6000 ore guardate',      unlocked: w.hours >= 6000 },
     // streak
     { id:'st3',   label: '3 giorni di fila',       unlocked: w.streak >= 3 },
     { id:'st5',   label: '5 giorni di fila',       unlocked: w.streak >= 5 },
@@ -2242,6 +2271,7 @@ function getAchievements(w) {
     { id:'st90',  label: '90 giorni di fila',      unlocked: w.streak >= 90 },
     { id:'st180', label: '180 giorni di fila',     unlocked: w.streak >= 180 },
     { id:'st365', label: '365 giorni di fila',     unlocked: w.streak >= 365 },
+    { id:'st500', label: '500 giorni di fila',     unlocked: w.streak >= 500 },
     // generi
     { id:'g3',    label: '3 generi diversi',       unlocked: w.distinctGenres >= 3 },
     { id:'g4',    label: '4 generi diversi',       unlocked: w.distinctGenres >= 4 },
@@ -2250,17 +2280,21 @@ function getAchievements(w) {
     { id:'g7',    label: '7 generi diversi',       unlocked: w.distinctGenres >= 7 },
     { id:'g8',    label: '8 generi diversi',       unlocked: w.distinctGenres >= 8 },
     { id:'g10',   label: '10 generi diversi',      unlocked: w.distinctGenres >= 10 },
+    { id:'g12',   label: '12 generi diversi',      unlocked: w.distinctGenres >= 12 },
+    { id:'g15',   label: '15 generi diversi',      unlocked: w.distinctGenres >= 15 },
     // serie preferita
     { id:'bs25',  label: '25 episodi di una serie', unlocked: topWatched >= 25 },
     { id:'bs50',  label: '50 episodi di una serie', unlocked: topWatched >= 50 },
     { id:'bs100', label: '100 episodi di una serie', unlocked: topWatched >= 100 },
-    { id:'bs200', label: '200 episodi di una serie', unlocked: topWatched >= 200 }
+    { id:'bs200', label: '200 episodi di una serie', unlocked: topWatched >= 200 },
+    { id:'bs300', label: '300 episodi di una serie', unlocked: topWatched >= 300 },
+    { id:'bs500', label: '500 episodi di una serie', unlocked: topWatched >= 500 }
   ];
   return defs;
 }
 
 function renderAchievements(w) {
-  const defs = getAchievements(w);
+  const defs = getAchievements(w).slice().sort((a, b) => (b.unlocked - a.unlocked));
   const unlockedCount = defs.filter(a => a.unlocked).length;
   const items = defs.map(a => `
     <div class="ach ${a.unlocked?'unlocked':''}">
@@ -2494,6 +2528,19 @@ function renderGenreChips(genres, active, handlerName) {
 }
 
 // ---------- filtro genere in ricerca/scoperta (TMDB genre_ids -> nomi) ----------
+// TMDb non traduce sempre in italiano tutti i nomi dei generi anche con
+// language=it-IT (specie per le serie TV): forziamo qui la traduzione per id,
+// che resta stabile a prescindere dalla lingua restituita dall'API.
+const GENRE_IT_OVERRIDE = {
+  // film
+  28: 'Azione', 12: 'Avventura', 16: 'Animazione', 35: 'Commedia', 80: 'Crime',
+  99: 'Documentario', 18: 'Dramma', 10751: 'Famiglia', 14: 'Fantasy', 36: 'Storia',
+  27: 'Horror', 10402: 'Musica', 9648: 'Mistero', 10749: 'Romance', 878: 'Fantascienza',
+  10770: 'Film TV', 53: 'Thriller', 10752: 'Guerra', 37: 'Western',
+  // serie tv
+  10759: 'Azione e Avventura', 10762: 'Kids', 10763: 'News', 10764: 'Reality',
+  10765: 'Fantascienza e Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'Guerra e Politica'
+};
 async function ensureGenreMap(type) {
   const cached = type === 'tv' ? tvGenreMap : filmGenreMap;
   if (cached) return cached;
@@ -2501,7 +2548,7 @@ async function ensureGenreMap(type) {
     const r = await fetch(tmdbUrl(`/genre/${type}/list`, {}));
     const d = await r.json();
     const map = {};
-    (d.genres || []).forEach(g => { map[g.id] = g.name; });
+    (d.genres || []).forEach(g => { map[g.id] = GENRE_IT_OVERRIDE[g.id] || g.name; });
     if (type === 'tv') tvGenreMap = map; else filmGenreMap = map;
     return map;
   } catch (e) { return {}; }
@@ -2844,6 +2891,11 @@ function initPullToRefresh() {
   document.addEventListener('touchstart', e => {
     if (document.getElementById('sheetBg').classList.contains('open')) return;
     if (document.getElementById('confirmBg').classList.contains('open')) return;
+    if (document.getElementById('coverPickerBg').classList.contains('open')) return;
+    if (document.getElementById('nicknameOnboardBg').classList.contains('open')) return;
+    if (document.getElementById('notifPanel').classList.contains('open')) return;
+    if (document.getElementById('chatListPanel').classList.contains('open')) return;
+    if (document.getElementById('followPanel').classList.contains('open')) return;
     const t = e.touches[0];
     // baseY è il riferimento verticale da cui misurare il "pull": se siamo già in
     // cima lo prendiamo subito, altrimenti aspettiamo di arrivarci durante lo scroll
@@ -4570,7 +4622,7 @@ async function backfillMyCommentLevels() {
     if (!missing.length) return;
     const level = getUserLevel(computeWrapped().hours);
     const batch = fbDb.batch();
-    missing.slice(0, 490).forEach(d => batch.update(d.ref, { authorLevel: level.label, authorLevelEmoji: level.emoji }));
+    missing.slice(0, 490).forEach(d => batch.update(d.ref, { authorLevel: level.label }));
     await batch.commit();
   } catch(e) {}
 }
@@ -4590,7 +4642,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   return `<div class="commentItem" id="comment-${c.id}">
     <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
     <div class="commentBody">
-      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${c.authorLevelEmoji||''} ${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
+      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
@@ -4655,7 +4707,6 @@ async function postComment(epKey, parentId) {
       displayName: myName,
       photoURL: getCustomAvatar() || currentUser.photoURL || null,
       authorLevel: myLevel.label,
-      authorLevelEmoji: myLevel.emoji,
       text,
       mentions: mentionUids,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -4895,7 +4946,7 @@ function updateLogo() {
   const src = isDarkActive() ? 'logo-header-dark.png' : 'logo-header.png';
   document.querySelectorAll('.topbar-logo').forEach(img => img.src = src);
 }
-darkModeQuery.addEventListener('change', updateLogo);
+darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButtons(); });
 
 // ---------- tema (override manuale su quello di sistema) ----------
 function setTheme(theme) {
@@ -4905,11 +4956,16 @@ function setTheme(theme) {
   updateLogo();
 }
 function updateThemeButtons() {
-  const t = document.documentElement.getAttribute('data-theme');
+  // Se l'utente non ha mai scelto esplicitamente un tema, l'attributo
+  // data-theme non e' impostato e il tema effettivo segue le preferenze di
+  // sistema: in quel caso isDarkActive() (non il solo attributo) dice qual
+  // e' il tema davvero visibile, altrimenti nessuno dei due bottoni
+  // risultava selezionato pur essendo uno dei due chiaramente attivo.
+  const dark = isDarkActive();
   const lb = document.getElementById('themeLightBtn');
   const db = document.getElementById('themeDarkBtn');
-  if (lb) lb.classList.toggle('active', t === 'light');
-  if (db) db.classList.toggle('active', t === 'dark');
+  if (lb) lb.classList.toggle('active', !dark);
+  if (db) db.classList.toggle('active', dark);
 }
 
 // ---------- TMDb key ----------
