@@ -1525,7 +1525,14 @@ if (fbAuth) {
         }, err => console.error('notifications onSnapshot', err));
       unsubscribePublicProfile = fbDb.collection('publicProfiles').doc(user.uid)
         .onSnapshot(snap => {
-          followerUids = (snap.exists && snap.data().followers) || [];
+          const raw = (snap.exists && snap.data().followers) || [];
+          // Un vecchio bug scriveva per errore il proprio uid tra i propri follower:
+          // lo filtriamo qui e lo ripuliamo anche lato server se presente.
+          followerUids = raw.filter(u => u !== user.uid);
+          if (raw.includes(user.uid)) {
+            fbDb.collection('publicProfiles').doc(user.uid)
+              .set({ followers: firebase.firestore.FieldValue.arrayRemove(user.uid) }, { merge: true }).catch(()=>{});
+          }
           if (currentTab === 'profile') renderProfile();
         }, err => console.error('publicProfile onSnapshot', err));
     } else {
