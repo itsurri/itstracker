@@ -5456,6 +5456,57 @@ function dismissInstallBanner() {
   if (banner) banner.classList.remove('show');
 }
 
+// ---------- tasto "indietro" Android (chiude gli overlay invece dell'app) ----------
+// Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
+// il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
+// di uscire dall'app. Le chiusure dalla UI (X/sfondo) consumano l'entry.
+const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','coverPickerBg','wrappedBg','notifPanel','chatListPanel','followPanel'];
+let backGuardArmed = false;
+let closingViaBack = false;
+function isOverlayOpen(id) { const el = document.getElementById(id); return !!el && el.classList.contains('open'); }
+function anyOverlayOpen() { return OVERLAY_IDS.some(isOverlayOpen) || isOverlayOpen('nicknameOnboardBg'); }
+function armBackGuard() {
+  if (!backGuardArmed && anyOverlayOpen()) { backGuardArmed = true; history.pushState({ itsOverlay: true }, ''); }
+}
+// Chiude l'overlay più in alto (ordine di priorità = z-index/logica). true se ha chiuso.
+function closeTopOverlay() {
+  if (isOverlayOpen('wrappedBg')) { closeWrapped(); return true; }
+  if (isOverlayOpen('coverPickerBg')) { closeCoverPicker(); return true; }
+  if (isOverlayOpen('confirmBg')) { closeConfirm(); return true; }
+  if (isOverlayOpen('personBg')) { closePerson(); return true; }
+  if (isOverlayOpen('chatBg')) { closeChat(); return true; }
+  if (isOverlayOpen('sheetBg')) { closeSheet(); return true; }
+  if (isOverlayOpen('notifPanel') || isOverlayOpen('chatListPanel') || isOverlayOpen('followPanel')) { closeAllHeaderPanels(); return true; }
+  return false;
+}
+function initBackButton() {
+  // Un observer per overlay: arma la guardia all'apertura, la consuma alla
+  // chiusura dalla UI (così la cronologia resta allineata).
+  [...OVERLAY_IDS, 'nicknameOnboardBg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new MutationObserver(() => {
+      if (el.classList.contains('open')) {
+        armBackGuard();
+      } else if (backGuardArmed && !closingViaBack && !anyOverlayOpen()) {
+        backGuardArmed = false;
+        closingViaBack = true;
+        history.back();
+      }
+    }).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+  window.addEventListener('popstate', () => {
+    if (closingViaBack) { closingViaBack = false; return; }
+    // Onboarding nickname: obbligatorio, il back non deve chiuderlo né uscire.
+    if (isOverlayOpen('nicknameOnboardBg')) { backGuardArmed = true; history.pushState({ itsOverlay: true }, ''); return; }
+    backGuardArmed = false;
+    closingViaBack = true;
+    const closed = closeTopOverlay();
+    closingViaBack = false;
+    if (closed) armBackGuard(); // se resta un overlay annidato, riarma per il prossimo back
+  });
+}
+
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
@@ -5485,6 +5536,7 @@ renderNotifPanel();
 moveTabIndicator(document.querySelector('.tabbtn.active'));
 initSheetParallax();
 initCardTilt();
+initBackButton();
 </script>
 </body>
 </html>
