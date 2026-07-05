@@ -1041,6 +1041,7 @@
     flex: 1; overflow-y: auto; padding: 8px 12px calc(env(safe-area-inset-bottom) + 16px);
     background: linear-gradient(180deg, rgba(var(--overlay-rgb),0.02), transparent 160px);
   }
+  .chat-newsection { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.4); padding: 16px 8px 6px; }
   .notifItem { display: flex; gap: 12px; padding: 10px 8px; border-radius: 16px; transition: background 0.15s ease; }
   .notifItem.clickable { cursor: pointer; }
   .notifItem.clickable:active { background: rgba(var(--overlay-rgb),0.07); }
@@ -3839,26 +3840,46 @@ async function markAllChatsRead() {
   try { await batch.commit(); } catch(e) {}
 }
 
-function renderChatListPanel() {
+function chatRowHtml(uid, name, photo, subtitle, unread) {
+  const safeName = escapeHtml(name).replace(/'/g,"\\'");
+  const safePhoto = (photo||'').replace(/'/g,"\\'");
+  // nickname/riga -> apre la chat; avatar -> apre il profilo.
+  return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${uid}','${safeName}','${safePhoto}')">
+      <div class="notifIcon" style="overflow:hidden;padding:0;cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+      <div class="notifBody">
+        <div class="notifText"><b>${escapeHtml(name)}</b></div>
+        <div class="notifTime">${escapeHtml(subtitle || '')}</div>
+      </div>
+    </div>`;
+}
+
+async function renderChatListPanel() {
   const el = document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
-  if (!chatListCache.length) { el.innerHTML = '<div class="commentsEmpty">Nessuna conversazione ancora.</div>'; return; }
-  el.innerHTML = chatListCache.map(c => {
+  const existing = chatListCache.map(c => {
     const peerUid = (c.participants||[]).find(u => u !== currentUser.uid);
     const name = (c.names && c.names[peerUid]) || 'Utente';
     const photo = (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
-    const safeName = escapeHtml(name).replace(/'/g,"\\'");
-    const safePhoto = photo.replace(/'/g,"\\'");
-    // Nella lista messaggi: nickname/riga -> apre la chat; avatar -> apre il profilo.
-    return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${peerUid}','${safeName}','${safePhoto}')">
-      <div class="notifIcon" style="overflow:hidden;padding:0;cursor:pointer" onclick="event.stopPropagation();openPerson('${peerUid}')">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
-      <div class="notifBody">
-        <div class="notifText"><b>${escapeHtml(name)}</b></div>
-        <div class="notifTime">${escapeHtml(c.lastMessage || '')}</div>
-      </div>
-    </div>`;
+    return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread);
   }).join('');
+  el.innerHTML = existing || '<div class="spinner"></div>';
+  // Persone che segui con cui non hai ancora una chat: suggerite per iniziarne una.
+  const chatted = new Set(chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid)));
+  let suggestions = [];
+  try {
+    const profs = await ensureFollowingProfiles();
+    suggestions = profs.filter(p => p.uid !== currentUser.uid && !chatted.has(p.uid));
+  } catch(e) {}
+  let html = existing;
+  if (suggestions.length) {
+    html += `<div class="chat-newsection">Inizia una chat</div>` +
+      suggestions.map(p => chatRowHtml(p.uid, p.nickname || p.displayName || 'Utente', p.photoURL || '', 'Tocca per scrivere', false)).join('');
+  }
+  if (!existing && !suggestions.length) {
+    html = '<div class="commentsEmpty">Nessuna conversazione. Segui qualcuno per iniziare a chattare.</div>';
+  }
+  el.innerHTML = html;
 }
 
 function openChatListPanel() {
