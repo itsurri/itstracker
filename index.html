@@ -1334,8 +1334,8 @@
       <button class="closebtn chat-closebtn" onclick="closeChat()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
-      <div id="chatAvatar" class="chat-head-avatar"></div>
-      <div class="chat-head-name" id="chatHeadName"></div>
+      <div id="chatAvatar" class="chat-head-avatar" style="cursor:pointer" onclick="openPerson(currentChatUid)"></div>
+      <div class="chat-head-name" id="chatHeadName" style="cursor:pointer" onclick="openPerson(currentChatUid)"></div>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-inputrow">
@@ -1534,7 +1534,7 @@ function renderProfileAuth() {
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
             <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
-          <div style="display:flex; flex-direction:column; gap:6px">
+          <div style="display:flex; gap:6px">
             <button class="profile-share-btn" onclick="shareProfileImage()" title="Condividi profilo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>
             </button>
@@ -3726,9 +3726,9 @@ function renderChatListPanel() {
     const photo = (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
     return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${peerUid}','${escapeHtml(name).replace(/'/g,"\\'")}','${photo.replace(/'/g,"\\'")}')">
-      <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+      <div class="notifIcon" style="overflow:hidden;padding:0;cursor:pointer" onclick="event.stopPropagation();openPerson('${peerUid}')">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       <div class="notifBody">
-        <div class="notifText"><b>${escapeHtml(name)}</b></div>
+        <div class="notifText"><b style="cursor:pointer" onclick="event.stopPropagation();openPerson('${peerUid}')">${escapeHtml(name)}</b></div>
         <div class="notifTime">${escapeHtml(c.lastMessage || '')}</div>
       </div>
     </div>`;
