@@ -1718,9 +1718,10 @@ let lastTvResults = [];
 let lastFilmResults = [];
 let lastTvResultsChips = null;
 let lastFilmResultsChips = null;
-// Cache dei titoli "popolari/consigliati" per non farli cambiare a ogni
-// apertura della sezione (la popolarità TMDb fluttua di continuo).
-let popularCache = {};
+// Pool di titoli popolari (già filtrati) tenuto per sessione, così non
+// ri-scarichiamo da TMDB a ogni apertura; da questo pool peschiamo però un
+// campione casuale diverso ogni volta (consigliati "freschi" ma popolari).
+let popularPool = {};
 let tvGenreMap = null;
 let filmGenreMap = null;
 
@@ -3162,6 +3163,10 @@ function initSheetSwipe() {
 
   sheet.addEventListener('touchstart', e => {
     if (!document.getElementById('sheetBg').classList.contains('open')) return;
+    // Non attivare lo swipe tra serie se il tocco parte da una riga che scorre
+    // già in orizzontale (tab delle stagioni, provider): altrimenti i due
+    // gesti si confondono.
+    if (e.target.closest('.seasontabs, .watch-providers')) { sheetSwipeState = null; return; }
     const t = e.touches[0];
     sheetSwipeState = { startX: t.clientX, startY: t.clientY, dx: 0, dragging: false };
   }, { passive: true });
@@ -3388,29 +3393,25 @@ async function loadPopular(mode) {
     const chipGenres = Object.values(map).sort();
     const chips = renderGenreChips(chipGenres, activeGenre, mode === 'tv' ? 'setTvPopularGenre' : 'setFilmPopularGenre');
     const cacheKey = mode + ':' + (genreId || 'all');
-    const cached = popularCache[cacheKey];
-    // Riuso i risultati per 30 minuti: stessa sezione = stessi titoli, niente
-    // "shuffle" percepito a ogni riapertura.
-    if (cached && Date.now() - cached.at < 30*60*1000) {
-      if (mode === 'tv') { lastTvResults = cached.results; lastTvResultsChips = chips; renderTvResultsFromCache(); }
-      else { lastFilmResults = cached.results; lastFilmResultsChips = chips; renderFilmResultsFromCache(); }
-      return;
+    let pool = popularPool[cacheKey];
+    if (!pool || Date.now() - pool.at > 30*60*1000) {
+      c.innerHTML = searchSkeletonGrid();
+      // Pool ampio (8 pagine ≈ 160 titoli) dei più popolari, così il campione
+      // casuale che mostriamo cambia ma resta sempre fra i titoli popolari.
+      const path = mode === 'tv' ? '/discover/tv' : '/discover/movie';
+      const extraParams = genreId ? { with_genres: genreId } : {};
+      const pages = await Promise.all([1,2,3,4,5,6,7,8].map(p => fetch(tmdbUrl(path, Object.assign({ sort_by: 'popularity.desc', page: p }, extraParams))).then(r => r.json())));
+      const all = pages.flatMap(d => d.results || []);
+      const seen = new Set();
+      const items = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      pool = { items, at: Date.now() };
+      popularPool[cacheKey] = pool;
     }
-    c.innerHTML = searchSkeletonGrid();
-    // Se è selezionato un genere, richiediamo direttamente a TMDB solo quel
-    // genere, così i risultati sono tanti quanti dovrebbero essere davvero.
-    const path = mode === 'tv' ? '/discover/tv' : '/discover/movie';
-    const extraParams = genreId ? { with_genres: genreId } : {};
-    const pages = await Promise.all([1,2,3,4,5].map(p => fetch(tmdbUrl(path, Object.assign({ sort_by: 'popularity.desc', page: p }, extraParams))).then(r => r.json())));
-    const all = pages.flatMap(d => d.results || []);
-    const seen = new Set();
-    const results = all.filter(r => {
-      if (seen.has(r.id)) return false;
-      seen.add(r.id);
-      return mode === 'tv' ? !library[r.id] : !filmLibrary[r.id];
-    });
-    if (mode === 'tv') { await renderTvResults(results, chips); popularCache[cacheKey] = { results: lastTvResults, at: Date.now() }; }
-    else { await renderFilmResults(results, chips); popularCache[cacheKey] = { results: lastFilmResults, at: Date.now() }; }
+    // Campione casuale diverso a ogni apertura (esclude ciò che è già in libreria).
+    const shuffled = pool.items.filter(r => mode === 'tv' ? !library[r.id] : !filmLibrary[r.id]).slice();
+    for (let i = shuffled.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; }
+    if (mode === 'tv') await renderTvResults(shuffled, chips);
+    else await renderFilmResults(shuffled, chips);
   } catch(e) { c.innerHTML = ''; showToast('Errore di connessione'); }
 }
 
@@ -3565,7 +3566,7 @@ function feedItemHtml(a) {
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
   return `<div class="feed-item" onclick="${onclick}">
-    ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}
+    ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">` : `<div class="fi-avatar" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')"></div>`}
     <div class="fi-body">
       <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
