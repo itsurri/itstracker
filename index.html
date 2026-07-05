@@ -360,9 +360,9 @@
   .cover-grid img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; cursor: pointer; background: rgba(var(--overlay-rgb),0.08); }
   .cover-remove { width: 100%; margin-top: 12px; padding: 11px; border-radius: 14px; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-weight: 600; font-size: 13px; font-family: inherit; }
   .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-  .follow-inline { display: flex; gap: 18px; font-size: 13px; color: rgba(var(--overlay-rgb),0.6); }
-  .follow-inline span { cursor: pointer; }
-  .follow-inline b { color: var(--fg); font-size: 14px; font-weight: 700; margin-right: 3px; }
+  .follow-inline { display: flex; justify-content: center; gap: 18px; font-size: 12px; color: rgba(var(--overlay-rgb),0.6); letter-spacing: 0.03em; }
+  .follow-inline span { cursor: pointer; text-transform: uppercase; }
+  .follow-inline b { color: var(--fg); font-size: 14px; font-weight: 700; margin-right: 3px; text-transform: none; }
   .profile-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(var(--overlay-rgb),0.1); }
   .profile-stats-inline { flex: 1; display: flex; justify-content: space-around; }
   .profile-stats-inline .v { font-size: 17px; }
@@ -1480,7 +1480,7 @@ function syncPublicProfile() {
     nickname: getNickname() || '',
     displayName: currentUser.displayName || '',
     nicknameLower: (getNickname() || '').toLowerCase(),
-    photoURL: getCustomAvatar() || currentUser.photoURL || null,
+    photoURL: getAvatarUrl(),
     coverImage: getCoverImage() || null,
     shows, films,
     updatedAt: Date.now()
@@ -1509,7 +1509,7 @@ function renderProfileAuth() {
   if (currentUser) {
     const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
     const displayHandle = getNickname() || firstName;
-    const avatarUrl = getCustomAvatar() || currentUser.photoURL;
+    const avatarUrl = getAvatarUrl();
     const cover = getCoverImage();
     c.innerHTML = `
       <div class="profile-cover" style="${cover?`background-image:url('${cover}')`:''}">
@@ -1962,7 +1962,7 @@ const USER_LEVELS = [
   { min: 1750, label: 'Icona' },
   { min: 2200, label: 'Immortale' },
   { min: 2800, label: 'Leggenda Vivente' },
-  { min: 3500, label: 'itstracker Supremo' }
+  { min: 3500, label: 'Supremo' }
 ];
 function getUserLevel(hours) {
   let level = USER_LEVELS[0];
@@ -3303,7 +3303,7 @@ async function logActivity(payload) {
   try {
     await fbDb.collection('activity').add(Object.assign({
       uid: currentUser.uid, name: commentAuthorName(),
-      photo: getCustomAvatar() || currentUser.photoURL || null,
+      photo: getAvatarUrl(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, payload));
   } catch(e) {}
@@ -3328,7 +3328,6 @@ function personCardHtml(p) {
   </div>`;
 }
 
-const FEED_ICONS = { finished_show: '🏁', watched_film: '🎬', commented: '💬' };
 function feedActionText(a) {
   if (a.type === 'finished_show') return `ha finito <b>${escapeHtml(a.title||'una serie')}</b>`;
   if (a.type === 'watched_film') return `ha visto <b>${escapeHtml(a.title||'un film')}</b>`;
@@ -3342,8 +3341,8 @@ function feedItemHtml(a) {
   return `<div class="feed-item" onclick="${onclick}">
     ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}
     <div class="fi-body">
-      <div class="fi-text"><span class="feed-icon">${FEED_ICONS[a.type]||'✨'}</span><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
-      <div class="fi-time">${actMillis(a) ? formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10)) : ''}</div>
+      <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
+      <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
     </div>
     ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
   </div>`;
@@ -3552,7 +3551,7 @@ async function sendChatMessage() {
   const chatId = chatIdFor(currentChatUid);
   input.value = '';
   const myName = commentAuthorName();
-  const myPhoto = getCustomAvatar() || currentUser.photoURL || '';
+  const myPhoto = getAvatarUrl();
   try {
     await fbDb.collection('chats').doc(chatId).collection('messages').add({
       from: currentUser.uid, to: currentChatUid, text, createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -4705,7 +4704,7 @@ async function postComment(epKey, parentId) {
       parentId: parentId || null,
       uid: currentUser.uid,
       displayName: myName,
-      photoURL: getCustomAvatar() || currentUser.photoURL || null,
+      photoURL: getAvatarUrl(),
       authorLevel: myLevel.label,
       text,
       mentions: mentionUids,
@@ -5017,6 +5016,31 @@ async function submitOnboardNickname() {
 
 // ---------- avatar personalizzato (ritaglio + zoom) ----------
 function getCustomAvatar() { try { return localStorage.getItem('serietracker_avatar') || ''; } catch(e) { return ''; } }
+
+// Se l'utente non ha ne' una foto Google ne' una custom, gli assegniamo un
+// avatar generato (colore + iniziale) invece di lasciare il cerchio vuoto.
+// Generato una sola volta e salvato, cosi' resta lo stesso tra le sessioni.
+function getAvatarUrl() {
+  const custom = getCustomAvatar();
+  if (custom) return custom;
+  if (currentUser && currentUser.photoURL) return currentUser.photoURL;
+  return getOrCreateRandomAvatar();
+}
+function getOrCreateRandomAvatar() {
+  const uid = currentUser ? currentUser.uid : 'anon';
+  try {
+    const saved = JSON.parse(localStorage.getItem('serietracker_random_avatar') || 'null');
+    if (saved && saved.uid === uid) return saved.url;
+  } catch(e) {}
+  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA94D','#A78BFA','#F783AC','#69DB7C','#FFD43B','#4D96FF','#FF922B'];
+  const color = colors[Math.floor(Math.random()*colors.length)];
+  const source = (getNickname() || (currentUser && currentUser.displayName) || '?').trim();
+  const letter = (source[0] || '?').toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="${color}"/><text x="50%" y="50%" font-size="90" font-family="-apple-system,sans-serif" fill="#fff" text-anchor="middle" dominant-baseline="central">${letter}</text></svg>`;
+  const url = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  try { localStorage.setItem('serietracker_random_avatar', JSON.stringify({ uid, url })); } catch(e) {}
+  return url;
+}
 
 // ---------- copertina profilo ----------
 function getCoverImage() { try { return localStorage.getItem('serietracker_cover') || ''; } catch(e) { return ''; } }
