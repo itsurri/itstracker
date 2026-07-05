@@ -1631,6 +1631,8 @@ let tvSearchGenreFilter = null;
 let filmSearchGenreFilter = null;
 let lastTvResults = [];
 let lastFilmResults = [];
+let lastTvResultsChips = null;
+let lastFilmResultsChips = null;
 let tvGenreMap = null;
 let filmGenreMap = null;
 
@@ -3068,8 +3070,17 @@ async function loadPopular(mode) {
   c.innerHTML = searchSkeletonGrid();
   document.getElementById('searchEmpty').style.display = 'none';
   try {
+    const type = mode === 'tv' ? 'tv' : 'movie';
+    const map = await ensureGenreMap(type);
+    const activeGenre = mode === 'tv' ? tvSearchGenreFilter : filmSearchGenreFilter;
+    // Se è selezionato un genere, non filtriamo il campione già scaricato (troppo
+    // piccolo per contenere abbastanza titoli di quel genere): richiediamo
+    // direttamente a TMDB solo quel genere, così i risultati sono tanti quanti
+    // dovrebbero essere davvero.
+    const genreId = activeGenre ? Object.keys(map).find(id => map[id] === activeGenre) : null;
     const path = mode === 'tv' ? '/discover/tv' : '/discover/movie';
-    const pages = await Promise.all([1,2,3,4,5].map(p => fetch(tmdbUrl(path, { sort_by: 'popularity.desc', page: p })).then(r => r.json())));
+    const extraParams = genreId ? { with_genres: genreId } : {};
+    const pages = await Promise.all([1,2,3,4,5].map(p => fetch(tmdbUrl(path, Object.assign({ sort_by: 'popularity.desc', page: p }, extraParams))).then(r => r.json())));
     const all = pages.flatMap(d => d.results || []);
     const seen = new Set();
     const results = all.filter(r => {
@@ -3077,9 +3088,14 @@ async function loadPopular(mode) {
       seen.add(r.id);
       return mode === 'tv' ? !library[r.id] : !filmLibrary[r.id];
     });
-    if (mode === 'tv') renderTvResults(results); else renderFilmResults(results);
+    const chipGenres = Object.values(map).sort();
+    const chips = renderGenreChips(chipGenres, activeGenre, mode === 'tv' ? 'setTvPopularGenre' : 'setFilmPopularGenre');
+    if (mode === 'tv') renderTvResults(results, chips); else renderFilmResults(results, chips);
   } catch(e) { c.innerHTML = ''; showToast('Errore di connessione'); }
 }
+
+function setTvPopularGenre(g) { tvSearchGenreFilter = g || null; loadPopular('tv'); }
+function setFilmPopularGenre(g) { filmSearchGenreFilter = g || null; loadPopular('film'); }
 
 let searchTimer = null;
 document.getElementById('searchInput').addEventListener('input', () => {
@@ -3502,13 +3518,14 @@ async function doSearchTv(q) {
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
-async function renderTvResults(results) {
+async function renderTvResults(results, chips) {
   const c = document.getElementById('searchResults');
-  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; lastTvResults = []; return; }
+  lastTvResultsChips = chips || null;
+  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun risultato.</div>'; lastTvResults = []; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
   const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,30);
-  c.innerHTML = searchSkeletonGrid(Math.min(ranked.length, 9));
+  c.innerHTML = (chips||'') + searchSkeletonGrid(Math.min(ranked.length, 9));
 
   const [enriched] = await Promise.all([
     Promise.all(ranked.map(async s => {
@@ -3533,12 +3550,21 @@ function renderTvResultsFromCache() {
   const c = document.getElementById('searchResults');
   const all = lastTvResults;
   if (!all.length) return;
-  const genres = genreNamesFromIds(all, tvGenreMap || {});
-  if (tvSearchGenreFilter && !genres.includes(tvSearchGenreFilter)) tvSearchGenreFilter = null;
-  const enriched = tvSearchGenreFilter
-    ? all.filter(s => (s.genre_ids||[]).some(id => tvGenreMap[id] === tvSearchGenreFilter))
-    : all;
-  const chips = renderGenreChips(genres, tvSearchGenreFilter, 'setTvSearchGenreFilter');
+  let chips, enriched;
+  if (lastTvResultsChips != null) {
+    // Risultati "popolari" già filtrati lato server (with_genres): i chip sono
+    // già pronti con l'elenco completo dei generi TMDB, non vanno ricalcolati
+    // sul campione ridotto.
+    chips = lastTvResultsChips;
+    enriched = all;
+  } else {
+    const genres = genreNamesFromIds(all, tvGenreMap || {});
+    if (tvSearchGenreFilter && !genres.includes(tvSearchGenreFilter)) tvSearchGenreFilter = null;
+    enriched = tvSearchGenreFilter
+      ? all.filter(s => (s.genre_ids||[]).some(id => tvGenreMap[id] === tvSearchGenreFilter))
+      : all;
+    chips = renderGenreChips(genres, tvSearchGenreFilter, 'setTvSearchGenreFilter');
+  }
 
   if (!enriched.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
 
@@ -3602,9 +3628,10 @@ async function doSearchFilm(q) {
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
-async function renderFilmResults(results) {
+async function renderFilmResults(results, chips) {
   const c = document.getElementById('searchResults');
-  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; lastFilmResults = []; return; }
+  lastFilmResultsChips = chips || null;
+  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun risultato.</div>'; lastFilmResults = []; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
   await ensureGenreMap('movie');
@@ -3618,12 +3645,18 @@ function renderFilmResultsFromCache() {
   const c = document.getElementById('searchResults');
   const all = lastFilmResults;
   if (!all.length) return;
-  const genres = genreNamesFromIds(all, filmGenreMap || {});
-  if (filmSearchGenreFilter && !genres.includes(filmSearchGenreFilter)) filmSearchGenreFilter = null;
-  const ranked = filmSearchGenreFilter
-    ? all.filter(f => (f.genre_ids||[]).some(id => filmGenreMap[id] === filmSearchGenreFilter))
-    : all;
-  const chips = renderGenreChips(genres, filmSearchGenreFilter, 'setFilmSearchGenreFilter');
+  let chips, ranked;
+  if (lastFilmResultsChips != null) {
+    chips = lastFilmResultsChips;
+    ranked = all;
+  } else {
+    const genres = genreNamesFromIds(all, filmGenreMap || {});
+    if (filmSearchGenreFilter && !genres.includes(filmSearchGenreFilter)) filmSearchGenreFilter = null;
+    ranked = filmSearchGenreFilter
+      ? all.filter(f => (f.genre_ids||[]).some(id => filmGenreMap[id] === filmSearchGenreFilter))
+      : all;
+    chips = renderGenreChips(genres, filmSearchGenreFilter, 'setFilmSearchGenreFilter');
+  }
 
   if (!ranked.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
 
