@@ -440,6 +440,8 @@
   }
   .cat-tab-icon { display: inline-flex; align-items: center; justify-content: center; }
   .cat-tab-icon .tab-badge { margin-left: 4px; }
+  .cat-tab-corner { position: relative; overflow: visible; }
+  .seasontab .cat-corner-badge { top: -6px; right: -6px; }
 
   .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; }
   .epitop { display: flex; gap: 12px; align-items: center; cursor: pointer; }
@@ -937,6 +939,30 @@
   .bar-col .bar-fill { width: 100%; max-width: 26px; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg,#0A84FF,#5E5CE6); min-height: 3px; transition: height 0.5s ease; }
   .bar-col .bar-lbl { font-size: 10px; color: rgba(var(--overlay-rgb),0.45); font-variant-numeric: tabular-nums; }
   .bar-col .bar-detail { font-size: 8.5px; color: rgba(var(--overlay-rgb),0.4); text-align: center; line-height: 1.35; white-space: nowrap; }
+  /* heatmap attività */
+  .hm-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .hm-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.5); }
+  .hm-legend { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; color: rgba(var(--overlay-rgb),0.4); }
+  .hm-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .hm-wrap { overflow-x: auto; scrollbar-width: none; }
+  .hm-wrap::-webkit-scrollbar { display: none; }
+  .hm-grid { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; }
+  .hm-cell, .hm-legend i { background: rgba(var(--overlay-rgb),0.07); }
+  .hm-cell { width: 12px; height: 12px; border-radius: 2px; }
+  .hm-l1 { background: rgba(10,132,255,0.35) !important; }
+  .hm-l2 { background: rgba(10,132,255,0.55) !important; }
+  .hm-l3 { background: rgba(10,132,255,0.78) !important; }
+  .hm-l4 { background: #0A84FF !important; }
+  .hm-future { opacity: 0.25; }
+  /* classifica amici */
+  .lb-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.5); margin-bottom: 10px; }
+  .lb-row { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 12px; cursor: pointer; }
+  .lb-row.me { background: rgba(10,132,255,0.1); cursor: default; }
+  .lb-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); flex-shrink: 0; }
+  .lb-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
+  .lb-row.me .lb-name { font-weight: 800; }
+  .lb-hours { font-size: 13px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .gs-list { display: flex; flex-direction: column; gap: 10px; }
   .gs-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
   .gs-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
@@ -1109,10 +1135,7 @@
       <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
       <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
       <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista</button>
-      <button class="seasontab cat-tab-icon" data-cat="inarrivo" onclick="setTvCategory('inarrivo')" title="In Arrivo">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        <span class="tab-badge" id="inarrivoBadge" style="display:none"></span>
-      </button>
+      <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
     </div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
@@ -1493,6 +1516,8 @@ function syncPublicProfile() {
     photoURL: getAvatarUrl(),
     coverImage: getCoverImage() || null,
     shows, films,
+    monthKey: currentMonthKey(),
+    monthHours: hoursInMonth(new Date().getFullYear(), new Date().getMonth()),
     updatedAt: Date.now()
   }, { merge: true }).catch(() => {});
 }
@@ -2275,6 +2300,71 @@ function renderBars(months) {
   return `<div class="bars">${cols}</div>`;
 }
 
+// ---------- heatmap attività (stile contributi GitHub) ----------
+function watchDayCounts() {
+  const counts = {};
+  const add = t => { if (typeof t === 'number') { const d = new Date(t); d.setHours(0,0,0,0); const k = d.getTime(); counts[k] = (counts[k]||0)+1; } };
+  Object.values(library).forEach(s => Object.values(s.watched||{}).forEach(add));
+  Object.values(filmLibrary).forEach(f => { if (f.watched) add(f.watchedAt); });
+  return counts;
+}
+function renderHeatmap() {
+  const counts = watchDayCounts();
+  const WEEKS = 26;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dow = (today.getDay()+6)%7; // 0 = lunedì
+  const gridEnd = new Date(today); gridEnd.setDate(gridEnd.getDate() + (6-dow)); // domenica di questa settimana
+  const totalDays = WEEKS*7;
+  const start = new Date(gridEnd); start.setDate(start.getDate() - (totalDays-1));
+  let cells = '';
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(start); d.setDate(start.getDate()+i); d.setHours(0,0,0,0);
+    const cnt = counts[d.getTime()] || 0;
+    const future = d.getTime() > today.getTime();
+    let lvl = 0;
+    if (cnt >= 8) lvl = 4; else if (cnt >= 5) lvl = 3; else if (cnt >= 3) lvl = 2; else if (cnt >= 1) lvl = 1;
+    cells += `<div class="hm-cell hm-l${lvl}${future?' hm-future':''}" title="${d.toLocaleDateString('it-IT')}: ${cnt} ${cnt===1?'titolo':'titoli'}"></div>`;
+  }
+  return `<div class="hm-head"><span class="hm-title">Attività</span>
+      <span class="hm-legend">meno <i class="hm-l0"></i><i class="hm-l1"></i><i class="hm-l2"></i><i class="hm-l3"></i><i class="hm-l4"></i> più</span>
+    </div>
+    <div class="hm-wrap"><div class="hm-grid">${cells}</div></div>`;
+}
+
+// ---------- classifica amici (ore viste questo mese) ----------
+function hoursInMonth(year, month) {
+  let mins = 0;
+  Object.values(library).forEach(s => { const rt = s.runtime||42; Object.values(s.watched||{}).forEach(v => { if (typeof v==='number') { const d=new Date(v); if (d.getFullYear()===year && d.getMonth()===month) mins+=rt; } }); });
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt==='number') { const d=new Date(f.watchedAt); if (d.getFullYear()===year && d.getMonth()===month) mins+=(f.runtime||110); } });
+  return Math.round(mins/60);
+}
+function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${n.getMonth()}`; }
+
+async function renderLeaderboard() {
+  const el = document.getElementById('leaderboardBody');
+  if (!el || !fbDb || !currentUser || !followingList.length) return;
+  const mk = currentMonthKey();
+  const now = new Date();
+  const myHours = hoursInMonth(now.getFullYear(), now.getMonth());
+  const rows = [{ uid: currentUser.uid, name: 'Tu', photo: getAvatarUrl(), hours: myHours, me: true }];
+  try {
+    const uids = followingList.slice(0, 30);
+    const chunks = [];
+    for (let i = 0; i < uids.length; i += 10) chunks.push(uids.slice(i, i+10));
+    const snaps = await Promise.all(chunks.map(ch => fbDb.collection('publicProfiles').where('uid','in',ch).get()));
+    snaps.forEach(s => s.forEach(d => { const p = d.data(); rows.push({ uid: p.uid, name: p.nickname || p.displayName || 'Utente', photo: p.photoURL || '', hours: (p.monthKey === mk ? (p.monthHours||0) : 0) }); }));
+  } catch(e) {}
+  rows.sort((a,b) => b.hours - a.hours);
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = rows.slice(0, 10).map((r,i) => `
+    <div class="lb-row${r.me?' me':''}"${r.me?'':` onclick="openPerson('${r.uid}')"`}>
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      ${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}
+      <div class="lb-name">${escapeHtml(r.name)}</div>
+      <div class="lb-hours">${r.hours} h</div>
+    </div>`).join('');
+}
+
 function animateCountUp(el) {
   const target = Number(el.getAttribute('data-count')) || 0;
   const duration = 600;
@@ -2564,16 +2654,20 @@ function renderProfile() {
   }
 
   let html = '';
+  if (currentUser && followingList.length) {
+    html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
+  }
   html += renderWrappedCard();
   html += renderAchievements(w);
 
   if (w.hasActivity) {
-    html += `<div class="wrap-card glass" style="margin-top:22px">${renderBars(w.months)}</div>`;
+    html += `<div class="wrap-card glass" style="margin-top:22px; padding:16px">${renderHeatmap()}</div>`;
   } else {
     html += `<div class="wrap-note">Segna gli episodi come visti per costruire il grafico di attività e la tua streak.</div>`;
   }
 
   c.innerHTML = html;
+  renderLeaderboard();
 }
 
 // ---------- render library TV ----------
@@ -2722,8 +2816,8 @@ function updateUpcomingBadge() {
   const badge = document.getElementById('inarrivoBadge');
   if (!badge) return;
   const count = upcomingWithin90Days().length;
-  badge.textContent = count;
-  badge.style.display = count ? 'inline-flex' : 'none';
+  badge.textContent = count > 9 ? '9+' : count;
+  badge.classList.toggle('show', count > 0);
 }
 
 async function ensureUpcomingCache() {
@@ -3586,11 +3680,15 @@ let currentChatPeerPhoto = '';
 let unsubscribeChat = null;
 let unsubscribeChatList = null;
 let chatListCache = [];
+let chatReturnToList = false;
 
 function chatIdFor(uid) { return [currentUser.uid, uid].sort().join('_'); }
 
 function openChat(uid, name, photoURL) {
   if (!currentUser) { showToast('Accedi per scrivere un messaggio'); return; }
+  // Se la chat viene aperta dalla lista messaggi, alla chiusura torniamo lì
+  // invece di chiudere tutto e finire nell'app.
+  chatReturnToList = document.getElementById('chatListPanel').classList.contains('open');
   closeChatListPanel();
   currentChatUid = uid;
   currentChatPeerName = name;
@@ -3684,6 +3782,7 @@ function closeChat() {
   document.getElementById('chatBg').classList.remove('open');
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   currentChatUid = null;
+  if (chatReturnToList) { chatReturnToList = false; openChatListPanel(); }
 }
 document.getElementById('chatBg').addEventListener('click', e => { if (e.target.id === 'chatBg') closeChat(); });
 
@@ -3725,23 +3824,32 @@ function renderChatListPanel() {
     const name = (c.names && c.names[peerUid]) || 'Utente';
     const photo = (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
-    return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${peerUid}','${escapeHtml(name).replace(/'/g,"\\'")}','${photo.replace(/'/g,"\\'")}')">
+    const safeName = escapeHtml(name).replace(/'/g,"\\'");
+    const safePhoto = photo.replace(/'/g,"\\'");
+    // Nella lista messaggi: nickname/riga -> apre la chat; avatar -> apre il profilo.
+    return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${peerUid}','${safeName}','${safePhoto}')">
       <div class="notifIcon" style="overflow:hidden;padding:0;cursor:pointer" onclick="event.stopPropagation();openPerson('${peerUid}')">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       <div class="notifBody">
-        <div class="notifText"><b style="cursor:pointer" onclick="event.stopPropagation();openPerson('${peerUid}')">${escapeHtml(name)}</b></div>
+        <div class="notifText"><b>${escapeHtml(name)}</b></div>
         <div class="notifTime">${escapeHtml(c.lastMessage || '')}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-function toggleChatListPanel(e) {
-  if (e) e.stopPropagation();
+function openChatListPanel() {
   const panel = document.getElementById('chatListPanel');
   const overlay = document.getElementById('chatListOverlay');
-  const opening = !panel.classList.contains('open');
   closeAllHeaderPanels();
-  if (opening) { renderChatListPanel(); positionHeaderPanel(panel, overlay); panel.classList.add('open'); overlay.classList.add('open'); }
+  renderChatListPanel();
+  positionHeaderPanel(panel, overlay);
+  panel.classList.add('open'); overlay.classList.add('open');
+}
+function toggleChatListPanel(e) {
+  if (e) e.stopPropagation();
+  const opening = !document.getElementById('chatListPanel').classList.contains('open');
+  closeAllHeaderPanels();
+  if (opening) openChatListPanel();
 }
 
 function closeChatListPanel() {
