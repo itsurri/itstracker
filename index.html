@@ -3689,7 +3689,7 @@ function renderPersonSheet(p) {
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
         const inLib = !!library[s.id];
-        return `<div class="person-item" onclick="openShow(${s.id})" style="cursor:pointer">
+        return `<div class="person-item" onclick="closePerson();openShow(${s.id})" style="cursor:pointer">
           ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
           <div class="pi-info">
             <div class="pi-name">${escapeHtml(s.name)}</div>
@@ -3703,7 +3703,7 @@ function renderPersonSheet(p) {
       }).join('')}` : ''}
       ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
         const inLib = !!filmLibrary[f.id];
-        return `<div class="person-item" onclick="openFilm(${f.id})" style="cursor:pointer">
+        return `<div class="person-item" onclick="closePerson();openFilm(${f.id})" style="cursor:pointer">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
         <div class="pi-info">
           <div class="pi-name">${escapeHtml(f.title)}</div>
