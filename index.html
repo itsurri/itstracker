@@ -248,13 +248,16 @@
   /* CTA anno in rassegna nel profilo */
   .wrapped-cta {
     display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 20px; cursor: pointer;
-    margin-bottom: 12px; color: #fff; background: linear-gradient(120deg,#7b2ff7,#f107a3);
+    margin-bottom: 12px; color: var(--fg);
+    background: rgba(var(--overlay-rgb),0.06);
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.12);
   }
   .wrapped-cta .wc-icon { font-size: 26px; }
   .wrapped-cta .wc-text { flex: 1; min-width: 0; }
   .wrapped-cta .wc-title { font-size: 15px; font-weight: 800; }
-  .wrapped-cta .wc-sub { font-size: 12px; opacity: 0.85; margin-top: 1px; }
-  .wrapped-cta svg { stroke: #fff; }
+  .wrapped-cta .wc-sub { font-size: 12px; opacity: 0.6; margin-top: 1px; }
+  .wrapped-cta svg { stroke: var(--fg); }
 
   /* anno in rassegna (storie) */
   .wrappedBg {
@@ -955,7 +958,7 @@
   .notifPanel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .notifPanel-head {
     display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top) + 14px) 16px 13px;
+    padding: 14px 16px 13px;
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
     background: rgba(var(--overlay-rgb),0.035);
     -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
@@ -1048,6 +1051,17 @@
       </button>
     </div>
     <div class="notifList" id="chatListBody"></div>
+  </div>
+
+  <div class="notifOverlay" id="followOverlay" onclick="closeFollowPanel()"></div>
+  <div class="notifPanel" id="followPanel">
+    <div class="notifPanel-head">
+      <span class="notifPanel-title" id="followPanelTitle">Follower</span>
+      <button class="notifPanel-close" onclick="closeFollowPanel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="notifList" id="followPanelBody"></div>
   </div>
 
   <!-- SERIE TV -->
@@ -1479,7 +1493,6 @@ function renderProfileAuth() {
           <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
           <span onclick="toggleFollowList('following')"><b>${followingList.length}</b> Seguiti</span>
         </div>
-        <div id="followListBody"></div>
         <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:12px;margin-bottom:0"></div>
       </div>
     `;
@@ -2553,7 +2566,7 @@ function renderNotifPanel() {
   list.innerHTML = items.length
     ? items.slice(0, 50).map(n => {
         const isChat = n.type === 'message' && n.fromUid;
-        const clickable = (n.type === 'mention' && n.showId) || isChat;
+        const clickable = !!n.showId || isChat;
         const handler = isChat ? `goToChatNotification('${n.id}')` : `goToCommentNotification('${n.id}')`;
         const icon = (isChat && n.fromPhoto) ? `<img src="${n.fromPhoto}" alt="">` : (NOTIF_ICONS[n.type] || '🔔');
         return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="${handler}"` : ''}>
@@ -2996,12 +3009,13 @@ async function toggleFollow(uid) {
   if (currentTab === 'profile') renderProfile();
 }
 
-let followListOpenMode = null;
 async function toggleFollowList(mode) {
-  const body = document.getElementById('followListBody');
-  if (!body) return;
-  if (followListOpenMode === mode) { followListOpenMode = null; body.innerHTML = ''; return; }
-  followListOpenMode = mode;
+  const panel = document.getElementById('followPanel');
+  const overlay = document.getElementById('followOverlay');
+  const body = document.getElementById('followPanelBody');
+  document.getElementById('followPanelTitle').textContent = mode === 'following' ? 'Seguiti' : 'Follower';
+  positionHeaderPanel(panel, overlay);
+  panel.classList.add('open'); overlay.classList.add('open');
   const uids = mode === 'following' ? followingList : followerUids;
   if (!uids.length) {
     body.innerHTML = `<div class="commentsEmpty">${mode === 'following' ? 'Non segui ancora nessuno.' : 'Nessun follower ancora.'}</div>`;
@@ -3013,6 +3027,11 @@ async function toggleFollowList(mode) {
     const people = docs.filter(d => d.exists).map(d => d.data());
     body.innerHTML = people.length ? people.map(personCardHtml).join('') : `<div class="commentsEmpty">Nessun profilo trovato.</div>`;
   } catch (e) { body.innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; }
+}
+
+function closeFollowPanel() {
+  document.getElementById('followPanel').classList.remove('open');
+  document.getElementById('followOverlay').classList.remove('open');
 }
 
 async function logActivity(payload) {
@@ -4264,8 +4283,16 @@ function toggleLikeComment(commentId) {
   const op = nowLiking ? firebase.firestore.FieldValue.arrayUnion(id) : firebase.firestore.FieldValue.arrayRemove(id);
   fbDb.collection('comments').doc(commentId).update({ likedBy: op }).catch(() => { showToast('Errore'); });
   if (nowLiking && currentUser && c.uid && c.uid !== currentUser.uid) {
-    pushRemoteNotification(c.uid, { type: 'like', text: `${commentAuthorName()} ha messo mi piace al tuo commento` });
+    const ep = parseEpKey(c.epKey);
+    pushRemoteNotification(c.uid, Object.assign({ type: 'like', text: `${commentAuthorName()} ha messo mi piace al tuo commento`, commentId }, ep));
   }
+}
+
+// Estrae showId/season/number dalla chiave episodio "{showId}_{season}x{number}".
+function parseEpKey(epKey) {
+  const [showIdStr, se] = (epKey || '').split('_');
+  const [season, number] = (se || '').split('x');
+  return { showId: Number(showIdStr), season: Number(season), number: Number(number) };
 }
 
 async function postComment(epKey, parentId) {
@@ -4297,7 +4324,8 @@ async function postComment(epKey, parentId) {
       const f = document.getElementById(`replyForm-${parentId}`); if (f) f.classList.remove('open');
       const parent = commentsCache[parentId];
       if (parent && parent.uid && parent.uid !== currentUser.uid) {
-        pushRemoteNotification(parent.uid, { type: 'reply', text: `${myName} ha risposto al tuo commento` });
+        const ep = parseEpKey(parent.epKey);
+        pushRemoteNotification(parent.uid, Object.assign({ type: 'reply', text: `${myName} ha risposto al tuo commento`, commentId: docRef.id }, ep));
       }
     }
     const [showIdStr, seasonEp] = epKey.split('_');
