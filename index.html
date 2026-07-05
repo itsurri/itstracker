@@ -1952,6 +1952,9 @@ function switchTab(tab) {
   moveTabIndicator(activeBtn);
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
+  // Le view condividono lo scroll della pagina: senza reset, cambiando tab si
+  // ritrova la stessa posizione di scroll lasciata nella tab precedente.
+  window.scrollTo(0, 0);
   document.getElementById('topbarRight').style.display = (tab === 'tv' || tab === 'film' || tab === 'search') ? 'flex' : 'none';
   if (tab === 'profile') renderProfile();
   if (tab === 'search' && !document.getElementById('searchInput').value.trim() && !document.getElementById('searchResults').innerHTML.trim()) {
@@ -3891,8 +3894,12 @@ async function renderChatListPanel() {
   if (suggestions.length) {
     html += `<div class="chat-newsection">Inizia una chat</div>` +
       suggestions.map(p => chatRowHtml(p.uid, p.nickname || p.displayName || 'Utente', p.photoURL || '', 'Tocca per scrivere', false)).join('');
+  } else if (existing && followingList.length) {
+    // Nessun suggerimento ma segui gente: chiariamo perché (già tutti in chat),
+    // invece di lasciare un silenzio che sembra un bug.
+    html += `<div class="chat-newsection">Inizia una chat</div><div class="commentsEmpty" style="padding:10px 8px">Hai già una chat con tutte le persone che segui.</div>`;
   }
-  if (!existing && !suggestions.length) {
+  if (!existing && !suggestions.length && !followingList.length) {
     html = '<div class="commentsEmpty">Nessuna conversazione. Segui qualcuno per iniziare a chattare.</div>';
   }
   el.innerHTML = html;
