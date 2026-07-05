@@ -342,6 +342,11 @@
     background: rgba(255,69,58,0.14); color: #ff453a;
     display: flex; align-items: center; justify-content: center;
   }
+  .profile-share-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: none; flex-shrink: 0;
+    background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
+    display: flex; align-items: center; justify-content: center;
+  }
   .profile-level-line { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); font-weight: 600; margin-top: 2px; text-align: left; }
   .profile-level-line .plvl-emoji { display: inline-flex; align-items: center; line-height: 1; }
   /* picker copertina */
@@ -1171,7 +1176,7 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
+      <div class="glass" id="profileShareTarget" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
           <div style="padding:16px; font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
@@ -1416,6 +1421,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
@@ -1524,9 +1530,14 @@ function renderProfileAuth() {
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
             <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
-          <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+          <div style="display:flex; flex-direction:column; gap:6px">
+            <button class="profile-share-btn" onclick="shareProfileImage()" title="Condividi profilo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>
+            </button>
+            <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
         <div class="follow-inline">
           <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
@@ -1978,24 +1989,96 @@ function renderLevelBadge(hours) {
 const WRAP_MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 let wrappedSlides = [], wrappedIndex = 0, wrappedTimer = null, wrappedSummary = null;
 
-function gatherWrappedData() {
-  const w = computeWrapped();
-  const monthCounts = {};
-  Object.values(library).forEach(s => Object.values(s.watched||{}).forEach(v => { if (typeof v === 'number') { const d = new Date(v); const k = d.getMonth(); monthCounts[k] = (monthCounts[k]||0)+1; } }));
-  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt === 'number') { const d = new Date(f.watchedAt); const k = d.getMonth(); monthCounts[k] = (monthCounts[k]||0)+1; } });
+// Anni per cui esiste almeno un'attività, piu' l'anno corrente (cosi' un
+// nuovo anno appare automaticamente il 1 gennaio anche senza nulla ancora
+// visto in quell'anno).
+function renderWrappedCard() {
+  const years = getWrappedYears();
+  return `<div class="wrap-card glass ach-details" id="wrappedYearCard">
+    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer" onclick="toggleWrappedYearPicker()">
+      <span class="ach-summary-title">🎬 Wrapped</span>
+      <svg class="ach-chevron" id="wrappedYearChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div id="wrappedYearList" style="display:none; padding:0 16px 16px; flex-direction:column; gap:8px">
+      ${years.map(y => `<button class="filebtn" onclick="event.stopPropagation();openWrapped(${y})">${y}</button>`).join('')}
+    </div>
+  </div>`;
+}
+function toggleWrappedYearPicker() {
+  const list = document.getElementById('wrappedYearList');
+  const chevron = document.getElementById('wrappedYearChevron');
+  const isOpen = list.classList.contains('open');
+  list.classList.toggle('open', !isOpen);
+  list.style.display = isOpen ? 'none' : 'flex';
+  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function getWrappedYears() {
+  const years = new Set([new Date().getFullYear()]);
+  Object.values(library).forEach(s => Object.values(s.watched||{}).forEach(v => { if (typeof v === 'number') years.add(new Date(v).getFullYear()); }));
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt === 'number') years.add(new Date(f.watchedAt).getFullYear()); });
+  return [...years].sort((a,b) => b - a);
+}
+
+// Come computeWrapped() ma limitato a un singolo anno solare, per il Wrapped
+// "per anno" (il resto dell'app - statistiche profilo, achievement - usa
+// invece computeWrapped() senza filtro, sono conteggi di sempre).
+function computeWrappedForYear(year) {
+  const shows = Object.values(library);
+  const films = Object.values(filmLibrary);
+  let episodesWatched = 0, filmsWatched = 0, mins = 0;
+  const gTally = {};
+  let top = null;
+  const events = [];
+
+  shows.forEach(x => {
+    const watchedInYear = Object.entries(x.watched||{}).filter(([,v]) => typeof v === 'number' && new Date(v).getFullYear() === year);
+    if (!watchedInYear.length) return;
+    episodesWatched += watchedInYear.length;
+    mins += watchedInYear.length * (x.runtime || 42);
+    (x.genres||[]).forEach(g => { gTally[g] = (gTally[g]||0)+1; });
+    if (!top || watchedInYear.length > top.w) top = { name: x.name, image: x.image, w: watchedInYear.length, total: x.totalEpisodes||0 };
+    watchedInYear.forEach(([,v]) => events.push({ t: v, type: 'ep' }));
+  });
+  films.forEach(f => {
+    if (f.watched && typeof f.watchedAt === 'number' && new Date(f.watchedAt).getFullYear() === year) {
+      filmsWatched++;
+      mins += (f.runtime || 110);
+      (f.genres && f.genres.length ? f.genres : (f.genre ? [f.genre] : [])).forEach(g => { gTally[g] = (gTally[g]||0)+1; });
+      events.push({ t: f.watchedAt, type: 'film' });
+    }
+  });
+
+  const hours = Math.round(mins / 60);
+  const genres = Object.entries(gTally).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+  const months = []; for (let m = 0; m < 12; m++) months.push({ m, count: 0 });
+  events.forEach(e => { const d = new Date(e.t); if (d.getFullYear() === year) months[d.getMonth()].count++; });
   let bestMonth = null, bestC = 0;
-  Object.entries(monthCounts).forEach(([k,c]) => { if (c > bestC) { bestC = c; bestMonth = Number(k); } });
+  months.forEach((mo, i) => { if (mo.count > bestC) { bestC = mo.count; bestMonth = i; } });
+
+  const days = [...new Set(events.map(e => { const d = new Date(e.t); d.setHours(0,0,0,0); return d.getTime(); }))].sort((a,b) => a-b);
+  let run = 0, best = 0;
+  for (let i = 0; i < days.length; i++) { run = (i > 0 && days[i]-days[i-1] === 86400000) ? run+1 : 1; if (run > best) best = run; }
+
+  return { year, totalShows: shows.length, episodesWatched, filmsWatched, hours, genres,
+    distinctGenres: Object.keys(gTally).length, top, streak: best, bestMonth, bestMonthCount: bestC,
+    hasActivity: events.length > 0 };
+}
+
+function gatherWrappedData(year) {
+  const w = computeWrappedForYear(year);
   const level = getUserLevel(w.hours);
   const topGenre = w.genres.length ? w.genres[0] : null;
   wrappedSummary = { hours: w.hours, episodes: w.episodesWatched, films: w.filmsWatched, shows: w.totalShows,
     top: w.top, genre: topGenre ? topGenre[0] : null, genreCount: topGenre ? topGenre[1] : 0,
-    month: bestMonth !== null ? WRAP_MONTHS[bestMonth] : null, monthCount: bestC, level };
+    month: w.bestMonth !== null ? WRAP_MONTHS[w.bestMonth] : null, monthCount: w.bestMonthCount, level, year };
 
   const slides = [];
   slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">itstracker</div>
-    <div class="w-mid">Wrapped</div>
-    <div class="w-sub">Un riassunto di tutto quello<br>che hai guardato. Tocca a destra →</div>` });
+    <div class="w-mid">Wrapped ${year}</div>
+    <div class="w-sub">Un riassunto di tutto quello<br>che hai guardato nel ${year}. Tocca a destra →</div>` });
   slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Hai passato</div>
     <div class="w-big" data-count="${w.hours}">0</div>
@@ -2015,21 +2098,22 @@ function gatherWrappedData() {
     <div class="w-eyebrow">Il tuo genere</div>
     <div class="w-mid" style="font-size:40px">${escapeHtml(topGenre[0])}</div>
     <div class="w-sub">Il filo conduttore di ${topGenre[1]} titoli</div>` });
-  if (bestMonth !== null && bestC > 0) slides.push({ bg: 'var(--sheet-bg)', html: `
+  if (w.bestMonth !== null && w.bestMonthCount > 0) slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il mese più intenso</div>
-    <div class="w-mid" style="font-size:44px">${WRAP_MONTHS[bestMonth]}</div>
-    <div class="w-sub">${bestC} titoli in un solo mese 🔥</div>` });
+    <div class="w-mid" style="font-size:44px">${WRAP_MONTHS[w.bestMonth]}</div>
+    <div class="w-sub">${w.bestMonthCount} titoli in un solo mese 🔥</div>` });
   slides.push({ bg: 'var(--sheet-bg)', html: `
     <div class="w-eyebrow">Il tuo livello</div>
     <div class="w-mid" style="font-size:46px">${level.label}</div>
-    <div class="w-sub">${w.hours} ore totali guardate su itstracker</div>
+    <div class="w-sub">${w.hours} ore guardate nel ${year}</div>
     <button class="w-share" onclick="shareWrapped()">📤 Condividi</button>` });
   return slides;
 }
 
-function openWrapped() {
-  if (!currentUser && Object.keys(library).length === 0 && Object.keys(filmLibrary).length === 0) { showToast('Aggiungi qualcosa alla libreria'); return; }
-  wrappedSlides = gatherWrappedData();
+function openWrapped(year) {
+  year = year || new Date().getFullYear();
+  if (!computeWrappedForYear(year).hasActivity) { showToast(`Nessuna attività ancora nel ${year}`); return; }
+  wrappedSlides = gatherWrappedData(year);
   wrappedIndex = 0;
   document.getElementById('wrappedBg').classList.add('open');
   renderWrappedProgress();
@@ -2060,6 +2144,32 @@ function wrappedNext() { showWrappedSlide(wrappedIndex + 1); }
 function wrappedPrev() { showWrappedSlide(wrappedIndex - 1); }
 function closeWrapped() { clearTimeout(wrappedTimer); document.getElementById('wrappedBg').classList.remove('open'); }
 
+// Cattura la card del profilo cosi' com'e' (copertina, avatar, nickname,
+// livello, follower/seguiti, statistiche) senza i bottoni di modifica, e la
+// condivide come immagine (o la scarica se la condivisione non e' disponibile).
+async function shareProfileImage() {
+  if (typeof html2canvas === 'undefined') { showToast('Funzione non disponibile'); return; }
+  const target = document.getElementById('profileShareTarget');
+  if (!target) return;
+  const hideEls = target.querySelectorAll('.cover-edit, .profile-share-btn, .profile-signout-x');
+  hideEls.forEach(el => el.style.visibility = 'hidden');
+  try {
+    const canvas = await html2canvas(target, { backgroundColor: null, useCORS: true, scale: 2 });
+    hideEls.forEach(el => el.style.visibility = '');
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    const file = new File([blob], 'itstracker-profilo.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: 'Il mio profilo su itstracker' });
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'itstracker-profilo.png'; a.click();
+      showToast('Immagine salvata');
+    }
+  } catch(e) {
+    hideEls.forEach(el => el.style.visibility = '');
+    showToast('Errore nella creazione dell\'immagine');
+  }
+}
+
 async function shareWrapped() {
   clearTimeout(wrappedTimer);
   const s = wrappedSummary; if (!s) return;
@@ -2071,7 +2181,7 @@ async function shareWrapped() {
   ctx.fillStyle = grad; ctx.fillRect(0, 0, 1080, 1920);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
   ctx.font = '700 44px -apple-system, "Segoe UI", sans-serif';
-  ctx.globalAlpha = 0.85; ctx.fillText('IL MIO ANNO SU ITSTRACKER', 540, 250); ctx.globalAlpha = 1;
+  ctx.globalAlpha = 0.85; ctx.fillText(`IL MIO ${s.year||''} SU ITSTRACKER`, 540, 250); ctx.globalAlpha = 1;
   const rows = [
     [`${s.hours}`, 'ore guardate'],
     [`${s.episodes}`, 'episodi visti'],
@@ -2450,12 +2560,7 @@ function renderProfile() {
   }
 
   let html = '';
-  html += `<div class="wrap-card glass ach-details" style="cursor:pointer" onclick="openWrapped()">
-    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between">
-      <span class="ach-summary-title">🎬 Wrapped</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5"><path d="M9 18l6-6-6-6"/></svg>
-    </div>
-  </div>`;
+  html += renderWrappedCard();
   html += renderAchievements(w);
 
   if (w.hasActivity) {
