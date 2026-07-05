@@ -225,6 +225,7 @@
     background: var(--sheet-bg); border-radius: 0;
     transform: translateY(100%); transition: transform 0.35s cubic-bezier(.32,.72,0,1);
     padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
+    will-change: transform, opacity;
   }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
@@ -2836,7 +2837,7 @@ function initSheetSwipe() {
   sheet.addEventListener('touchcancel', endHandler);
 }
 
-function sheetSwipeGo(direction) {
+async function sheetSwipeGo(direction) {
   const sheet = document.getElementById('sheet');
   const nextIndex = sheetNavIndex + direction;
   if (nextIndex < 0 || nextIndex >= sheetNavIds.length) {
@@ -2849,15 +2850,24 @@ function sheetSwipeGo(direction) {
   sheet.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
   sheet.style.transform = `translateY(0) translateX(${direction * -60}px)`;
   sheet.style.opacity = '0';
-  setTimeout(() => {
-    sheet.style.transition = 'none';
-    sheet.style.transform = `translateY(0) translateX(${direction * 60}px)`;
-    if (sheetNavOpener === 'film') openFilm(nextId); else openShow(nextId);
-    requestAnimationFrame(() => {
-      sheet.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
-      sheet.style.transform = 'translateY(0)'; sheet.style.opacity = '1';
-    });
-  }, 180);
+  await new Promise(r => setTimeout(r, 180));
+
+  // Salta subito dall'altro lato senza transizione: il reflow forzato (offsetHeight)
+  // garantisce che il browser applichi davvero questo stato "di scatto" prima di
+  // riattivare la transizione, altrimenti i due cambi di stile rischiano di essere
+  // fusi in uno solo e il salto si vede come uno scatto a metà animazione.
+  sheet.style.transition = 'none';
+  sheet.style.transform = `translateY(0) translateX(${direction * 60}px)`;
+  void sheet.offsetHeight;
+
+  // Aspetta che il nuovo contenuto sia davvero pronto (fetch TMDB incluso) prima di
+  // farlo scorrere in vista, altrimenti si vedrebbe lo scheletro di caricamento
+  // comparire a metà dell'animazione di rientro.
+  if (sheetNavOpener === 'film') await openFilm(nextId); else await openShow(nextId);
+
+  sheet.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
+  void sheet.offsetHeight;
+  sheet.style.transform = 'translateY(0)'; sheet.style.opacity = '1';
 }
 
 function hidePtrIndicator() {
