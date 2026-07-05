@@ -4733,16 +4733,15 @@ let followingProfilesCache = [];
 let followingProfilesLoadedFor = null;
 async function ensureFollowingProfiles() {
   const key = followingList.slice().sort().join(',');
-  if (followingProfilesLoadedFor === key) return followingProfilesCache;
+  if (followingProfilesLoadedFor === key && followingProfilesCache.length) return followingProfilesCache;
   followingProfilesLoadedFor = key;
   if (!fbDb || !followingList.length) { followingProfilesCache = []; return followingProfilesCache; }
   try {
-    const chunks = [];
-    for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
-    const snaps = await Promise.all(chunks.map(ch => fbDb.collection('publicProfiles').where('uid', 'in', ch).get()));
-    followingProfilesCache = [];
-    snaps.forEach(s => s.forEach(d => followingProfilesCache.push(d.data())));
-  } catch(e) { followingProfilesCache = []; }
+    // Carico per ID documento (che è l'uid): più affidabile della query
+    // where('uid','in',...), che fallisce se manca l'indice/campo.
+    const docs = await Promise.all(followingList.map(u => fbDb.collection('publicProfiles').doc(u).get()));
+    followingProfilesCache = docs.filter(d => d.exists).map(d => { const data = d.data() || {}; if (!data.uid) data.uid = d.id; return data; });
+  } catch(e) { followingProfilesCache = []; followingProfilesLoadedFor = null; }
   return followingProfilesCache;
 }
 
