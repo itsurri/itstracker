@@ -425,6 +425,8 @@
   .seasontab.active { background: var(--fg); color: var(--bg); }
   .cat-tabs { justify-content: center; }
   .cat-tabs .seasontab { text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; }
+  .genre-chips { padding: 0 0 14px; }
+  .genre-chips .seasontab { padding: 6px 14px; font-size: 12px; }
   .tab-badge {
     display: inline-flex; align-items: center; justify-content: center;
     min-width: 16px; height: 16px; padding: 0 4px; margin-left: 5px; border-radius: 8px;
@@ -1623,6 +1625,14 @@ let currentTab = 'tv';
 let viewMode = 'grid'; // 'grid' | 'list'
 let tvCategory = 'continua'; // 'continua' | 'inpari' | 'davedere'
 let filmCategory = 'visti'; // 'visti' | 'davedere'
+let tvGenreFilter = null;
+let filmGenreFilter = null;
+let tvSearchGenreFilter = null;
+let filmSearchGenreFilter = null;
+let lastTvResults = [];
+let lastFilmResults = [];
+let tvGenreMap = null;
+let filmGenreMap = null;
 
 // TMDB restituisce trame e generi già in italiano (language=it-IT).
 // Lo stato della serie invece non è localizzato, quindi lo mappiamo qui.
@@ -2419,10 +2429,15 @@ function renderLibrary() {
   if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; tvCategoryIds = []; return; }
   emptyEl.style.display = 'none';
 
-  const items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
+  const categoryItems = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
+  const genres = genreList(categoryItems.map(([,s]) => s));
+  if (tvGenreFilter && !genres.includes(tvGenreFilter)) tvGenreFilter = null;
+  const items = tvGenreFilter ? categoryItems.filter(([,s]) => (s.genres||[]).includes(tvGenreFilter)) : categoryItems;
   tvCategoryIds = items.map(([k, s]) => validId(s, k));
   const rail = tvCategory === 'continua' ? renderResumeRail(items) : '';
+  const chips = renderGenreChips(genres, tvGenreFilter, 'setTvGenreFilter');
   container.innerHTML = `${rail}<div class="section">
+    ${chips}
     ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
@@ -2430,6 +2445,45 @@ function renderLibrary() {
     }
   </div>`;
   applyCardGlows(container);
+}
+
+function setTvGenreFilter(g) { tvGenreFilter = g || null; renderLibrary(); }
+function setFilmGenreFilter(g) { filmGenreFilter = g || null; renderFilmLibrary(); }
+
+function genreList(objs) {
+  const set = new Set();
+  objs.forEach(o => (o.genres && o.genres.length ? o.genres : (o.genre ? [o.genre] : [])).forEach(g => set.add(g)));
+  return [...set].sort();
+}
+
+function renderGenreChips(genres, active, handlerName) {
+  if (genres.length < 2) return '';
+  const chips = [{ label: 'Tutti', val: null }, ...genres.map(g => ({ label: g, val: g }))];
+  return `<div class="seasontabs genre-chips">${chips.map(c => {
+    const isActive = active ? active === c.val : c.val === null;
+    const arg = c.val === null ? 'null' : `'${c.val.replace(/'/g, "\\'")}'`;
+    return `<button class="seasontab${isActive ? ' active' : ''}" onclick="${handlerName}(${arg})">${escapeHtml(c.label)}</button>`;
+  }).join('')}</div>`;
+}
+
+// ---------- filtro genere in ricerca/scoperta (TMDB genre_ids -> nomi) ----------
+async function ensureGenreMap(type) {
+  const cached = type === 'tv' ? tvGenreMap : filmGenreMap;
+  if (cached) return cached;
+  try {
+    const r = await fetch(tmdbUrl(`/genre/${type}/list`, {}));
+    const d = await r.json();
+    const map = {};
+    (d.genres || []).forEach(g => { map[g.id] = g.name; });
+    if (type === 'tv') tvGenreMap = map; else filmGenreMap = map;
+    return map;
+  } catch (e) { return {}; }
+}
+
+function genreNamesFromIds(results, map) {
+  const set = new Set();
+  results.forEach(r => (r.genre_ids || []).forEach(id => { if (map[id]) set.add(map[id]); }));
+  return [...set].sort();
 }
 
 const RING_C = 2 * Math.PI * 19; // r=19
@@ -2938,9 +2992,14 @@ function renderFilmLibrary() {
   if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; filmCategoryIds = []; return; }
   emptyEl.style.display = 'none';
 
-  const items = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
+  const categoryItems = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
+  const genres = genreList(categoryItems.map(([,f]) => f));
+  if (filmGenreFilter && !genres.includes(filmGenreFilter)) filmGenreFilter = null;
+  const items = filmGenreFilter ? categoryItems.filter(([,f]) => (f.genres && f.genres.length ? f.genres : (f.genre ? [f.genre] : [])).includes(filmGenreFilter)) : categoryItems;
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
+  const chips = renderGenreChips(genres, filmGenreFilter, 'setFilmGenreFilter');
   container.innerHTML = `<div class="section">
+    ${chips}
     ${items.length === 0 ? `<div class="cat-empty">Nessun film in questa categoria.</div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
@@ -3445,24 +3504,46 @@ async function doSearchTv(q) {
 
 async function renderTvResults(results) {
   const c = document.getElementById('searchResults');
-  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
+  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; lastTvResults = []; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
   const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,30);
   c.innerHTML = searchSkeletonGrid(Math.min(ranked.length, 9));
 
-  const enriched = await Promise.all(ranked.map(async s => {
-    try {
-      const r = await fetch(tmdbUrl(`/tv/${s.id}`, {}));
-      const d = await r.json();
-      s.totalSeasons = (d.seasons||[]).filter(se=>se.season_number>0).length || d.number_of_seasons || 0;
-      s.totalEpisodes = d.number_of_episodes || 0;
-    } catch(e) {}
-    return s;
-  }));
+  const [enriched] = await Promise.all([
+    Promise.all(ranked.map(async s => {
+      try {
+        const r = await fetch(tmdbUrl(`/tv/${s.id}`, {}));
+        const d = await r.json();
+        s.totalSeasons = (d.seasons||[]).filter(se=>se.season_number>0).length || d.number_of_seasons || 0;
+        s.totalEpisodes = d.number_of_episodes || 0;
+      } catch(e) {}
+      return s;
+    })),
+    ensureGenreMap('tv')
+  ]);
+
+  lastTvResults = enriched;
+  renderTvResultsFromCache();
+}
+
+function setTvSearchGenreFilter(g) { tvSearchGenreFilter = g || null; renderTvResultsFromCache(); }
+
+function renderTvResultsFromCache() {
+  const c = document.getElementById('searchResults');
+  const all = lastTvResults;
+  if (!all.length) return;
+  const genres = genreNamesFromIds(all, tvGenreMap || {});
+  if (tvSearchGenreFilter && !genres.includes(tvSearchGenreFilter)) tvSearchGenreFilter = null;
+  const enriched = tvSearchGenreFilter
+    ? all.filter(s => (s.genre_ids||[]).some(id => tvGenreMap[id] === tvSearchGenreFilter))
+    : all;
+  const chips = renderGenreChips(genres, tvSearchGenreFilter, 'setTvSearchGenreFilter');
+
+  if (!enriched.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
 
   if (viewMode === 'list') {
-    c.innerHTML = `<div>${enriched.map(s => {
+    c.innerHTML = chips + `<div>${enriched.map(s => {
       const inLib = !!library[s.id];
       const poster = tmdbImg(s.poster_path, 'w185');
       const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
@@ -3486,7 +3567,7 @@ async function renderTvResults(results) {
     return;
   }
 
-  c.innerHTML = `<div class="grid">${enriched.map(s => {
+  c.innerHTML = chips + `<div class="grid">${enriched.map(s => {
     const inLib = !!library[s.id];
     const poster = tmdbImg(s.poster_path, 'w342');
     const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
@@ -3521,15 +3602,33 @@ async function doSearchFilm(q) {
   } catch(e) { c.innerHTML=''; showToast('Errore di connessione'); }
 }
 
-function renderFilmResults(results) {
+async function renderFilmResults(results) {
   const c = document.getElementById('searchResults');
-  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; return; }
+  if (!results.length) { c.innerHTML = '<div class="empty">Nessun risultato.</div>'; lastFilmResults = []; return; }
   document.getElementById('searchEmpty').style.display = 'none';
 
-  const ranked = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
+  await ensureGenreMap('movie');
+  lastFilmResults = results.slice().sort((a, b) => (b.vote_count||0) - (a.vote_count||0)).slice(0,60);
+  renderFilmResultsFromCache();
+}
+
+function setFilmSearchGenreFilter(g) { filmSearchGenreFilter = g || null; renderFilmResultsFromCache(); }
+
+function renderFilmResultsFromCache() {
+  const c = document.getElementById('searchResults');
+  const all = lastFilmResults;
+  if (!all.length) return;
+  const genres = genreNamesFromIds(all, filmGenreMap || {});
+  if (filmSearchGenreFilter && !genres.includes(filmSearchGenreFilter)) filmSearchGenreFilter = null;
+  const ranked = filmSearchGenreFilter
+    ? all.filter(f => (f.genre_ids||[]).some(id => filmGenreMap[id] === filmSearchGenreFilter))
+    : all;
+  const chips = renderGenreChips(genres, filmSearchGenreFilter, 'setFilmSearchGenreFilter');
+
+  if (!ranked.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
 
   if (viewMode === 'list') {
-    c.innerHTML = `<div>${ranked.map(f => {
+    c.innerHTML = chips + `<div>${ranked.map(f => {
       const inLib = !!filmLibrary[f.id];
       const poster = tmdbImg(f.poster_path, 'w185');
       const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
@@ -3547,7 +3646,7 @@ function renderFilmResults(results) {
     return;
   }
 
-  c.innerHTML = `<div class="grid">${ranked.map(f => {
+  c.innerHTML = chips + `<div class="grid">${ranked.map(f => {
     const inLib = !!filmLibrary[f.id];
     const poster = tmdbImg(f.poster_path, 'w342');
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
