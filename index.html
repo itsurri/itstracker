@@ -1611,6 +1611,11 @@ let library = {};
 let filmLibrary = {};
 let currentShowId = null;
 let currentSeason = null;
+let tvCategoryIds = [];
+let filmCategoryIds = [];
+let sheetNavIds = [];
+let sheetNavIndex = -1;
+let sheetNavOpener = null; // 'show' | 'film'
 let episodesCache = {};
 let searchMode = 'tv';
 let currentTab = 'tv';
@@ -2404,15 +2409,17 @@ function renderLibrary() {
 
   if (tvCategory === 'inarrivo') {
     emptyEl.style.display = 'none';
+    tvCategoryIds = [];
     if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
     renderUpcoming(container);
     return;
   }
 
-  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
+  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; tvCategoryIds = []; return; }
   emptyEl.style.display = 'none';
 
   const items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
+  tvCategoryIds = items.map(([k, s]) => validId(s, k));
   const rail = tvCategory === 'continua' ? renderResumeRail(items) : '';
   container.innerHTML = `${rail}<div class="section">
     ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
@@ -2785,6 +2792,74 @@ function initPullToRefresh() {
   document.addEventListener('touchcancel', onPtrEnd);
 }
 
+// ---------- swipe orizzontale nella scheda dettaglio (serie/film successivo o precedente) ----------
+const SHEET_SWIPE_THRESHOLD = 70;
+let sheetSwipeState = null;
+
+function initSheetSwipe() {
+  const sheet = document.getElementById('sheet');
+
+  sheet.addEventListener('touchstart', e => {
+    if (!document.getElementById('sheetBg').classList.contains('open')) return;
+    const t = e.touches[0];
+    sheetSwipeState = { startX: t.clientX, startY: t.clientY, dx: 0, dragging: false };
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    if (!sheetSwipeState) return;
+    const t = e.touches[0];
+    const dx = t.clientX - sheetSwipeState.startX;
+    const dy = t.clientY - sheetSwipeState.startY;
+    if (!sheetSwipeState.dragging) {
+      if (Math.abs(dx) < 12) return;
+      if (Math.abs(dy) > Math.abs(dx)) { sheetSwipeState = null; return; }
+      if (sheetNavIndex < 0 || !sheetNavIds.length) { sheetSwipeState = null; return; }
+      sheetSwipeState.dragging = true;
+    }
+    e.preventDefault();
+    sheetSwipeState.dx = dx;
+    sheet.style.transition = 'none';
+    sheet.style.transform = `translateY(0) translateX(${dx * 0.5}px)`;
+    sheet.style.opacity = String(1 - Math.min(0.4, Math.abs(dx) / 600));
+  }, { passive: false });
+
+  const endHandler = () => {
+    if (!sheetSwipeState) return;
+    const { dx, dragging } = sheetSwipeState;
+    sheetSwipeState = null;
+    if (!dragging) return;
+    if (dx <= -SHEET_SWIPE_THRESHOLD) sheetSwipeGo(1);
+    else if (dx >= SHEET_SWIPE_THRESHOLD) sheetSwipeGo(-1);
+    else { sheet.style.transition = 'transform 0.25s ease, opacity 0.25s ease'; sheet.style.transform = 'translateY(0)'; sheet.style.opacity = ''; }
+  };
+  sheet.addEventListener('touchend', endHandler);
+  sheet.addEventListener('touchcancel', endHandler);
+}
+
+function sheetSwipeGo(direction) {
+  const sheet = document.getElementById('sheet');
+  const nextIndex = sheetNavIndex + direction;
+  if (nextIndex < 0 || nextIndex >= sheetNavIds.length) {
+    haptic();
+    sheet.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+    sheet.style.transform = 'translateY(0)'; sheet.style.opacity = '';
+    return;
+  }
+  const nextId = sheetNavIds[nextIndex];
+  sheet.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+  sheet.style.transform = `translateY(0) translateX(${direction * -60}px)`;
+  sheet.style.opacity = '0';
+  setTimeout(() => {
+    sheet.style.transition = 'none';
+    sheet.style.transform = `translateY(0) translateX(${direction * 60}px)`;
+    if (sheetNavOpener === 'film') openFilm(nextId); else openShow(nextId);
+    requestAnimationFrame(() => {
+      sheet.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
+      sheet.style.transform = 'translateY(0)'; sheet.style.opacity = '1';
+    });
+  }, 180);
+}
+
 function hidePtrIndicator() {
   const indicator = document.getElementById('ptrIndicator');
   indicator.classList.remove('visible');
@@ -2850,10 +2925,11 @@ function renderFilmLibrary() {
   const container = document.getElementById('filmContent');
   const emptyEl = document.getElementById('filmEmpty');
   const entries = Object.entries(filmLibrary);
-  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
+  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; filmCategoryIds = []; return; }
   emptyEl.style.display = 'none';
 
   const items = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
+  filmCategoryIds = items.map(([k, f]) => validId(f, k));
   container.innerHTML = `<div class="section">
     ${items.length === 0 ? `<div class="cat-empty">Nessun film in questa categoria.</div>` :
       viewMode === 'grid'
@@ -3563,6 +3639,9 @@ async function fetchTvEpisodes(id, seasonNumbers) {
 async function openShow(id) {
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
   currentShowId = id;
+  sheetNavOpener = 'show';
+  sheetNavIds = tvCategoryIds.slice();
+  sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
@@ -4369,6 +4448,9 @@ async function deleteComment(commentId) {
 
 // ---------- film detail ----------
 async function openFilm(id) {
+  sheetNavOpener = 'film';
+  sheetNavIds = filmCategoryIds.slice();
+  sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
   sheet.innerHTML = sheetSkeleton();
@@ -4817,6 +4899,7 @@ checkAchievements(false);
 checkIncomingCompare();
 ensureUpcomingCache();
 initPullToRefresh();
+initSheetSwipe();
 initInstallBanner();
 renderNotifPanel();
 moveTabIndicator(document.querySelector('.tabbtn.active'));
