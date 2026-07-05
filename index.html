@@ -56,6 +56,9 @@
   button:active { transform: scale(0.94); }
   .card:active, .searchcard:active, .resume-card:active { transform: scale(0.97); transition: transform 0.12s ease; }
   html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--sf, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif); overscroll-behavior-y: none; }
+  html, body, .sheet, .tabbar, .topbar-wrap, .glass, .card, .list-item, .notifPanel {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
   body {
     background: var(--bg);
     min-height: 100vh;
@@ -140,6 +143,9 @@
   }
   .empty svg { opacity: 0.3; margin-bottom: 10px; }
   .cat-empty { color: rgba(var(--overlay-rgb),0.25); font-size: 13px; padding: 10px 0 18px; }
+  .cat-empty-ill { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 20px 30px; color: rgba(var(--overlay-rgb),0.35); text-align: center; }
+  .cat-empty-ill svg { opacity: 0.5; }
+  .cat-empty-ill span { font-size: 13px; }
 
   /* risultati ricerca */
   .addbtn {
@@ -246,19 +252,6 @@
   .watch-providers img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
   /* stima tempo rimanente */
   .time-left { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-tv, #0A84FF); background: rgba(10,132,255,0.12); padding: 6px 12px; border-radius: 14px; margin-bottom: 16px; }
-  /* CTA anno in rassegna nel profilo */
-  .wrapped-cta {
-    display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 28px; cursor: pointer;
-    margin-bottom: 12px; color: var(--fg);
-    background: rgba(var(--overlay-rgb),0.06);
-    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.12);
-  }
-  .wrapped-cta .wc-icon { font-size: 26px; }
-  .wrapped-cta .wc-text { flex: 1; min-width: 0; }
-  .wrapped-cta .wc-title { font-size: 15px; font-weight: 800; }
-  .wrapped-cta .wc-sub { font-size: 12px; opacity: 0.6; margin-top: 1px; }
-  .wrapped-cta svg { stroke: var(--fg); }
 
   /* anno in rassegna (storie) */
   .wrappedBg {
@@ -349,7 +342,7 @@
     background: rgba(255,69,58,0.14); color: #ff453a;
     display: flex; align-items: center; justify-content: center;
   }
-  .profile-name-row { display: flex; align-items: center; gap: 8px; }
+  .profile-level-line { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); font-weight: 600; margin-top: 2px; }
   /* picker copertina */
   .coverPickerBg {
     display: none; position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,0.75);
@@ -524,6 +517,16 @@
   .personcard .pc-info { flex: 1; min-width: 0; }
   .personcard .pc-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .personcard .pc-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .pc-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .pc-follow-btn {
+    padding: 7px 13px; border-radius: 14px; font-size: 12px; font-weight: 700; font-family: inherit;
+    background: #0A84FF; color: #fff;
+  }
+  .pc-follow-btn.following { background: rgba(var(--overlay-rgb),0.1); color: var(--fg); }
+  .pc-chat-btn {
+    width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
   .person-cover { aspect-ratio: 16/9; background-size: cover; background-position: center; }
   .person-hero { text-align: center; padding: 30px 20px 18px; }
   .person-hero.has-cover { margin-top: -50px; position: relative; }
@@ -805,6 +808,22 @@
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
   }
   .confirmbg.open { opacity: 1; pointer-events: auto; }
+  /* mesh gradient animato per la schermata di onboarding (primo accesso) */
+  #nicknameOnboardBg {
+    background:
+      radial-gradient(at 20% 20%, rgba(123,47,247,0.55) 0px, transparent 50%),
+      radial-gradient(at 80% 15%, rgba(10,132,255,0.5) 0px, transparent 50%),
+      radial-gradient(at 15% 85%, rgba(241,7,163,0.45) 0px, transparent 50%),
+      radial-gradient(at 85% 85%, rgba(48,209,88,0.35) 0px, transparent 50%),
+      #000;
+    background-size: 200% 200%;
+    animation: meshMove 16s ease-in-out infinite;
+  }
+  @keyframes meshMove {
+    0% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%, 0 0; }
+    50% { background-position: 30% 40%, 70% 30%, 30% 70%, 70% 60%, 0 0; }
+    100% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%, 0 0; }
+  }
   .confirmbox {
     background: var(--panel-bg); border: 0.5px solid rgba(var(--overlay-rgb),0.15); border-radius: 26px;
     padding: 24px 20px; max-width: 300px; width: 88%; text-align: center;
@@ -925,7 +944,7 @@
   }
   body.splash-active .tabbar { visibility: hidden; }
   #splashLogo { height: 48px; width: auto; display: block; margin: 0 auto; animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
-  .splash-by { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 600; color: #fff; animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
+  .splash-by { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--fg); animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
   @keyframes splashIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
   @keyframes splashOut { to { opacity: 0; visibility: hidden; pointer-events: none; } }
 
@@ -1135,7 +1154,7 @@
         </button>
       </div>
     </div>
-    <div class="seasontabs cat-tabs" id="peopleHomeTabs" style="display:none; padding:0 20px 14px">
+    <div class="seasontabs cat-tabs" id="peopleHomeTabs" style="display:none; padding:16px 20px 14px">
       <button class="seasontab active" data-ptab="feed" onclick="setPeopleHomeTab('feed')">Attività amici</button>
       <button class="seasontab" data-ptab="suggestions" onclick="setPeopleHomeTab('suggestions')">Potresti conoscere</button>
     </div>
@@ -1501,10 +1520,8 @@ function renderProfileAuth() {
             ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
           </div>
           <div style="min-width:0; flex:1">
-            <div class="profile-name-row">
-              <div class="profile-name">${escapeHtml(displayHandle)}</div>
-              ${renderLevelBadge(computeWrapped().hours)}
-            </div>
+            <div class="profile-name">${escapeHtml(displayHandle)}</div>
+            <div class="profile-level-line">${getUserLevel(computeWrapped().hours).emoji} ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -1587,6 +1604,7 @@ if (fbAuth) {
             try { localStorage.setItem('serietracker_avatar', data.customPhotoURL); } catch(e) {}
           }
           followingList = data.following || [];
+          if (currentTab === 'search' && searchMode === 'people' && !document.getElementById('searchInput').value.trim()) loadPeopleHome();
           if (data.coverImage && data.coverImage !== getCoverImage()) {
             try { localStorage.setItem('serietracker_cover', data.coverImage); } catch(e) {}
           }
@@ -1609,6 +1627,7 @@ if (fbAuth) {
           // scattava per caso un controllo con notifica, facendo comparire di colpo
           // tutti insieme i toast di sblocco per cose in realtà già raggiunte da tempo.
           checkAchievements(false);
+          backfillMyCommentLevels();
           if (!data.nickname && !getNickname()) showNicknameOnboarding();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
@@ -2428,10 +2447,11 @@ function renderProfile() {
   }
 
   let html = '';
-  html += `<div class="wrapped-cta" onclick="openWrapped()">
-    <div class="wc-icon">🎬</div>
-    <div class="wc-text"><div class="wc-title">Wrapped</div></div>
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:.6"><path d="M9 18l6-6-6-6"/></svg>
+  html += `<div class="wrap-card glass ach-details" style="cursor:pointer" onclick="openWrapped()">
+    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between">
+      <span class="ach-summary-title">🎬 Wrapped</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.5"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
   </div>`;
   html += renderAchievements(w);
 
@@ -2476,7 +2496,7 @@ function renderLibrary() {
   const chips = renderGenreChips(genres, tvGenreFilter, 'setTvGenreFilter');
   container.innerHTML = `${rail}<div class="section">
     ${chips}
-    ${items.length === 0 ? `<div class="cat-empty">Nessuna serie in questa categoria.</div>` :
+    ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg><span>Nessuna serie in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
         : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
@@ -3047,7 +3067,7 @@ function renderFilmLibrary() {
   const chips = renderGenreChips(genres, filmGenreFilter, 'setFilmGenreFilter');
   container.innerHTML = `<div class="section">
     ${chips}
-    ${items.length === 0 ? `<div class="cat-empty">Nessun film in questa categoria.</div>` :
+    ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg><span>Nessun film in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
         : `<div>${items.map(([k,f]) => renderListFilm(k,f)).join('')}</div>`
@@ -3270,12 +3290,20 @@ async function logActivity(payload) {
 function actMillis(a) { return (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : (a.createdAt || 0); }
 
 function personCardHtml(p) {
+  const canAct = currentUser && p.uid !== currentUser.uid;
+  const safeName = escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'");
   return `<div class="personcard" onclick="openPerson('${p.uid}')">
     ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
     <div class="pc-info">
       <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
     </div>
+    ${canAct ? `<div class="pc-actions" onclick="event.stopPropagation()">
+      <button class="pc-follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
+      <button class="pc-chat-btn" onclick="openChat('${p.uid}','${safeName}','${(p.photoURL||'').replace(/'/g,"\\'")}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      </button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -3293,7 +3321,7 @@ function feedItemHtml(a) {
   return `<div class="feed-item" onclick="${onclick}">
     ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}
     <div class="fi-body">
-      <div class="fi-text"><span class="feed-icon">${FEED_ICONS[a.type]||'✨'}</span><b>${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
+      <div class="fi-text"><span class="feed-icon">${FEED_ICONS[a.type]||'✨'}</span><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10)) : ''}</div>
     </div>
     ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
@@ -4109,6 +4137,10 @@ function initCardTilt() {
     card.style.transform = `perspective(800px) rotateY(${px * MAX}deg) rotateX(${-py * MAX}deg) scale(0.98)`;
   }
   function onDown(e) {
+    // Il tilt 3D non ha senso su schermi touch (nessun hover) ed e' proprio
+    // durante lo swipe touch che il costo del reflow si sente di piu':
+    // lo limitiamo a mouse/pen, dove non c'e' nessuno swipe da rallentare.
+    if (e.pointerType === 'touch') return;
     const card = e.target.closest('.card');
     if (!card || !card.closest('.grid')) return;
     sx = e.clientX; sy = e.clientY;
@@ -4556,6 +4588,23 @@ function renderComments(showId, season, number) {
 
 function commentMillis(c) {
   return (c.createdAt && c.createdAt.toMillis) ? c.createdAt.toMillis() : (c.createdAt || 0);
+}
+
+// Aggiunge il badge di livello ai commenti postati prima che questo campo
+// esistesse (altrimenti sui propri vecchi commenti il badge non compare mai).
+let commentLevelBackfillDone = false;
+async function backfillMyCommentLevels() {
+  if (!fbDb || !currentUser || commentLevelBackfillDone) return;
+  commentLevelBackfillDone = true;
+  try {
+    const snap = await fbDb.collection('comments').where('uid', '==', currentUser.uid).get();
+    const missing = snap.docs.filter(d => !d.data().authorLevel);
+    if (!missing.length) return;
+    const level = getUserLevel(computeWrapped().hours);
+    const batch = fbDb.batch();
+    missing.slice(0, 490).forEach(d => batch.update(d.ref, { authorLevel: level.label, authorLevelEmoji: level.emoji }));
+    await batch.commit();
+  } catch(e) {}
 }
 
 function renderCommentItem(c, epKey, replies, isReply) {

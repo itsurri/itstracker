@@ -30,7 +30,10 @@ service cloud.firestore {
     // ---- Commenti agli episodi ----
     // Lettura libera (i conteggi si vedono anche senza login).
     // Creazione: solo autenticato e come sé stesso.
-    // Update: consentito solo per il like (unico campo modificabile: likedBy).
+    // Update: chiunque può mettere/togliere like (solo campo likedBy); l'autore
+    //         del commento può anche aggiornare il proprio badge di livello
+    //         (authorLevel/authorLevelEmoji), usato per il backfill dei commenti
+    //         vecchi postati prima che il sistema di livelli esistesse.
     // Delete: l'autore del commento, oppure l'autore del commento padre
     //         (per l'eliminazione a cascata delle risposte).
     match /comments/{commentId} {
@@ -41,8 +44,11 @@ service cloud.firestore {
                     && request.resource.data.text is string
                     && request.resource.data.text.size() > 0
                     && request.resource.data.text.size() <= 500;
-      allow update: if request.auth != null
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
+      allow update: if request.auth != null && (
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
+                       || (resource.data.uid == request.auth.uid
+                           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['authorLevel', 'authorLevelEmoji']))
+                    );
       allow delete: if request.auth != null && (
                        resource.data.uid == request.auth.uid
                        || (resource.data.parentId != null
