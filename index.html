@@ -355,7 +355,10 @@
   .cover-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .cover-grid img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; cursor: pointer; background: rgba(var(--overlay-rgb),0.08); }
   .cover-remove { width: 100%; margin-top: 12px; padding: 11px; border-radius: 14px; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-weight: 600; font-size: 13px; font-family: inherit; }
-  .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .follow-inline { display: flex; gap: 18px; font-size: 13px; color: rgba(var(--overlay-rgb),0.6); }
+  .follow-inline span { cursor: pointer; }
+  .follow-inline b { color: var(--fg); font-size: 14px; font-weight: 700; margin-right: 3px; }
   .profile-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: rgba(var(--overlay-rgb),0.1); }
   .profile-stats-inline { flex: 1; display: flex; justify-content: space-around; }
   .profile-stats-inline .v { font-size: 17px; }
@@ -509,7 +512,7 @@
   .personcard .pc-info { flex: 1; min-width: 0; }
   .personcard .pc-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .personcard .pc-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
-  .person-cover { height: 150px; background-size: cover; background-position: center; }
+  .person-cover { aspect-ratio: 16/9; background-size: cover; background-position: center; }
   .person-hero { text-align: center; padding: 30px 20px 18px; }
   .person-hero.has-cover { margin-top: -50px; position: relative; }
   .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
@@ -1334,6 +1337,20 @@
   </div>
 </div>
 
+<!-- ONBOARDING NICKNAME (obbligatorio dopo il primo login) -->
+<div class="confirmbg" id="nicknameOnboardBg">
+  <div class="confirmbox">
+    <h3>Scegli un nickname</h3>
+    <p>Ti identifica nei commenti, nelle menzioni e nella ricerca persone. Puoi cambiarlo in seguito da Impostazioni.</p>
+    <input type="text" id="onboardNicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
+      style="width:100%; box-sizing:border-box; margin:4px 0 6px; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:11px 12px; color:var(--fg); font-family:inherit; font-size:14px;">
+    <div id="onboardNicknameErr" style="font-size:12px; color:#ff453a; min-height:16px; margin-bottom:6px"></div>
+    <div class="cbrow">
+      <button class="cb-confirm" style="background:var(--fg); color:var(--bg); flex:1" onclick="submitOnboardNickname()">Conferma</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM DIALOG -->
 <div class="confirmbg" id="confirmBg">
   <div class="confirmbox">
@@ -1458,7 +1475,12 @@ function renderProfileAuth() {
             <button class="filebtn" style="padding:6px 14px; font-size:12px" onclick="signOutGoogle()">Esci</button>
           </div>
         </div>
-        <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:16px;margin-bottom:0"></div>
+        <div class="follow-inline">
+          <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
+          <span onclick="toggleFollowList('following')"><b>${followingList.length}</b> Seguiti</span>
+        </div>
+        <div id="followListBody"></div>
+        <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:12px;margin-bottom:0"></div>
       </div>
     `;
   } else {
@@ -1535,9 +1557,11 @@ if (fbAuth) {
           // parallelo): ricontrolla e correggi di nuovo dopo ogni sync dal cloud,
           // altrimenti la vecchia versione sovrascrive silenziosamente la correzione.
           refreshInPariShows();
+          if (!data.nickname && !getNickname()) showNicknameOnboarding();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
           syncPublicProfile();
+          showNicknameOnboarding();
         }
       }, () => showToast('Sync non riuscita'));
     }
@@ -2325,11 +2349,11 @@ function renderProfile() {
   statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
 
   if (!w.episodesWatched && !w.filmsWatched) {
-    c.innerHTML = currentUser ? renderFollowStats() : `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
+    c.innerHTML = currentUser ? '' : `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
     return;
   }
 
-  let html = currentUser ? renderFollowStats() : '';
+  let html = '';
   html += `<div class="wrapped-cta" onclick="openWrapped()">
     <div class="wc-icon">🎬</div>
     <div class="wc-text"><div class="wc-title">Il tuo anno in rassegna</div><div class="wc-sub">Scopri e condividi le tue statistiche</div></div>
@@ -2962,21 +2986,14 @@ async function toggleFollow(uid) {
   if (!currentUser || !fbDb) { showToast('Accedi per seguire'); return; }
   const following = isFollowing(uid);
   if (following) followingList = followingList.filter(u => u !== uid); else followingList = [...followingList, uid];
-  const op = following ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
+  const myOp = following ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
+  const followerOp = following ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid) : firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
   try {
-    await fbDb.collection('users').doc(currentUser.uid).set({ following: op }, { merge: true });
-    await fbDb.collection('publicProfiles').doc(uid).set({ followers: op }, { merge: true });
+    await fbDb.collection('users').doc(currentUser.uid).set({ following: myOp }, { merge: true });
+    await fbDb.collection('publicProfiles').doc(uid).set({ followers: followerOp }, { merge: true });
   } catch(e) {}
   if (currentPersonProfile && currentPersonProfile.uid === uid) renderPersonSheet(currentPersonProfile);
   if (currentTab === 'profile') renderProfile();
-}
-
-function renderFollowStats() {
-  return `<div class="statrow" style="margin-top:14px;margin-bottom:0">
-    <div class="stat" style="cursor:pointer" onclick="toggleFollowList('following')"><div class="v">${followingList.length}</div><div class="l">Seguiti</div></div>
-    <div class="stat" style="cursor:pointer" onclick="toggleFollowList('followers')"><div class="v">${followerUids.length}</div><div class="l">Follower</div></div>
-  </div>
-  <div id="followListBody"></div>`;
 }
 
 let followListOpenMode = null;
@@ -4049,21 +4066,38 @@ document.addEventListener('focusout', e => {
   if (e.target.tagName === 'TEXTAREA') setTimeout(closeMentionDropdown, 150);
 });
 
+let followingProfilesCache = [];
+let followingProfilesLoadedFor = null;
+async function ensureFollowingProfiles() {
+  const key = followingList.slice().sort().join(',');
+  if (followingProfilesLoadedFor === key) return followingProfilesCache;
+  followingProfilesLoadedFor = key;
+  if (!fbDb || !followingList.length) { followingProfilesCache = []; return followingProfilesCache; }
+  try {
+    const chunks = [];
+    for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
+    const snaps = await Promise.all(chunks.map(ch => fbDb.collection('publicProfiles').where('uid', 'in', ch).get()));
+    followingProfilesCache = [];
+    snaps.forEach(s => s.forEach(d => followingProfilesCache.push(d.data())));
+  } catch(e) { followingProfilesCache = []; }
+  return followingProfilesCache;
+}
+
+// Suggerisce solo le persone seguite: piu' rilevante di una ricerca globale
+// per nickname e non richiede query Firestore per ogni carattere digitato.
 async function onMentionInput(textareaId) {
   const el = document.getElementById(textareaId);
   if (!el || !fbDb) { closeMentionDropdown(); return; }
   const pos = el.selectionStart;
   const uptoCursor = el.value.slice(0, pos);
-  const m = uptoCursor.match(/@([a-zA-Z0-9_.]{1,20})$/);
+  const m = uptoCursor.match(/@([a-zA-Z0-9_.]{0,20})$/);
   if (!m) { closeMentionDropdown(); return; }
   const query = m[1].toLowerCase();
   mentionState = { textareaId, start: pos - m[0].length, query };
-  try {
-    const snap = await fbDb.collection('publicProfiles').where('nicknameLower', '>=', query).where('nicknameLower', '<', query + '').limit(6).get();
-    if (!mentionState || mentionState.query !== query) return;
-    const results = snap.docs.map(d => d.data()).filter(p => p.nickname && (!currentUser || p.uid !== currentUser.uid));
-    renderMentionDropdown(el, results);
-  } catch(e) { closeMentionDropdown(); }
+  const profiles = await ensureFollowingProfiles();
+  if (!mentionState || mentionState.query !== query) return;
+  const results = profiles.filter(p => p.nickname && (!query || (p.nicknameLower || '').startsWith(query))).slice(0, 6);
+  renderMentionDropdown(el, results);
 }
 
 function renderMentionDropdown(el, results) {
@@ -4521,6 +4555,37 @@ function saveNickname() {
   try { localStorage.setItem('serietracker_nickname', v); } catch(e) {}
   if (fbDb && currentUser) { fbDb.collection('users').doc(currentUser.uid).set({ nickname: v }, { merge: true }).catch(()=>{}); syncPublicProfile(); }
   showToast(v ? 'Nickname salvato' : 'Nickname rimosso');
+}
+
+// ---------- nickname obbligatorio al primo accesso ----------
+function showNicknameOnboarding() {
+  const bg = document.getElementById('nicknameOnboardBg');
+  if (!bg) return;
+  document.getElementById('onboardNicknameInput').value = '';
+  document.getElementById('onboardNicknameErr').textContent = '';
+  bg.classList.add('open');
+}
+async function submitOnboardNickname() {
+  const input = document.getElementById('onboardNicknameInput');
+  const errEl = document.getElementById('onboardNicknameErr');
+  const v = input.value.trim();
+  if (v.length < 3) { errEl.textContent = 'Almeno 3 caratteri.'; return; }
+  if (!/^[a-zA-Z0-9_.]+$/.test(v)) { errEl.textContent = 'Solo lettere, numeri, punto e underscore.'; return; }
+  const lower = v.toLowerCase();
+  errEl.textContent = 'Verifica in corso...';
+  try {
+    if (fbDb) {
+      const snap = await fbDb.collection('publicProfiles').where('nicknameLower', '==', lower).limit(1).get();
+      const taken = snap.docs.some(d => !currentUser || d.id !== currentUser.uid);
+      if (taken) { errEl.textContent = 'Nickname già in uso, scegline un altro.'; return; }
+    }
+  } catch(e) {}
+  try { localStorage.setItem('serietracker_nickname', v); } catch(e) {}
+  const nInput = document.getElementById('nicknameInput');
+  if (nInput) nInput.value = v;
+  if (fbDb && currentUser) { fbDb.collection('users').doc(currentUser.uid).set({ nickname: v }, { merge: true }).catch(()=>{}); syncPublicProfile(); }
+  document.getElementById('nicknameOnboardBg').classList.remove('open');
+  showToast('Nickname salvato');
 }
 
 // ---------- avatar personalizzato (ritaglio + zoom) ----------
