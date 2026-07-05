@@ -533,7 +533,11 @@
     width: 30px; height: 30px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  .person-cover { aspect-ratio: 16/9; background-size: cover; background-position: center; }
+  .person-cover {
+    aspect-ratio: 16/9; background-size: cover; background-position: center;
+    background-color: rgba(var(--overlay-rgb),0.08);
+    background-image: linear-gradient(120deg, rgba(123,47,247,0.5), rgba(241,7,163,0.4));
+  }
   .person-hero { text-align: center; padding: 30px 20px 18px; }
   .person-hero.has-cover { margin-top: -50px; position: relative; }
   .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
@@ -3512,8 +3516,8 @@ function renderPersonSheet(p) {
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
   sheet.innerHTML = `
-    ${p.coverImage ? `<div class="person-cover" style="background-image:url('${p.coverImage}')"></div>` : ''}
-    <div class="person-hero${p.coverImage ? ' has-cover' : ''}">
+    <div class="person-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
+    <div class="person-hero has-cover">
       ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
       <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
