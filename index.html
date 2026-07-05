@@ -1049,6 +1049,7 @@
   <div class="notifPanel" id="chatListPanel">
     <div class="notifPanel-head">
       <span class="notifPanel-title">Messaggi</span>
+      <button class="notifMarkRead" onclick="markAllChatsRead()">Segna tutte come lette</button>
       <button class="notifPanel-close" onclick="closeChatListPanel()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
@@ -1572,6 +1573,10 @@ if (fbAuth) {
           if (data.coverImage && data.coverImage !== getCoverImage()) {
             try { localStorage.setItem('serietracker_cover', data.coverImage); } catch(e) {}
           }
+          if (data.unlockedAchievements && data.unlockedAchievements.length) {
+            const merged = new Set([...getUnlockedAchievementIds(), ...data.unlockedAchievements]);
+            try { localStorage.setItem('serietracker_achievements', JSON.stringify([...merged])); } catch(e) {}
+          }
           applyingRemoteData = false;
           renderProfileAuth();
           syncPublicProfile();
@@ -1580,6 +1585,13 @@ if (fbAuth) {
           // parallelo): ricontrolla e correggi di nuovo dopo ogni sync dal cloud,
           // altrimenti la vecchia versione sovrascrive silenziosamente la correzione.
           refreshInPariShows();
+          // Stesso motivo: il controllo achievement silenzioso all'avvio gira sui dati
+          // locali, che potrebbero essere ancora incompleti rispetto a quelli appena
+          // arrivati dal cloud. Senza questo ricontrollo silenzioso, gli achievement
+          // già maturati (secondo i dati cloud) restavano "non salvati" finché non
+          // scattava per caso un controllo con notifica, facendo comparire di colpo
+          // tutti insieme i toast di sblocco per cose in realtà già raggiunte da tempo.
+          checkAchievements(false);
           if (!data.nickname && !getNickname()) showNicknameOnboarding();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
@@ -2267,6 +2279,13 @@ function getUnlockedAchievementIds() {
 }
 function saveUnlockedAchievementIds(set) {
   try { localStorage.setItem('serietracker_achievements', JSON.stringify([...set])); } catch(e) {}
+  // Oltre al localStorage (che su alcune piattaforme, es. PWA iOS, può venire
+  // ripulito periodicamente dal browser) salviamo anche sul profilo cloud
+  // dell'utente loggato, così lo stato "già sbloccato" sopravvive e non fa
+  // ripartire da capo i toast di sblocco al primo riavvio dopo la pulizia.
+  if (fbDb && currentUser) {
+    fbDb.collection('users').doc(currentUser.uid).set({ unlockedAchievements: [...set] }, { merge: true }).catch(() => {});
+  }
 }
 
 let achievementQueue = [];
@@ -3473,6 +3492,15 @@ function renderChatListBadge() {
   badge.classList.toggle('show', unread > 0);
 }
 
+async function markAllChatsRead() {
+  if (!fbDb || !currentUser) return;
+  const unread = chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid));
+  if (!unread.length) return;
+  const batch = fbDb.batch();
+  unread.forEach(c => batch.update(fbDb.collection('chats').doc(c.id), { readBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) }));
+  try { await batch.commit(); } catch(e) {}
+}
+
 function renderChatListPanel() {
   const el = document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
@@ -3702,7 +3730,7 @@ function renderFilmResultsFromCache() {
 async function quickAdd(id) {
   if (library[id]) {
     delete library[id]; saveLibrary(); renderLibrary(); showToast('Rimossa dalla libreria');
-    if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
+    renderTvResultsFromCache();
     return;
   }
   if (!hasTmdbKey()) return;
@@ -3711,14 +3739,14 @@ async function quickAdd(id) {
     const show = await res.json();
     library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
-    if (document.getElementById('searchInput').value.trim() && searchMode==='tv') doSearchTv(document.getElementById('searchInput').value.trim());
+    renderTvResultsFromCache();
   } catch(e) { showToast('Errore, riprova'); }
 }
 
 async function quickAddFilm(id) {
   if (filmLibrary[id]) {
     delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); showToast('Rimosso dalla libreria');
-    if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
+    renderFilmResultsFromCache();
     return;
   }
   if (!hasTmdbKey()) return;
@@ -3727,7 +3755,7 @@ async function quickAddFilm(id) {
     const f = await res.json();
     filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
-    if (document.getElementById('searchInput').value.trim() && searchMode==='film') doSearchFilm(document.getElementById('searchInput').value.trim());
+    renderFilmResultsFromCache();
   } catch(e) { showToast('Errore, riprova'); }
 }
 
