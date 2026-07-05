@@ -5285,13 +5285,12 @@ async function submitOnboardNickname() {
 // ---------- avatar personalizzato (ritaglio + zoom) ----------
 function getCustomAvatar() { try { return localStorage.getItem('serietracker_avatar') || ''; } catch(e) { return ''; } }
 
-// Se l'utente non ha ne' una foto Google ne' una custom, gli assegniamo un
-// avatar generato (colore + iniziale) invece di lasciare il cerchio vuoto.
-// Generato una sola volta e salvato, cosi' resta lo stesso tra le sessioni.
+// Se l'utente ha caricato una foto sua la usiamo; altrimenti gli assegniamo
+// un avatar generato (colore + iniziale), NON la foto di Google. Se poi ne
+// carica una propria, quella (custom) vince e viene salvata.
 function getAvatarUrl() {
   const custom = getCustomAvatar();
   if (custom) return custom;
-  if (currentUser && currentUser.photoURL) return currentUser.photoURL;
   return getOrCreateRandomAvatar();
 }
 function getOrCreateRandomAvatar() {
