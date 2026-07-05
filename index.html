@@ -3129,6 +3129,9 @@ const PTR_MAX = 100;
 function initPullToRefresh() {
   document.addEventListener('touchstart', e => {
     if (document.getElementById('sheetBg').classList.contains('open')) return;
+    if (document.getElementById('personBg').classList.contains('open')) return;
+    if (document.getElementById('chatBg').classList.contains('open')) return;
+    if (document.getElementById('wrappedBg').classList.contains('open')) return;
     if (document.getElementById('confirmBg').classList.contains('open')) return;
     if (document.getElementById('coverPickerBg').classList.contains('open')) return;
     if (document.getElementById('nicknameOnboardBg').classList.contains('open')) return;
@@ -3671,27 +3674,27 @@ function renderPersonSheet(p) {
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
         const inLib = !!library[s.id];
-        return `<div class="person-item">
+        return `<div class="person-item" onclick="openShow(${s.id})" style="cursor:pointer">
           ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
           <div class="pi-info">
             <div class="pi-name">${escapeHtml(s.name)}</div>
             <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
             ${s.total ? `<div class="pi-prog"><i style="width:${pct}%"></i></div>` : ''}
           </div>
-          <button class="addbtn${inLib?' in-lib':''}" onclick="addShowFromPerson(${s.id})">
+          <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addShowFromPerson(${s.id})">
             ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
           </button>
         </div>`;
       }).join('')}` : ''}
       ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
         const inLib = !!filmLibrary[f.id];
-        return `<div class="person-item">
+        return `<div class="person-item" onclick="openFilm(${f.id})" style="cursor:pointer">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
         <div class="pi-info">
           <div class="pi-name">${escapeHtml(f.title)}</div>
           <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
         </div>
-        <button class="addbtn${inLib?' in-lib':''}" onclick="addFilmFromPerson(${f.id})">
+        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addFilmFromPerson(${f.id})">
           ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
