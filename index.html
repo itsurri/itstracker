@@ -1520,7 +1520,7 @@ function renderProfileAuth() {
           <div onclick="document.getElementById('avatarFileInput').click()">
             ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
           </div>
-          <div style="min-width:0; flex:1; align-self:flex-start">
+          <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-30px">
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
             <div class="profile-level-line">Livello: <span class="plvl-emoji">${getUserLevel(computeWrapped().hours).emoji}</span> ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
