@@ -3337,6 +3337,7 @@ function renderPersonSheet(p) {
     <div class="section">
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
+        const inLib = !!library[s.id];
         return `<div class="person-item">
           ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
           <div class="pi-info">
@@ -3344,18 +3345,37 @@ function renderPersonSheet(p) {
             <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
             ${s.total ? `<div class="pi-prog"><i style="width:${pct}%"></i></div>` : ''}
           </div>
+          <button class="addbtn${inLib?' in-lib':''}" onclick="addShowFromPerson(${s.id})">
+            ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+          </button>
         </div>`;
       }).join('')}` : ''}
-      ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => `<div class="person-item">
+      ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
+        const inLib = !!filmLibrary[f.id];
+        return `<div class="person-item">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
         <div class="pi-info">
           <div class="pi-name">${escapeHtml(f.title)}</div>
           <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
         </div>
-      </div>`).join('')}` : ''}
+        <button class="addbtn${inLib?' in-lib':''}" onclick="addFilmFromPerson(${f.id})">
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+        </button>
+      </div>`;
+      }).join('')}` : ''}
       ${!shows.length && !films.length ? `<div class="wrap-note" style="text-align:center;padding:20px">Libreria vuota.</div>` : ''}
     </div>
   `;
+}
+
+async function addShowFromPerson(id) {
+  await quickAdd(id);
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
+}
+
+async function addFilmFromPerson(id) {
+  await quickAddFilm(id);
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
 }
 
 function closePerson() {
