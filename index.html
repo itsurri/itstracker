@@ -991,6 +991,7 @@
     background: #30D158; border: 2px solid var(--sheet-bg); bottom: 0; right: 0;
   }
   .avatar-wrap.is-online::after { content: ''; }
+  .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
   .lb-row.me .lb-name { font-weight: 800; }
   .lb-hours { font-size: 13px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; flex-shrink: 0; }
@@ -3951,7 +3952,7 @@ function chatRowHtml(uid, name, photo, subtitle, unread) {
         <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       </div>
       <div class="notifBody">
-        <div class="notifText"><b>${escapeHtml(name)}</b></div>
+        <div class="notifText"><b>${escapeHtml(name)}</b> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
         <div class="notifTime">${escapeHtml(subtitle || '')}</div>
       </div>
     </div>`;
@@ -5513,6 +5514,10 @@ function applyPresenceDots(container) {
   (container || document).querySelectorAll('[data-presence-uid]').forEach(el => {
     const uid = el.getAttribute('data-presence-uid');
     if (isOnline(presenceCache[uid])) el.classList.add('is-online');
+  });
+  (container || document).querySelectorAll('[data-presence-text-uid]').forEach(el => {
+    const uid = el.getAttribute('data-presence-text-uid');
+    el.textContent = formatLastSeen(presenceCache[uid]);
   });
 }
 
