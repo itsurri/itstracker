@@ -195,9 +195,10 @@
     font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 7px;
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7); /* leggibile anche sul tratto giallo pieno */
   }
   .card .badge-green { background: rgba(48,209,88,0.85); }
-  .card .badge-blue  { background: rgba(10,132,255,0.85); }
+  .card .badge-blue  { background: rgba(247,181,56,0.85); }
 
   /* LIST */
   .list-item {
@@ -216,7 +217,7 @@
   .list-item .li-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .list-item .li-meta { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
   .list-item .li-prog { margin-top: 6px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
-  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
+  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); }
 
   /* sheet */
   .sheetbg {
@@ -574,7 +575,7 @@
   .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .person-item .pi-prog { margin-top: 5px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
-  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#0A84FF,#5E5CE6); }
+  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); }
 
   /* chat */
   .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; background: var(--sheet-bg); }
@@ -602,15 +603,15 @@
     margin: 6px 0 14px; text-transform: uppercase; letter-spacing: 0.04em;
   }
   .chat-bubble {
-    max-width: 75%; padding: 9px 14px; margin-bottom: 2px; border-radius: 18px; font-size: 14px;
-    line-height: 1.42; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    max-width: 75%; padding: 10px 15px; margin-bottom: 2px; border-radius: 20px; font-size: 14.5px;
+    line-height: 1.42; word-break: break-word; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
   }
-  .chat-bubble.mine { align-self: flex-end; background: #0A84FF; color: #fff; }
-  .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.09); color: var(--fg); }
-  .chat-bubble.mine.grouped-top { border-top-right-radius: 6px; }
-  .chat-bubble.mine.grouped-bottom { border-bottom-right-radius: 6px; }
-  .chat-bubble.theirs.grouped-top { border-top-left-radius: 6px; }
-  .chat-bubble.theirs.grouped-bottom { border-bottom-left-radius: 6px; }
+  .chat-bubble.mine { align-self: flex-end; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.3); }
+  .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); border: 0.5px solid rgba(var(--overlay-rgb),0.06); }
+  .chat-bubble.mine.grouped-top { border-top-right-radius: 7px; }
+  .chat-bubble.mine.grouped-bottom { border-bottom-right-radius: 7px; }
+  .chat-bubble.theirs.grouped-top { border-top-left-radius: 7px; }
+  .chat-bubble.theirs.grouped-bottom { border-bottom-left-radius: 7px; }
   .chat-time { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin: 4px 3px 12px; }
   .chat-time.mine { align-self: flex-end; }
   .chat-time.theirs { align-self: flex-start; }
@@ -621,11 +622,11 @@
   }
   .chat-inputrow textarea {
     flex: 1; min-width: 0; min-height: 40px; max-height: 100px; resize: none; padding: 10px 16px; border-radius: 20px;
-    border: 0.5px solid rgba(var(--overlay-rgb),0.1); background: rgba(var(--overlay-rgb),0.06);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.12); background: rgba(var(--overlay-rgb),0.06);
     color: var(--fg); font-family: inherit; font-size: 14px; line-height: 1.4;
   }
   .chat-inputrow .commentReplySendBtn {
-    width: 38px; height: 38px; background: #0A84FF; color: #fff; box-shadow: 0 2px 6px rgba(10,132,255,0.35);
+    width: 38px; height: 38px; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.4);
   }
 
   /* ritaglio avatar */
@@ -3188,7 +3189,7 @@ function renderCardTv(key, s) {
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const cat = categorizeShow(s);
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
-  const badgeStyle = (cat === 'continua' && total) ? ` style="background:linear-gradient(90deg,#0A84FF ${pct}%,rgba(0,0,0,0.75) ${pct}%)"` : '';
+  const badgeStyle = (cat === 'continua' && total) ? ` style="background:linear-gradient(90deg,#F7B538 ${pct}%,rgba(0,0,0,0.75) ${pct}%)"` : '';
   const badgeText = watched > 0
     ? `${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}`
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
@@ -4366,10 +4367,12 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
-      ${inLib?`<button class="markallbtn${allAiredWatched(show,episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(show,episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>`:''}
+      ${inLib?`<div class="btnrow">
+        <button class="markallbtn${allAiredWatched(show,episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(show,episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
+        <button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>
+      </div>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
       <div id="episodeList"></div>
-      ${inLib?`<button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>`:''}
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
