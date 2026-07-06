@@ -5314,12 +5314,34 @@ function pickCol(row, candidates) {
 function findAllZipEntries(zip, pattern) {
   return Object.keys(zip.files).filter(n => pattern.test(n) && !zip.files[n].dir).map(n => zip.files[n]);
 }
+function normName(s) {
+  // toLowerCase + NFD scompone gli accenti in lettera+segno; ̀-ͯ
+  // rimuove i segni diacritici; poi teniamo solo lettere/numeri.
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\(.*?\)/g, ' ')            // rimuove "(US)", "(2016)", ecc.
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+// Cerca la serie su TMDb ma accetta solo una corrispondenza vera del nome:
+// se nessun risultato combacia davvero, restituisce null (meglio non importare
+// che importare una serie sbagliata che l'utente non riconosce).
 async function matchShowOnTmdb(name) {
-  if (!name) return null;
+  const nq = normName(name);
+  if (!nq) return null;
   try {
-    const r = await fetch(tmdbUrl('/search/tv', { query: name }));
+    const r = await fetch(tmdbUrl('/search/tv', { query: stripTvTimeYear(name) }));
     const d = await r.json();
-    return (d.results && d.results[0]) || null;
+    const results = (d.results || []);
+    if (!results.length) return null;
+    // 1) match esatto sul nome (o nome originale)
+    let best = results.find(x => normName(x.name) === nq || normName(x.original_name) === nq);
+    if (best) return best;
+    // 2) uno contiene l'altro (es. "The Office US" vs "The Office"), il più popolare
+    //    fra i risultati (TMDb li ordina già per rilevanza/popolarità)
+    best = results.find(x => { const n = normName(x.name), o = normName(x.original_name);
+      return n.includes(nq) || nq.includes(n) || o.includes(nq) || nq.includes(o); });
+    if (best) return best;
+    // 3) niente di simile: non importiamo una serie sbagliata
+    return null;
   } catch(e) { return null; }
 }
 // CSV grezzo: array di righe, ogni riga array di celle (senza assumere header).
