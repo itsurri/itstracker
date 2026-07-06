@@ -5411,9 +5411,11 @@ async function importTvTimeShow(name, info, dates) {
 
   const airedWithDate = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate))
     .sort((a,b) => a.season - b.season || a.number - b.number);
-  // "In pari" se il flag di TV Time lo dice, oppure se il conteggio copre già
-  // quasi tutti gli episodi usciti (fallback nel caso il flag non sia affidabile).
-  const markAll = info.finished || (info.count > 0 && airedWithDate.length > 0 && info.count >= airedWithDate.length * 0.9);
+  // "In pari" solo se il conteggio episodi visti copre quasi tutti gli episodi
+  // usciti. NON usiamo il flag dell'ultima colonna: si è rivelato "sto
+  // seguendo", 1 anche per serie mai viste, e faceva importare/marcare roba
+  // che l'utente non ha guardato.
+  const markAll = info.count > 0 && airedWithDate.length > 0 && info.count >= airedWithDate.length * 0.9;
 
   if (markAll) {
     // Segna TUTTI gli episodi non futuri (inclusi quelli senza data su TMDb,
@@ -5470,10 +5472,10 @@ async function importTvTimeZip(file) {
       });
     }
 
-    // Importa SOLO le serie con attività reale: almeno un episodio visto,
-    // segnate come finite, o con date da watched_on_episode. Le serie soltanto
-    // "seguite"/aggiunte ma mai guardate (count 0 e non finite) si scartano.
-    const names = Object.keys(shows).filter(n => shows[n].count > 0 || shows[n].finished || (datesByShow[n] && datesByShow[n].length));
+    // Importa SOLO le serie con episodi effettivamente visti (conteggio > 0) o
+    // con date in watched_on_episode. Le serie soltanto "seguite"/in lista ma
+    // mai guardate (conteggio 0) NON vengono importate.
+    const names = Object.keys(shows).filter(n => shows[n].count > 0 || (datesByShow[n] && datesByShow[n].length));
     if (!names.length) { setStatus('Nessuna serie vista trovata nello zip. Assicurati di caricare lo zip completo della richiesta dati.'); return; }
     setStatus(`Trovate ${names.length} serie viste. Abbino con TMDb e importo, può volerci qualche minuto…`);
 
