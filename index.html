@@ -5338,6 +5338,12 @@ async function importShowEpisodes(tmdbId, watchedList) {
   try { await refreshShowTotals(tmdbId); } catch(e) {}
 }
 
+// Toglie l'anno tra parentesi che TV Time aggiunge al nome ("The Grand Tour
+// (2016)" -> "The Grand Tour"): la ricerca TMDb funziona meglio senza.
+function stripTvTimeYear(name) {
+  return (name || '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+}
+
 async function importTvTimeZip(file) {
   const statusEl = document.getElementById('tvTimeImportStatus');
   const setStatus = t => { if (statusEl) statusEl.textContent = t; };
@@ -5345,43 +5351,34 @@ async function importTvTimeZip(file) {
   setStatus('Leggo il file zip…');
   try {
     const zip = await JSZip.loadAsync(file);
-    const showsEntry = findZipEntry(zip, /user_tv_show_data/i);
     const watchedEntry = findZipEntry(zip, /watched_on_episode/i);
     if (!watchedEntry) { setStatus('Non ho trovato "watched_on_episode" nello zip: import non riuscito.'); return; }
 
     const watchedRows = parseCSV(await watchedEntry.async('string'));
-    const showsMap = {};
-    if (showsEntry) {
-      parseCSV(await showsEntry.async('string')).forEach(r => {
-        const id = pickCol(r, ['id', 'tv_show_id', 'show_id']);
-        const name = pickCol(r, ['name', 'show_name', 'title']);
-        if (id && name) showsMap[id] = name;
-      });
-    }
-
+    // watched_on_episode.csv include gia' il nome della serie in ogni riga
+    // (tv_show_name), quindi raggruppiamo direttamente per nome.
     const byShow = {};
     watchedRows.forEach(r => {
-      const showId = pickCol(r, ['tv_show_id', 'show_id', 'tvshow_id', 'id']);
-      const season = pickCol(r, ['season_number', 'season']);
+      const name = pickCol(r, ['tv_show_name', 'show_name', 'name']);
+      const season = pickCol(r, ['episode_season_number', 'season_number', 'season']);
       const episode = pickCol(r, ['episode_number', 'episode']);
       const date = pickCol(r, ['updated_at', 'created_at', 'watched_at', 'date']);
-      if (!showId) return;
-      (byShow[showId] = byShow[showId] || []).push({ season: Number(season), episode: Number(episode), date });
+      if (!name) return;
+      (byShow[name] = byShow[name] || []).push({ season: Number(season), episode: Number(episode), date });
     });
 
-    const showIds = Object.keys(byShow);
-    if (!showIds.length) { setStatus('Nessun episodio visto trovato nel file.'); return; }
-    setStatus(`Trovate ${showIds.length} serie, abbino con TMDb (può richiedere un po')…`);
+    const showNames = Object.keys(byShow);
+    if (!showNames.length) { setStatus('Nessun episodio visto trovato nel file.'); return; }
+    setStatus(`Trovate ${showNames.length} serie, abbino con TMDb (può richiedere un po')…`);
 
     let matched = 0;
     const notFound = [];
-    for (const showId of showIds) {
-      const name = showsMap[showId];
-      const found = await matchShowOnTmdb(name);
-      if (!found) { notFound.push(name || showId); continue; }
-      await importShowEpisodes(found.id, byShow[showId]);
+    for (const name of showNames) {
+      const found = await matchShowOnTmdb(stripTvTimeYear(name));
+      if (!found) { notFound.push(name); continue; }
+      await importShowEpisodes(found.id, byShow[name]);
       matched++;
-      setStatus(`Importazione in corso… ${matched + notFound.length}/${showIds.length}`);
+      setStatus(`Importazione in corso… ${matched + notFound.length}/${showNames.length}`);
     }
     renderLibrary();
     setStatus(`Fatto: ${matched} serie importate${notFound.length ? `, ${notFound.length} non trovate su TMDb (${notFound.slice(0,5).join(', ')}${notFound.length>5?'…':''})` : ''}.`);
