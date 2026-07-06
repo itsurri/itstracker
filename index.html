@@ -5349,9 +5349,10 @@ function stripTvTimeYear(name) {
 }
 
 const TVTIME_HEADER_TOKENS = ['tv_show_name','show_name','name','user_id','tv_show_id','archived','created_at','updated_at','episode_number','episode_season_number'];
-// Da una riga di user_tv_show_data ricava nome serie + conteggio episodi visti.
-// Schema reale (senza header): archived, seen_count, name, user_id, show_id, ...
-// -> il nome è la prima cella con lettere, il conteggio è la cella numerica subito prima.
+// Da una riga di user_tv_show_data ricava nome, episodi visti e flag "in pari".
+// Schema reale (senza header): archived, seen_count, name, user_id, show_id, up_to_date
+// -> il nome è la prima cella con lettere, il conteggio è la cella numerica
+//    subito prima, l'ultima cella (0/1) indica se la serie è stata completata.
 function parseShowRow(row) {
   if (!row || !row.length) return null;
   if (row.some(c => TVTIME_HEADER_TOKENS.includes(c.toLowerCase()))) return null; // riga di header
@@ -5360,17 +5361,19 @@ function parseShowRow(row) {
   const name = row[nameIdx];
   let count = 0;
   if (nameIdx > 0 && /^\d+$/.test(row[nameIdx-1])) count = Number(row[nameIdx-1]);
-  return { name, count };
+  const last = row[row.length-1];
+  const finished = last === '1';
+  return { name, count, finished };
 }
 
-async function importTvTimeShow(name, count, dates) {
+async function importTvTimeShow(name, info, dates) {
   const found = await matchShowOnTmdb(stripTvTimeYear(name));
   if (!found) return false;
   const tmdbId = found.id;
   if (!library[tmdbId]) await quickAddSilent(tmdbId);
   if (!library[tmdbId]) return false;
 
-  // Prendi la lista episodi (tutte le stagioni) per poter marcare i primi N.
+  // Lista episodi (tutte le stagioni).
   let eps = episodesCache[tmdbId];
   if (!eps) {
     try {
@@ -5384,16 +5387,22 @@ async function importTvTimeShow(name, count, dates) {
   if (!library[tmdbId].watched) library[tmdbId].watched = {};
   const w = library[tmdbId].watched;
 
-  // Marca i primi N episodi già usciti in ordine di messa in onda (N = episodi
-  // visti secondo TV Time, limitato a quelli davvero usciti). Le date precise
-  // non ci sono per singolo episodio, quindi usiamo "adesso".
-  if (count > 0) {
-    const aired = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate))
-      .sort((a,b) => a.season - b.season || a.number - b.number);
-    const n = Math.min(count, aired.length);
-    for (let i = 0; i < n; i++) { const e = aired[i]; w[`${e.season}x${e.number}`] = Date.now(); }
+  const airedWithDate = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate))
+    .sort((a,b) => a.season - b.season || a.number - b.number);
+  // "In pari" se il flag di TV Time lo dice, oppure se il conteggio copre già
+  // quasi tutti gli episodi usciti (fallback nel caso il flag non sia affidabile).
+  const markAll = info.finished || (info.count > 0 && airedWithDate.length > 0 && info.count >= airedWithDate.length * 0.9);
+
+  if (markAll) {
+    // Segna TUTTI gli episodi non futuri (inclusi quelli senza data su TMDb,
+    // spesso vecchi/anime), così la serie risulta davvero completata.
+    eps.filter(e => !isFutureDateStr(e.airdate)).forEach(e => { w[`${e.season}x${e.number}`] = Date.now(); });
+  } else if (info.count > 0) {
+    // Serie a metà: segna i primi N episodi usciti in ordine di messa in onda.
+    const n = Math.min(info.count, airedWithDate.length);
+    for (let i = 0; i < n; i++) { const e = airedWithDate[i]; w[`${e.season}x${e.number}`] = Date.now(); }
   }
-  // Sovrascrivi con le date reali dove disponibili (da watched_on_episode).
+  // Date reali dove disponibili (da watched_on_episode).
   (dates || []).forEach(d => {
     if (isNaN(d.season) || isNaN(d.episode)) return;
     const t = d.date ? new Date(d.date).getTime() : Date.now();
@@ -5413,20 +5422,19 @@ async function importTvTimeZip(file) {
   try {
     const zip = await JSZip.loadAsync(file);
 
-    // 1) Fonte principale: user_tv_show_data (tutte le serie + conteggio visti).
-    const shows = {}; // nome -> conteggio episodi visti
+    // 1) Fonte principale: user_tv_show_data (serie + episodi visti + flag "in pari").
+    const shows = {}; // nome -> { count, finished }
+    const addShow = s => {
+      if (!s || !s.name) return;
+      const cur = shows[s.name] || { count: 0, finished: false };
+      shows[s.name] = { count: Math.max(cur.count, s.count || 0), finished: cur.finished || s.finished };
+    };
     for (const entry of findAllZipEntries(zip, /user_tv_show_data/i)) {
-      parseCSVLines(await entry.async('string')).forEach(row => {
-        const s = parseShowRow(row);
-        if (s && s.name) shows[s.name] = Math.max(shows[s.name] || 0, s.count);
-      });
+      parseCSVLines(await entry.async('string')).forEach(row => addShow(parseShowRow(row)));
     }
-    // 2) Fallback/aggiunta: followed_tv_show (serie seguite, magari con 0 visti).
+    // 2) Aggiunta: followed_tv_show (serie seguite, magari con 0 visti).
     for (const entry of findAllZipEntries(zip, /followed_tv_show(?!_source)/i)) {
-      parseCSVLines(await entry.async('string')).forEach(row => {
-        const s = parseShowRow(row);
-        if (s && s.name && !(s.name in shows)) shows[s.name] = s.count || 0;
-      });
+      parseCSVLines(await entry.async('string')).forEach(row => addShow(parseShowRow(row)));
     }
     // 3) Date precise dei singoli episodi da watched_on_episode.
     const datesByShow = {};
@@ -5438,7 +5446,7 @@ async function importTvTimeZip(file) {
         const date = pickCol(r, ['updated_at','created_at','watched_at','date']);
         if (!name) return;
         (datesByShow[name] = datesByShow[name] || []).push({ season, episode, date });
-        if (!(name in shows)) shows[name] = 0;
+        if (!(name in shows)) shows[name] = { count: 0, finished: false };
       });
     }
 
