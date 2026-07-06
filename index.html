@@ -5322,28 +5322,87 @@ async function matchShowOnTmdb(name) {
     return (d.results && d.results[0]) || null;
   } catch(e) { return null; }
 }
-async function importShowEpisodes(tmdbId, watchedList) {
-  if (!library[tmdbId]) await quickAddSilent(tmdbId);
-  if (!library[tmdbId]) return;
-  const seasonNums = [...new Set(watchedList.map(w => w.season).filter(n => !isNaN(n)))];
-  if (!episodesCache[tmdbId] && seasonNums.length) {
-    try { episodesCache[tmdbId] = await fetchTvEpisodes(tmdbId, seasonNums); } catch(e) {}
+// CSV grezzo: array di righe, ogni riga array di celle (senza assumere header).
+function parseCSVLines(text) {
+  const rows = [];
+  let i = 0, field = '', row = [], inQuotes = false;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') { if (text[i+1] === '"') { field += '"'; i += 2; continue; } inQuotes = false; i++; continue; }
+      field += c; i++; continue;
+    }
+    if (c === '"') { inQuotes = true; i++; continue; }
+    if (c === ',') { row.push(field); field = ''; i++; continue; }
+    if (c === '\r') { i++; continue; }
+    if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += c; i++;
   }
-  if (!library[tmdbId].watched) library[tmdbId].watched = {};
-  watchedList.forEach(w => {
-    if (isNaN(w.season) || isNaN(w.episode)) return;
-    const key = `${w.season}x${w.episode}`;
-    const t = w.date ? new Date(w.date).getTime() : Date.now();
-    library[tmdbId].watched[key] = isNaN(t) ? Date.now() : t;
-  });
-  saveLibrary();
-  try { await refreshShowTotals(tmdbId); } catch(e) {}
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.map(r => r.map(c => c.trim()));
 }
 
 // Toglie l'anno tra parentesi che TV Time aggiunge al nome ("The Grand Tour
 // (2016)" -> "The Grand Tour"): la ricerca TMDb funziona meglio senza.
 function stripTvTimeYear(name) {
   return (name || '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+}
+
+const TVTIME_HEADER_TOKENS = ['tv_show_name','show_name','name','user_id','tv_show_id','archived','created_at','updated_at','episode_number','episode_season_number'];
+// Da una riga di user_tv_show_data ricava nome serie + conteggio episodi visti.
+// Schema reale (senza header): archived, seen_count, name, user_id, show_id, ...
+// -> il nome è la prima cella con lettere, il conteggio è la cella numerica subito prima.
+function parseShowRow(row) {
+  if (!row || !row.length) return null;
+  if (row.some(c => TVTIME_HEADER_TOKENS.includes(c.toLowerCase()))) return null; // riga di header
+  const nameIdx = row.findIndex(c => /[A-Za-z]/.test(c) && !/^\d+$/.test(c));
+  if (nameIdx < 0) return null;
+  const name = row[nameIdx];
+  let count = 0;
+  if (nameIdx > 0 && /^\d+$/.test(row[nameIdx-1])) count = Number(row[nameIdx-1]);
+  return { name, count };
+}
+
+async function importTvTimeShow(name, count, dates) {
+  const found = await matchShowOnTmdb(stripTvTimeYear(name));
+  if (!found) return false;
+  const tmdbId = found.id;
+  if (!library[tmdbId]) await quickAddSilent(tmdbId);
+  if (!library[tmdbId]) return false;
+
+  // Prendi la lista episodi (tutte le stagioni) per poter marcare i primi N.
+  let eps = episodesCache[tmdbId];
+  if (!eps) {
+    try {
+      const detail = await fetch(tmdbUrl(`/tv/${tmdbId}`, {})).then(r => r.json());
+      const seasonNums = (detail.seasons||[]).map(s => s.season_number).filter(n => n > 0);
+      eps = await fetchTvEpisodes(tmdbId, seasonNums);
+      episodesCache[tmdbId] = eps;
+    } catch(e) { eps = []; }
+  }
+  eps = eps || [];
+  if (!library[tmdbId].watched) library[tmdbId].watched = {};
+  const w = library[tmdbId].watched;
+
+  // Marca i primi N episodi già usciti in ordine di messa in onda (N = episodi
+  // visti secondo TV Time, limitato a quelli davvero usciti). Le date precise
+  // non ci sono per singolo episodio, quindi usiamo "adesso".
+  if (count > 0) {
+    const aired = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate))
+      .sort((a,b) => a.season - b.season || a.number - b.number);
+    const n = Math.min(count, aired.length);
+    for (let i = 0; i < n; i++) { const e = aired[i]; w[`${e.season}x${e.number}`] = Date.now(); }
+  }
+  // Sovrascrivi con le date reali dove disponibili (da watched_on_episode).
+  (dates || []).forEach(d => {
+    if (isNaN(d.season) || isNaN(d.episode)) return;
+    const t = d.date ? new Date(d.date).getTime() : Date.now();
+    w[`${d.season}x${d.episode}`] = isNaN(t) ? Date.now() : t;
+  });
+
+  saveLibrary();
+  try { await refreshShowTotals(tmdbId); } catch(e) {}
+  return true;
 }
 
 async function importTvTimeZip(file) {
@@ -5353,38 +5412,50 @@ async function importTvTimeZip(file) {
   setStatus('Leggo il file zip…');
   try {
     const zip = await JSZip.loadAsync(file);
-    const watchedEntries = findAllZipEntries(zip, /watched_on_episode/i);
-    if (!watchedEntries.length) { setStatus('Non ho trovato "watched_on_episode" nello zip: import non riuscito.'); return; }
 
-    const watchedRows = [];
-    for (const entry of watchedEntries) watchedRows.push(...parseCSV(await entry.async('string')));
-    // watched_on_episode.csv include gia' il nome della serie in ogni riga
-    // (tv_show_name), quindi raggruppiamo direttamente per nome.
-    const byShow = {};
-    watchedRows.forEach(r => {
-      const name = pickCol(r, ['tv_show_name', 'show_name', 'name']);
-      const season = pickCol(r, ['episode_season_number', 'season_number', 'season']);
-      const episode = pickCol(r, ['episode_number', 'episode']);
-      const date = pickCol(r, ['updated_at', 'created_at', 'watched_at', 'date']);
-      if (!name) return;
-      (byShow[name] = byShow[name] || []).push({ season: Number(season), episode: Number(episode), date });
-    });
+    // 1) Fonte principale: user_tv_show_data (tutte le serie + conteggio visti).
+    const shows = {}; // nome -> conteggio episodi visti
+    for (const entry of findAllZipEntries(zip, /user_tv_show_data/i)) {
+      parseCSVLines(await entry.async('string')).forEach(row => {
+        const s = parseShowRow(row);
+        if (s && s.name) shows[s.name] = Math.max(shows[s.name] || 0, s.count);
+      });
+    }
+    // 2) Fallback/aggiunta: followed_tv_show (serie seguite, magari con 0 visti).
+    for (const entry of findAllZipEntries(zip, /followed_tv_show(?!_source)/i)) {
+      parseCSVLines(await entry.async('string')).forEach(row => {
+        const s = parseShowRow(row);
+        if (s && s.name && !(s.name in shows)) shows[s.name] = s.count || 0;
+      });
+    }
+    // 3) Date precise dei singoli episodi da watched_on_episode.
+    const datesByShow = {};
+    for (const entry of findAllZipEntries(zip, /watched_on_episode/i)) {
+      parseCSV(await entry.async('string')).forEach(r => {
+        const name = pickCol(r, ['tv_show_name','show_name','name']);
+        const season = Number(pickCol(r, ['episode_season_number','season_number','season']));
+        const episode = Number(pickCol(r, ['episode_number','episode']));
+        const date = pickCol(r, ['updated_at','created_at','watched_at','date']);
+        if (!name) return;
+        (datesByShow[name] = datesByShow[name] || []).push({ season, episode, date });
+        if (!(name in shows)) shows[name] = 0;
+      });
+    }
 
-    const showNames = Object.keys(byShow);
-    if (!showNames.length) { setStatus('Nessun episodio visto trovato nel file.'); return; }
-    setStatus(`Trovate ${showNames.length} serie, abbino con TMDb (può richiedere un po')…`);
+    const names = Object.keys(shows);
+    if (!names.length) { setStatus('Nessuna serie trovata nello zip. Assicurati di caricare lo zip completo della richiesta dati.'); return; }
+    setStatus(`Trovate ${names.length} serie. Abbino con TMDb e importo, può volerci qualche minuto…`);
 
-    let matched = 0;
+    let done = 0, imported = 0;
     const notFound = [];
-    for (const name of showNames) {
-      const found = await matchShowOnTmdb(stripTvTimeYear(name));
-      if (!found) { notFound.push(name); continue; }
-      await importShowEpisodes(found.id, byShow[name]);
-      matched++;
-      setStatus(`Importazione in corso… ${matched + notFound.length}/${showNames.length}`);
+    for (const name of names) {
+      const ok = await importTvTimeShow(name, shows[name], datesByShow[name]);
+      if (ok) imported++; else notFound.push(name);
+      done++;
+      if (done % 3 === 0 || done === names.length) setStatus(`Importazione… ${done}/${names.length} (${imported} ok)`);
     }
     renderLibrary();
-    setStatus(`Fatto: ${matched} serie importate${notFound.length ? `, ${notFound.length} non trovate su TMDb (${notFound.slice(0,5).join(', ')}${notFound.length>5?'…':''})` : ''}.`);
+    setStatus(`Fatto: ${imported} serie importate su ${names.length}${notFound.length ? `. Non trovate su TMDb: ${notFound.slice(0,8).join(', ')}${notFound.length>8?'…':''}` : ''}.`);
   } catch(e) {
     console.error(e);
     setStatus('Errore nella lettura dello zip.');
