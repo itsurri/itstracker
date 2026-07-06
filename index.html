@@ -3901,12 +3901,20 @@ let chatReturnToList = false;
 
 function chatIdFor(uid) { return [currentUser.uid, uid].sort().join('_'); }
 
+// Blocca il gesto di swipe-back di iOS Safari quando parte dal bordo sinistro:
+// intercettando il touchstart lì, il sistema non avvia nemmeno l'animazione
+// di navigazione (altrimenti si vedrebbe la chat chiudersi e poi riaprirsi).
+function blockEdgeSwipe(e) {
+  if (e.touches && e.touches[0] && e.touches[0].clientX < 24) e.preventDefault();
+}
+
 function openChat(uid, name, photoURL) {
   if (!currentUser) { showToast('Accedi per scrivere un messaggio'); return; }
   // Se la chat viene aperta dalla lista messaggi, alla chiusura torniamo lì
   // invece di chiudere tutto e finire nell'app.
   chatReturnToList = document.getElementById('chatListPanel').classList.contains('open');
   closeChatListPanel();
+  document.addEventListener('touchstart', blockEdgeSwipe, { passive: false });
   const chatSheetEl = document.getElementById('chatSheetInner');
   chatSheetEl.classList.add('chat-animating');
   clearTimeout(chatSheetEl._animTimer);
@@ -4003,6 +4011,7 @@ async function sendChatMessage() {
 }
 
 function closeChat() {
+  document.removeEventListener('touchstart', blockEdgeSwipe);
   const chatBgEl = document.getElementById('chatBg');
   chatBgEl.classList.remove('open');
   const chatSheetEl = document.getElementById('chatSheetInner');
