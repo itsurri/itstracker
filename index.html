@@ -2311,8 +2311,6 @@ async function shareProfileImage() {
     const stats = [[w.totalShows, 'SERIE'], [w.episodesWatched, 'EPISODI'], [w.filmsWatched, 'FILM'], [w.hours, 'ORE']];
     const statY = 400;
     ctx.textAlign = 'center';
-    roundRectPath(ctx, PAD, statY - 60, W - PAD * 2, 130, 26);
-    ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
     const colW = (W - PAD * 2) / 4;
     stats.forEach(([val, lab], i) => {
       const cx = PAD + colW * i + colW / 2;
@@ -2326,27 +2324,38 @@ async function shareProfileImage() {
       ctx.globalAlpha = 1;
     });
 
-    // achievement sbloccati
+    // achievement sbloccati: solo il livello più alto raggiunto per categoria,
+    // con etichetta sotto, cosi' il badge dice davvero cosa hai ottenuto.
     const defs = getAchievements(w);
     const unlocked = defs.filter(a => a.unlocked);
-    const achY = 620;
+    const bestByCategory = {};
+    unlocked.forEach(a => { bestByCategory[a.emoji] = a; });
+    const shown = Object.values(bestByCategory).slice(0, 6);
+    const achY = 610;
     ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.55;
     ctx.font = '700 24px -apple-system, sans-serif';
     ctx.fillText(`🏆 ACHIEVEMENT · ${unlocked.length}/${defs.length}`, W / 2, achY);
     ctx.globalAlpha = 1;
-    const shown = unlocked.slice(0, 7);
-    const badgeR = 46, gap = 118;
-    const totalW = Math.max(1, shown.length - 1) * gap;
-    let bx = W / 2 - (shown.length > 1 ? totalW / 2 : 0);
+    const badgeR = 44, gap = (W - PAD * 2) / Math.max(shown.length, 1);
+    let bx = PAD + gap / 2;
     shown.forEach(a => {
-      const bGrad = ctx.createRadialGradient(bx - 14, achY + 70 - 16, 4, bx, achY + 70, badgeR);
+      const bGrad = ctx.createRadialGradient(bx - 14, achY + 74 - 16, 4, bx, achY + 74, badgeR);
       bGrad.addColorStop(0, '#FFD166'); bGrad.addColorStop(1, '#F7B538');
-      ctx.beginPath(); ctx.arc(bx, achY + 70, badgeR, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(bx, achY + 74, badgeR, 0, Math.PI * 2);
       ctx.fillStyle = bGrad; ctx.fill();
-      ctx.font = '38px -apple-system, sans-serif';
+      ctx.font = '36px -apple-system, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(a.emoji, bx, achY + 72);
+      ctx.fillText(a.emoji, bx, achY + 76);
       ctx.textBaseline = 'alphabetic';
+      // etichetta, troncata se piu' larga della colonna disponibile
+      let label = a.label;
+      ctx.font = '600 17px -apple-system, sans-serif';
+      const maxW = gap - 14;
+      while (ctx.measureText(label).width > maxW && label.length > 3) label = label.slice(0, -1);
+      if (label !== a.label) label = label.replace(/\s*$/, '') + '…';
+      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.7;
+      ctx.fillText(label, bx, achY + 140);
+      ctx.globalAlpha = 1;
       bx += gap;
     });
     if (!shown.length) {
