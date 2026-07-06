@@ -1015,8 +1015,11 @@
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
   .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
     position: absolute; width: 10px; height: 10px; border-radius: 50%;
-    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px; z-index: 2;
+    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px;
   }
+  /* nel mio profilo l'avatar (.cover-lift) ha un suo z-index che altrimenti
+     coprirebbe il pallino: qui lo forziamo sopra solo in questo contesto. */
+  .profile-top .avatar-wrap .online-dot, .profile-top .avatar-wrap.is-online::after { z-index: 2; }
   .avatar-wrap.is-online::after { content: ''; }
   .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
@@ -2242,78 +2245,122 @@ function loadImageSafe(url) {
 // Immagine del profilo disegnata a mano su canvas (non uno screenshot del DOM):
 // controllo totale sul risultato, niente artefatti da blur/backdrop-filter che
 // html2canvas non sa renderizzare bene.
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 async function shareProfileImage() {
   showToast('Preparo l\'immagine…');
   try {
-    const W = 1080, H = 1350, COVER_H = 560;
+    const W = 1080, H = 1000, PAD = 64;
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
+    // sfondo scuro con un alone giallo soffuso dietro l'avatar, in stile app
     ctx.fillStyle = '#0b0b0d'; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(PAD + 90, 175, 10, PAD + 90, 175, 340);
+    glow.addColorStop(0, 'rgba(247,181,56,0.28)'); glow.addColorStop(1, 'rgba(247,181,56,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
-    const cover = getCoverImage();
-    const coverImg = await loadImageSafe(cover);
-    if (coverImg) {
-      const scale = Math.max(W / coverImg.width, COVER_H / coverImg.height);
-      const sw = W / scale, sh = COVER_H / scale;
-      const sx = (coverImg.width - sw) / 2, sy = (coverImg.height - sh) / 2;
-      ctx.drawImage(coverImg, sx, sy, sw, sh, 0, 0, W, COVER_H);
-    } else {
-      const grad = ctx.createLinearGradient(0, 0, W, COVER_H);
-      grad.addColorStop(0, '#7b2ff7'); grad.addColorStop(1, '#0A84FF');
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, COVER_H);
-    }
-    // sfumatura di fusione tra copertina e sfondo
-    const fade = ctx.createLinearGradient(0, COVER_H - 220, 0, COVER_H + 20);
-    fade.addColorStop(0, 'rgba(11,11,13,0)'); fade.addColorStop(1, 'rgba(11,11,13,1)');
-    ctx.fillStyle = fade; ctx.fillRect(0, COVER_H - 220, W, 240);
-
-    // avatar (sovrapposto a meta' tra copertina e sfondo, come nell'app)
-    const avR = 100, avX = W / 2, avY = COVER_H;
+    // avatar tutto a sinistra
+    const avR = 90, avX = PAD + avR, avY = 175;
     const avatarImg = await loadImageSafe(getAvatarUrl());
     ctx.save();
     ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
     if (avatarImg) ctx.drawImage(avatarImg, avX - avR, avY - avR, avR * 2, avR * 2);
     else { ctx.fillStyle = '#333'; ctx.fillRect(avX - avR, avY - avR, avR * 2, avR * 2); }
     ctx.restore();
-    ctx.lineWidth = 8; ctx.strokeStyle = '#0b0b0d';
+    ctx.lineWidth = 5; ctx.strokeStyle = '#F7B538';
     ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.stroke();
 
-    ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    // nickname + livello, subito a destra dell'avatar
+    const textX = avX + avR + 36;
+    ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
     const firstName = (currentUser && currentUser.displayName || '').split(' ')[0] || 'Utente';
     const displayHandle = getNickname() || firstName;
-    ctx.font = '800 58px -apple-system, "Segoe UI", sans-serif';
-    ctx.fillText(displayHandle, W / 2, avY + 150);
+    ctx.font = '800 50px -apple-system, "Segoe UI", sans-serif';
+    ctx.fillText(displayHandle, textX, avY - 12);
 
     const level = getUserLevel(computeWrapped().hours);
-    ctx.font = '600 32px -apple-system, sans-serif';
-    ctx.globalAlpha = 0.65;
-    ctx.fillText(`Livello: ${level.label}`, W / 2, avY + 200);
+    ctx.font = '600 27px -apple-system, sans-serif';
+    ctx.fillStyle = '#F7B538';
+    ctx.fillText(`Livello: ${level.label}`, textX, avY + 30);
+
+    // follower / seguiti, allineati a destra sulla stessa riga
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
+    ctx.font = '800 34px -apple-system, sans-serif';
+    ctx.fillText(`${followerUids.length}`, W - PAD, avY - 14);
+    ctx.font = '700 20px -apple-system, sans-serif'; ctx.globalAlpha = 0.55;
+    ctx.fillText('Follower', W - PAD, avY + 16);
+    ctx.globalAlpha = 1;
+    ctx.font = '800 34px -apple-system, sans-serif'; ctx.fillStyle = '#fff';
+    ctx.fillText(`${followingList.length}`, W - PAD - 150, avY - 14);
+    ctx.font = '700 20px -apple-system, sans-serif'; ctx.globalAlpha = 0.55;
+    ctx.fillText('Seguiti', W - PAD - 150, avY + 16);
     ctx.globalAlpha = 1;
 
-    // riga statistiche (serie / episodi / film / ore), come nel profilo
+    // riga statistiche (serie / episodi / film / ore), centrata
     const w = computeWrapped();
     const stats = [[w.totalShows, 'SERIE'], [w.episodesWatched, 'EPISODI'], [w.filmsWatched, 'FILM'], [w.hours, 'ORE']];
-    const statY = avY + 340;
-    const colW = W / 4;
+    const statY = 400;
+    ctx.textAlign = 'center';
+    roundRectPath(ctx, PAD, statY - 60, W - PAD * 2, 130, 26);
+    ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
+    const colW = (W - PAD * 2) / 4;
     stats.forEach(([val, lab], i) => {
-      const cx = colW * i + colW / 2;
+      const cx = PAD + colW * i + colW / 2;
       ctx.fillStyle = '#fff';
-      ctx.font = '800 56px -apple-system, sans-serif';
+      ctx.font = '800 52px -apple-system, sans-serif';
       const txt = String(val).length > 6 ? String(val).slice(0, 5) + '…' : String(val);
       ctx.fillText(txt, cx, statY);
-      ctx.font = '700 22px -apple-system, sans-serif';
+      ctx.font = '700 20px -apple-system, sans-serif';
       ctx.globalAlpha = 0.5;
-      ctx.fillText(lab, cx, statY + 36);
+      ctx.fillText(lab, cx, statY + 34);
       ctx.globalAlpha = 1;
     });
+
+    // achievement sbloccati
+    const defs = getAchievements(w);
+    const unlocked = defs.filter(a => a.unlocked);
+    const achY = 620;
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.55;
+    ctx.font = '700 24px -apple-system, sans-serif';
+    ctx.fillText(`🏆 ACHIEVEMENT · ${unlocked.length}/${defs.length}`, W / 2, achY);
+    ctx.globalAlpha = 1;
+    const shown = unlocked.slice(0, 7);
+    const badgeR = 46, gap = 118;
+    const totalW = Math.max(1, shown.length - 1) * gap;
+    let bx = W / 2 - (shown.length > 1 ? totalW / 2 : 0);
+    shown.forEach(a => {
+      const bGrad = ctx.createRadialGradient(bx - 14, achY + 70 - 16, 4, bx, achY + 70, badgeR);
+      bGrad.addColorStop(0, '#FFD166'); bGrad.addColorStop(1, '#F7B538');
+      ctx.beginPath(); ctx.arc(bx, achY + 70, badgeR, 0, Math.PI * 2);
+      ctx.fillStyle = bGrad; ctx.fill();
+      ctx.font = '38px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(a.emoji, bx, achY + 72);
+      ctx.textBaseline = 'alphabetic';
+      bx += gap;
+    });
+    if (!shown.length) {
+      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.4;
+      ctx.font = '600 24px -apple-system, sans-serif';
+      ctx.fillText('Nessuno sbloccato ancora', W / 2, achY + 76);
+      ctx.globalAlpha = 1;
+    }
 
     // firma itstracker in fondo
     ctx.font = '800 36px -apple-system, sans-serif';
     const its = 'its', tracker = 'tracker';
     const itsW = ctx.measureText(its).width, trackerW = ctx.measureText(tracker).width;
-    const logoY = H - 70;
+    const logoY = H - 60;
     let lx = W / 2 - (itsW + trackerW) / 2;
     ctx.textAlign = 'left';
     ctx.fillStyle = '#F7B538'; ctx.fillText(its, lx, logoY); lx += itsW;
