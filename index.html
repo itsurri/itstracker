@@ -150,7 +150,7 @@
   /* risultati ricerca */
   .addbtn {
     width: 30px; height: 30px; border-radius: 50%;
-    background: rgba(10,132,255,0.9); border: none; color: #fff;
+    background: #F7B538; border: none; color: #1a1508;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .addbtn.in-lib, .searchcard .scadd.in-lib { background: rgba(255,69,58,0.9); }
@@ -170,7 +170,7 @@
   }
   .searchcard .scadd {
     position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(10,132,255,0.9); border: none; color: #fff;
+    background: #F7B538; border: none; color: #1a1508;
     display: flex; align-items: center; justify-content: center;
   }
   .searchcard .scinfo {
@@ -321,7 +321,10 @@
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
-  .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 16px; }
+  .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .summary.expanded { -webkit-line-clamp: unset; overflow: visible; }
+  .summary-more { display: none; font-size: 13px; font-weight: 700; color: var(--fg); margin: 0 0 16px; }
+  .summary-more.show { display: inline-block; }
   .statrow { display: flex; gap: 10px; margin-bottom: 18px; }
   .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
   .stat .v { font-size: 20px; font-weight: 700; }
@@ -397,16 +400,22 @@
   .ach-chevron { transition: transform 0.25s ease; color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0; }
   .ach-details[open] .ach-chevron { transform: rotate(180deg); }
   .ach-details .ach-grid-wrap { padding: 0 16px 16px; }
-  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 8px; }
-  .ach { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: 0.4; }
+  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 8px; }
+  .ach { display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; opacity: 0.45; transition: transform 0.15s ease; }
   .ach.unlocked { opacity: 1; }
   .ach-icon {
-    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0;
+    position: relative; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--overlay-rgb),0.07); flex-shrink: 0;
   }
-  .ach.unlocked .ach-icon { background: #30D158; color: #fff; }
+  .ach-emoji { font-size: 22px; filter: grayscale(1); opacity: 0.5; line-height: 1; }
+  .ach.unlocked .ach-icon {
+    background: radial-gradient(circle at 32% 28%, #FFD166, #F7B538 65%);
+    box-shadow: 0 3px 10px rgba(247,181,56,0.45), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .ach.unlocked .ach-emoji { filter: none; opacity: 1; }
+  .ach-lock { position: absolute; bottom: -2px; right: -2px; font-size: 11px; background: var(--sheet-bg); border-radius: 50%; padding: 2px; line-height: 1; }
   .ach-label { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); line-height: 1.25; }
-  .ach.unlocked .ach-label { color: var(--fg); }
+  .ach.unlocked .ach-label { color: var(--fg); font-weight: 700; }
   .removebtn {
     width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
@@ -902,7 +911,7 @@
   .resume-card .rc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.86) 100%); }
   .resume-card .rc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px; display: flex; align-items: flex-end; gap: 12px; }
   .rc-info { flex: 1; min-width: 0; color: #fff; }
-  .rc-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6cb6ff; margin-bottom: 3px; }
+  .rc-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #F7B538; margin-bottom: 3px; }
   .rc-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc-ep { font-size: 12px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; border: none; background: none; padding: 0; }
@@ -987,10 +996,10 @@
     font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55);
   }
   .hm-blank { background: transparent; }
-  .hm-l1 { background: rgba(10,132,255,0.3); color: var(--fg); }
-  .hm-l2 { background: rgba(10,132,255,0.55); color: #fff; }
-  .hm-l3 { background: rgba(10,132,255,0.8); color: #fff; }
-  .hm-l4 { background: #0A84FF; color: #fff; }
+  .hm-l1 { background: rgba(247,181,56,0.3); color: var(--fg); }
+  .hm-l2 { background: rgba(247,181,56,0.55); color: #1a1508; }
+  .hm-l3 { background: rgba(247,181,56,0.8); color: #1a1508; }
+  .hm-l4 { background: #F7B538; color: #1a1508; }
   .hm-future { opacity: 0.35; }
   .hm-cell.hm-today { box-shadow: inset 0 0 0 2px rgba(var(--overlay-rgb),0.6); }
   .hm-legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 14px; }
@@ -1005,7 +1014,7 @@
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
   .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
     position: absolute; width: 10px; height: 10px; border-radius: 50%;
-    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 0; right: 0;
+    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px;
   }
   .avatar-wrap.is-online::after { content: ''; }
   .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
@@ -2468,7 +2477,7 @@ function renderHeatmap() {
 
   const isCurrentMonth = heatmapMonthOffset === 0;
   return `<div class="hm-title-row">
-      <div class="hm-title">Attività · ${MONTHS[month]}</div>
+      <div class="hm-title">Attività · ${MONTHS[month]} ${year}</div>
       <div class="hm-nav">
         <button class="hm-navbtn" onclick="heatmapPrevMonth()">‹</button>
         <button class="hm-navbtn" onclick="heatmapNextMonth()"${isCurrentMonth?' disabled':''}>›</button>
@@ -2656,7 +2665,19 @@ function getAchievements(w) {
     { id:'bs300', label: '300 episodi di una serie', unlocked: topWatched >= 300 },
     { id:'bs500', label: '500 episodi di una serie', unlocked: topWatched >= 500 }
   ];
-  return defs;
+  const emojiFor = id => {
+    if (id.startsWith('ep'))  return '📺';
+    if (id.startsWith('sc'))  return '🏁';
+    if (id.startsWith('lib')) return '📚';
+    if (id.startsWith('fl'))  return '🎞️';
+    if (id.startsWith('f'))   return '🍿';
+    if (id.startsWith('h'))   return '⏱️';
+    if (id.startsWith('st'))  return '🔥';
+    if (id.startsWith('g'))   return '🎭';
+    if (id.startsWith('bs'))  return '⭐';
+    return '🏆';
+  };
+  return defs.map(a => ({ ...a, emoji: emojiFor(a.id) }));
 }
 
 function renderAchievements(w) {
@@ -2664,9 +2685,10 @@ function renderAchievements(w) {
   const unlockedCount = defs.filter(a => a.unlocked).length;
   const items = defs.map(a => `
     <div class="ach ${a.unlocked?'unlocked':''}">
-      <div class="ach-icon">${a.unlocked
-        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`
-        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>`}</div>
+      <div class="ach-icon">
+        <span class="ach-emoji">${a.emoji}</span>
+        ${!a.unlocked?`<span class="ach-lock">🔒</span>`:''}
+      </div>
       <div class="ach-label">${a.label}</div>
     </div>`).join('');
   return `<details class="wrap-card glass ach-details">
@@ -3777,7 +3799,7 @@ function renderPersonSheet(p) {
             ${s.total ? `<div class="pi-prog"><i style="width:${pct}%"></i></div>` : ''}
           </div>
           <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addShowFromPerson(${s.id})">
-            ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+            ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
           </button>
         </div>`;
       }).join('')}` : ''}
@@ -3790,7 +3812,7 @@ function renderPersonSheet(p) {
           <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
         </div>
         <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addFilmFromPerson(${f.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
       }).join('')}` : ''}
@@ -4130,7 +4152,7 @@ function renderTvResultsFromCache() {
           <div class="li-meta">${meta}</div>
         </div>
         <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
     }).join('')}</div>`;
@@ -4150,7 +4172,7 @@ function renderTvResultsFromCache() {
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
       <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
       <div class="scinfo">
         <div class="sn">${escapeHtml(s.name)}</div>
@@ -4218,7 +4240,7 @@ function renderFilmResultsFromCache() {
           <div class="li-meta">${rating?`★ ${rating} · `:''}${f.release_date?f.release_date.slice(0,4):'—'}</div>
         </div>
         <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
         </button>
       </div>`;
     }).join('')}</div>`;
@@ -4234,7 +4256,7 @@ function renderFilmResultsFromCache() {
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
       <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
+        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
       <div class="scinfo">
         <div class="sn">${escapeHtml(f.title)}</div>
@@ -4396,11 +4418,12 @@ async function renderSheet(show, episodes, seasons, inLib) {
         ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
+      <button class="summary-more" id="showSummaryMore" onclick="toggleSummaryClamp('showSummary')">Mostra altro</button>
       <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
       ${inLib?`<div class="btnrow">
-        <button class="markallbtn${allAiredWatched(show,episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(show,episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
+        <button class="markallbtn${allAiredWatched(library[show.id],episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(library[show.id],episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
         <button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>
       </div>`:''}
       ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
@@ -4410,6 +4433,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
   renderEpisodeList(show.id, episodes, currentSeason);
   if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
   loadWatchProviders('tv', show.id);
+  initSummaryClamp('showSummary');
 }
 
 // Stima del tempo che manca per finire una serie: episodi rimanenti (usciti) × durata media.
@@ -4673,6 +4697,24 @@ function applyToggleEpisode(showId, season, number) {
     refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
   }
   if (!wasWatched) checkAchievements();
+}
+
+// Mostra il pulsante "Mostra altro" solo se la descrizione supera le 3 righe,
+// per lasciare più spazio alla lista episodi nella scheda.
+function initSummaryClamp(id) {
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id);
+    const btn = document.getElementById(id + 'More');
+    if (!el || !btn) return;
+    if (el.scrollHeight - el.clientHeight > 2) btn.classList.add('show');
+  });
+}
+function toggleSummaryClamp(id) {
+  const el = document.getElementById(id);
+  const btn = document.getElementById(id + 'More');
+  if (!el || !btn) return;
+  const expanded = el.classList.toggle('expanded');
+  btn.textContent = expanded ? 'Mostra meno' : 'Mostra altro';
 }
 
 function allAiredWatched(show, episodes) {
@@ -5266,6 +5308,7 @@ async function renderFilmSheet(f, inLib) {
         ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
+      <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
       ${f.runtime?`<div class="time-left">⏱️ Durata ~${Math.floor(f.runtime/60)?Math.floor(f.runtime/60)+' h ':''}${f.runtime%60} min</div>`:''}
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib
@@ -5275,6 +5318,7 @@ async function renderFilmSheet(f, inLib) {
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
   loadWatchProviders('movie', f.id);
+  initSummaryClamp('filmSummary');
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
