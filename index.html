@@ -416,10 +416,12 @@
   .ach-lock { position: absolute; bottom: -2px; right: -2px; font-size: 11px; background: var(--sheet-bg); border-radius: 50%; padding: 2px; line-height: 1; }
   .ach-label { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); line-height: 1.25; }
   .ach.unlocked .ach-label { color: var(--fg); font-weight: 700; }
+  .removebtn, .markallbtn.danger {
+    border-color: #ff8a80; background: #3a0f0f; color: #ff8a80;
+  }
   .removebtn {
-    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(255,69,58,0.4);
-    background: rgba(255,69,58,0.12); color: #ff453a; font-size: 14px; font-weight: 600;
-    font-family: inherit; margin-top: 6px;
+    width: 100%; padding: 7px 16px; border-radius: 18px; border: 1px solid #ff8a80;
+    font-size: 13px; font-weight: 700; font-family: inherit; letter-spacing: 0.02em; margin-top: 6px;
   }
   .addlibbtn {
     width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(48,209,88,0.4);
@@ -433,7 +435,6 @@
     background: #0d3320; color: #7fe89a; font-size: 13px; font-weight: 700;
     font-family: inherit; letter-spacing: 0.02em; margin-bottom: 10px;
   }
-  .markallbtn.danger { border-color: #ff8a80; background: #3a0f0f; color: #ff8a80; }
 
   .seasontabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 14px; scrollbar-width: none; touch-action: pan-x; }
   .seasontabs::-webkit-scrollbar { display: none; }
@@ -1014,7 +1015,7 @@
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
   .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
     position: absolute; width: 10px; height: 10px; border-radius: 50%;
-    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px;
+    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px; z-index: 2;
   }
   .avatar-wrap.is-online::after { content: ''; }
   .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
