@@ -234,6 +234,10 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 30px);
     will-change: transform, opacity;
   }
+  /* il gesto nativo di swipe-back ha già animato l'uscita della pagina: se la
+     nostra transizione di chiusura riparte da capo dopo, si vede un secondo
+     scatto/lag. In quel caso chiudiamo la sheet istantaneamente. */
+  .sheetbg.instant-close, .sheetbg.instant-close .sheet { transition: none !important; }
   .sheetbg.open .sheet { transform: translateY(0); }
   .hero { position: relative; height: 230px; overflow: hidden; }
   .sheetbg > .closebtn {
@@ -3924,11 +3928,19 @@ async function sendChatMessage() {
 }
 
 function closeChat() {
-  document.getElementById('chatBg').classList.remove('open');
+  const chatBgEl = document.getElementById('chatBg');
+  // se la chiusura arriva dal gesto di swipe-back nativo, la pagina è già
+  // stata animata dal sistema: rifare la nostra transizione da capo produce
+  // un secondo scatto percepito come lag, quindi chiudiamo di scatto.
+  if (closingViaBack) {
+    chatBgEl.classList.add('instant-close');
+    requestAnimationFrame(() => requestAnimationFrame(() => chatBgEl.classList.remove('instant-close')));
+  }
+  chatBgEl.classList.remove('open');
   const chatSheetEl = document.getElementById('chatSheetInner');
   chatSheetEl.classList.add('chat-animating');
   clearTimeout(chatSheetEl._animTimer);
-  chatSheetEl._animTimer = setTimeout(() => chatSheetEl.classList.remove('chat-animating'), 420);
+  chatSheetEl._animTimer = setTimeout(() => chatSheetEl.classList.remove('chat-animating'), closingViaBack ? 0 : 420);
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   currentChatUid = null;
   if (chatReturnToList) { chatReturnToList = false; openChatListPanel(); }
