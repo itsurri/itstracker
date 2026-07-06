@@ -3901,11 +3901,20 @@ let chatReturnToList = false;
 
 function chatIdFor(uid) { return [currentUser.uid, uid].sort().join('_'); }
 
-// Blocca il gesto di swipe-back di iOS Safari quando parte dal bordo sinistro:
-// intercettando il touchstart lì, il sistema non avvia nemmeno l'animazione
-// di navigazione (altrimenti si vedrebbe la chat chiudersi e poi riaprirsi).
-function blockEdgeSwipe(e) {
-  if (e.touches && e.touches[0] && e.touches[0].clientX < 24) e.preventDefault();
+// Blocca il gesto di swipe-back di iOS Safari solo quando parte dal bordo
+// sinistro E si muove chiaramente in orizzontale (come lo swipe di navigazione
+// tra schede più sotto): così non interferisce mai con lo scroll verticale
+// dei messaggi, che parte con la stessa touchstart ma si muove in verticale.
+let chatEdgeSwipeStart = null;
+function chatEdgeTouchStart(e) {
+  const t = e.touches && e.touches[0];
+  chatEdgeSwipeStart = (t && t.clientX < 24) ? { x: t.clientX, y: t.clientY } : null;
+}
+function chatEdgeTouchMove(e) {
+  if (!chatEdgeSwipeStart) return;
+  const t = e.touches[0];
+  const dx = t.clientX - chatEdgeSwipeStart.x, dy = t.clientY - chatEdgeSwipeStart.y;
+  if (dx > 4 && Math.abs(dx) > Math.abs(dy)) e.preventDefault();
 }
 
 function openChat(uid, name, photoURL) {
@@ -3914,7 +3923,8 @@ function openChat(uid, name, photoURL) {
   // invece di chiudere tutto e finire nell'app.
   chatReturnToList = document.getElementById('chatListPanel').classList.contains('open');
   closeChatListPanel();
-  document.addEventListener('touchstart', blockEdgeSwipe, { passive: false });
+  document.addEventListener('touchstart', chatEdgeTouchStart, { passive: true });
+  document.addEventListener('touchmove', chatEdgeTouchMove, { passive: false });
   const chatSheetEl = document.getElementById('chatSheetInner');
   chatSheetEl.classList.add('chat-animating');
   clearTimeout(chatSheetEl._animTimer);
@@ -4011,7 +4021,9 @@ async function sendChatMessage() {
 }
 
 function closeChat() {
-  document.removeEventListener('touchstart', blockEdgeSwipe);
+  document.removeEventListener('touchstart', chatEdgeTouchStart);
+  document.removeEventListener('touchmove', chatEdgeTouchMove);
+  chatEdgeSwipeStart = null;
   const chatBgEl = document.getElementById('chatBg');
   chatBgEl.classList.remove('open');
   const chatSheetEl = document.getElementById('chatSheetInner');
