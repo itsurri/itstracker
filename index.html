@@ -542,7 +542,8 @@
   }
   .person-hero { text-align: center; padding: 30px 20px 18px; }
   .person-hero.has-cover { margin-top: -50px; position: relative; }
-  .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); margin: 0 auto 12px; }
+  .person-hero img, .person-hero .noimg-s { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); }
+  .person-hero .avatar-wrap { display: block; width: 84px; margin: 0 auto 12px; }
   .person-hero.has-cover img, .person-hero.has-cover .noimg-s { border: 3px solid var(--sheet-bg); }
   .person-hero .ph-name { font-size: 19px; font-weight: 700; }
   .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
@@ -981,6 +982,13 @@
   .lb-row.me { background: rgba(10,132,255,0.1); }
   .lb-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); flex-shrink: 0; }
   .lb-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  /* pallino "online" sugli avatar */
+  .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
+  .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
+    position: absolute; width: 10px; height: 10px; border-radius: 50%;
+    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 0; right: 0;
+  }
+  .avatar-wrap.is-online::after { content: ''; }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
   .lb-row.me .lb-name { font-weight: 800; }
   .lb-hours { font-size: 13px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; flex-shrink: 0; }
@@ -1556,8 +1564,8 @@ function renderProfileAuth() {
       </div>
       <div class="profile-inner">
         <div class="profile-top">
-          <div onclick="document.getElementById('avatarFileInput').click()">
-            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
+          <div class="avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}${onlineDot(Date.now())}
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
             <div class="profile-name">${escapeHtml(displayHandle)}</div>
@@ -1600,6 +1608,7 @@ if (fbAuth) {
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
     if (unsubscribeNotifications) { unsubscribeNotifications(); unsubscribeNotifications = null; }
     if (unsubscribePublicProfile) { unsubscribePublicProfile(); unsubscribePublicProfile = null; }
+    if (user) { startPresenceHeartbeat(); } else { stopPresenceHeartbeat(); }
     if (user) {
       unsubscribeNotifications = fbDb.collection('notifications').where('toUid', '==', user.uid)
         .onSnapshot(snap => {
@@ -2461,7 +2470,7 @@ function leaderboardRowsHtml(rows) {
   return rows.slice(0, 10).map((r,i) => `
     <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
-      ${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}
+      <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}${onlineDot(r.lastActive)}</div>
       <div class="lb-name">${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
@@ -2476,8 +2485,8 @@ async function renderLeaderboard() {
   const myPhoto = getAvatarUrl();
   const myMonthHours = hoursInMonth(new Date().getFullYear(), new Date().getMonth());
   const myTotalHours = computeWrapped().hours;
-  const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, hours: myTotalHours, me: true }];
-  const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, hours: myMonthHours, me: true }];
+  const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myTotalHours, me: true }];
+  const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myMonthHours, me: true }];
   try {
     // Carico per ID documento (= uid): più affidabile di where('uid','in',...).
     const docs = await Promise.all(followingList.slice(0, 30).map(u => fbDb.collection('publicProfiles').doc(u).get()));
@@ -2485,8 +2494,8 @@ async function renderLeaderboard() {
       const p = d.data();
       const name = p.nickname || p.displayName || 'Utente';
       const photo = p.photoURL || '';
-      totalRows.push({ uid: p.uid || d.id, name, photo, hours: p.totalHours || 0 });
-      monthRows.push({ uid: p.uid || d.id, name, photo, hours: (p.monthKey === mk ? (p.monthHours||0) : 0) });
+      totalRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: p.totalHours || 0 });
+      monthRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: (p.monthKey === mk ? (p.monthHours||0) : 0) });
     });
   } catch(e) {}
   totalRows.sort((a,b) => b.hours - a.hours);
@@ -3609,7 +3618,7 @@ function personCardHtml(p) {
   const canAct = currentUser && p.uid !== currentUser.uid;
   const safeName = escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'");
   return `<div class="personcard" onclick="openPerson('${p.uid}')">
-    ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}
+    <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}${onlineDot(p.lastActive)}</div>
     <div class="pc-info">
       <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
@@ -3634,7 +3643,7 @@ function feedItemHtml(a) {
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
   return `<div class="feed-item" onclick="${onclick}">
-    ${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">` : `<div class="fi-avatar" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')"></div>`}
+    <div class="avatar-wrap" data-presence-uid="${a.uid}" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
     <div class="fi-body">
       <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
@@ -3694,6 +3703,7 @@ function renderProfileFeedBody() {
     html += `<button class="filebtn" style="width:100%; margin-top:10px" onclick="profileFeedShown+=10; renderProfileFeedBody()">Mostra altro</button>`;
   }
   body.innerHTML = html;
+  fetchPresence(shown.map(a => a.uid)).then(() => applyPresenceDots(body));
 }
 
 // ---------- scheda persona ----------
@@ -3721,7 +3731,7 @@ function renderPersonSheet(p) {
   sheet.innerHTML = `
     <div class="person-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
     <div class="person-hero has-cover">
-      ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s" style="margin:0 auto 12px"></div>`}
+      <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}${onlineDot(p.lastActive)}</div>
       <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
       ${canMessage ? `<div class="person-hero-btns">
@@ -3929,7 +3939,9 @@ function chatRowHtml(uid, name, photo, subtitle, unread) {
   const safePhoto = (photo||'').replace(/'/g,"\\'");
   // nickname/riga -> apre la chat; avatar -> apre il profilo.
   return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${uid}','${safeName}','${safePhoto}')">
-      <div class="notifIcon" style="overflow:hidden;padding:0;cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+      <div class="avatar-wrap" data-presence-uid="${uid}" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">
+        <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+      </div>
       <div class="notifBody">
         <div class="notifText"><b>${escapeHtml(name)}</b></div>
         <div class="notifTime">${escapeHtml(subtitle || '')}</div>
@@ -3968,6 +3980,8 @@ async function renderChatListPanel() {
     html = '<div class="commentsEmpty">Nessuna conversazione. Segui qualcuno per iniziare a chattare.</div>';
   }
   el.innerHTML = html;
+  const uids = [...chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid)), ...suggestions.map(p => p.uid)];
+  fetchPresence(uids).then(() => applyPresenceDots(el));
 }
 
 function openChatListPanel() {
@@ -4972,6 +4986,7 @@ function renderComments(showId, season, number) {
       commentCounts[key] = top.length + replies.length;
       const countEl = document.getElementById(`epcCount-${key}`);
       if (countEl) countEl.textContent = top.length + replies.length;
+      fetchPresence(all.map(c => c.uid)).then(() => applyPresenceDots(list));
     }, () => { list.innerHTML = '<div class="commentsEmpty">Errore nel caricamento dei commenti.</div>'; });
 }
 
@@ -5054,7 +5069,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   const replyBtn = `<button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')"><span class="emo">💬</span><span>${replies.length}</span></button>`;
   const likeBtn = `<button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')"><span class="emo">❤️</span><span>${likedBy.length}</span></button>`;
   return `<div class="commentItem" id="comment-${c.id}">
-    <div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div>
+    <div class="avatar-wrap" data-presence-uid="${c.uid}"><div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
     <div class="commentBody">
       <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
@@ -5435,6 +5450,51 @@ function getCustomAvatar() { try { return localStorage.getItem('serietracker_ava
 // Se l'utente ha caricato una foto sua la usiamo; altrimenti gli assegniamo
 // un avatar generato (colore + iniziale), NON la foto di Google. Se poi ne
 // carica una propria, quella (custom) vince e viene salvata.
+// ---------- presenza online ----------
+// Aggiorna un timestamp "ultima attività" sul profilo pubblico ogni minuto
+// (più subito quando l'app torna in primo piano): serve solo a mostrare il
+// pallino verde "online" sugli avatar di chi ha usato l'app di recente.
+let presenceInterval = null;
+function pingPresence() {
+  if (!fbDb || !currentUser) return;
+  fbDb.collection('publicProfiles').doc(currentUser.uid).set({ lastActive: Date.now() }, { merge: true }).catch(()=>{});
+}
+function startPresenceHeartbeat() {
+  pingPresence();
+  clearInterval(presenceInterval);
+  presenceInterval = setInterval(pingPresence, 60000);
+}
+function stopPresenceHeartbeat() { clearInterval(presenceInterval); presenceInterval = null; }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pingPresence(); });
+const ONLINE_WINDOW_MS = 3 * 60 * 1000;
+function isOnline(lastActive) { return typeof lastActive === 'number' && (Date.now() - lastActive) < ONLINE_WINDOW_MS; }
+// Pallino verde da affiancare a un avatar quando l'utente è online.
+function onlineDot(lastActive) { return isOnline(lastActive) ? '<span class="online-dot" title="Online"></span>' : ''; }
+// Recupera lastActive per una lista di uid (usato dove non abbiamo già il
+// documento pubblico intero: commenti, chat, feed attività).
+const presenceCache = {};
+const presenceFetchedAt = {};
+const PRESENCE_TTL_MS = 45 * 1000; // ricontrolla non più spesso del ritmo dell'heartbeat
+async function fetchPresence(uids) {
+  const now = Date.now();
+  const missing = [...new Set(uids)].filter(u => u && (!(u in presenceCache) || now - (presenceFetchedAt[u]||0) > PRESENCE_TTL_MS));
+  if (missing.length && fbDb) {
+    try {
+      const docs = await Promise.all(missing.map(u => fbDb.collection('publicProfiles').doc(u).get()));
+      docs.forEach((d, i) => { presenceCache[missing[i]] = (d.exists && d.data().lastActive) || null; presenceFetchedAt[missing[i]] = now; });
+    } catch(e) {}
+  }
+  return presenceCache;
+}
+// Applica il pallino a posteriori sugli elementi già renderizzati con
+// data-presence-uid="...", una volta note le presenze.
+function applyPresenceDots(container) {
+  (container || document).querySelectorAll('[data-presence-uid]').forEach(el => {
+    const uid = el.getAttribute('data-presence-uid');
+    if (isOnline(presenceCache[uid])) el.classList.add('is-online');
+  });
+}
+
 function getAvatarUrl() {
   const custom = getCustomAvatar();
   if (custom) return custom;
