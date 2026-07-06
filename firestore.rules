@@ -77,7 +77,7 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.toUid is string
                     && request.resource.data.toUid != request.auth.uid
-                    && request.resource.data.type in ['message', 'like', 'reply', 'mention']
+                    && request.resource.data.type in ['message', 'like', 'reply', 'mention', 'follow']
                     && request.resource.data.text is string
                     && request.resource.data.text.size() <= 300;
     }

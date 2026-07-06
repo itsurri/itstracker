@@ -1673,6 +1673,7 @@ if (fbAuth) {
           // tutti insieme i toast di sblocco per cose in realtà già raggiunte da tempo.
           checkAchievements(false);
           backfillMyCommentLevels();
+          backfillMyActivity();
           if (!data.nickname && !getNickname()) showNicknameOnboarding();
         } else {
           ref.set({ library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() }, { merge: true }).catch(()=>{});
@@ -3036,7 +3037,7 @@ function allNotifications() {
   return getLocalNotifications().concat(remoteNotifications).sort((a, b) => notifMillis(b) - notifMillis(a));
 }
 
-const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️' };
+const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️', follow: '👤' };
 
 let notifItemsCache = {};
 
@@ -3053,9 +3054,10 @@ function renderNotifPanel() {
   list.innerHTML = items.length
     ? items.slice(0, 50).map(n => {
         const isChat = n.type === 'message' && n.fromUid;
-        const clickable = !!n.showId || isChat;
-        const handler = isChat ? `goToChatNotification('${n.id}')` : `goToCommentNotification('${n.id}')`;
-        const icon = (isChat && n.fromPhoto) ? `<img src="${n.fromPhoto}" alt="">` : (NOTIF_ICONS[n.type] || '🔔');
+        const isFollow = n.type === 'follow' && n.fromUid;
+        const clickable = !!n.showId || isChat || isFollow;
+        const handler = isChat ? `goToChatNotification('${n.id}')` : isFollow ? `goToFollowNotification('${n.id}')` : `goToCommentNotification('${n.id}')`;
+        const icon = ((isChat || isFollow) && n.fromPhoto) ? `<img src="${n.fromPhoto}" alt="">` : (NOTIF_ICONS[n.type] || '🔔');
         return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="${handler}"` : ''}>
         <div class="notifIcon">${icon}</div>
         <div class="notifBody">
@@ -3085,6 +3087,13 @@ function goToChatNotification(id) {
   if (!n || !n.fromUid) return;
   closeNotifPanel();
   openChat(n.fromUid, n.fromName || 'Utente', n.fromPhoto || '');
+}
+
+function goToFollowNotification(id) {
+  const n = notifItemsCache[id];
+  if (!n || !n.fromUid) return;
+  closeNotifPanel();
+  openPerson(n.fromUid);
 }
 
 // Posiziona i pannelli notifiche/messaggi sotto l'header, così restano
@@ -3571,6 +3580,10 @@ async function toggleFollow(uid) {
     await fbDb.collection('users').doc(currentUser.uid).set({ following: myOp }, { merge: true });
     await fbDb.collection('publicProfiles').doc(uid).set({ followers: followerOp }, { merge: true });
   } catch(e) {}
+  if (!following) {
+    const myName = commentAuthorName();
+    pushRemoteNotification(uid, { type: 'follow', text: `${myName} ha iniziato a seguirti`, fromUid: currentUser.uid, fromPhoto: getAvatarUrl() || null });
+  }
   if (currentPersonProfile && currentPersonProfile.uid === uid) renderPersonSheet(currentPersonProfile);
   if (currentTab === 'profile') renderProfile();
 }
@@ -5001,6 +5014,51 @@ async function backfillMyCommentLevels() {
     const batch = fbDb.batch();
     missing.slice(0, 490).forEach(d => batch.update(d.ref, { authorLevel: level.label }));
     await batch.commit();
+  } catch(e) {}
+}
+
+// Popola il feed attività con lo storico già presente in libreria (serie
+// completate, film visti), usando le date reali in cui li hai segnati:
+// così chi inizia a seguirti vede anche quello che hai visto prima di
+// seguire, non solo le novità da adesso in poi. Una tantum: se hai già
+// almeno un'attività salvata, non rifà nulla.
+let activityBackfillDone = false;
+async function backfillMyActivity() {
+  if (!fbDb || !currentUser || activityBackfillDone) return;
+  activityBackfillDone = true;
+  try {
+    const existing = await fbDb.collection('activity').where('uid', '==', currentUser.uid).limit(1).get();
+    if (!existing.empty) return;
+
+    const myName = commentAuthorName();
+    const myPhoto = getAvatarUrl();
+    const batch = fbDb.batch();
+    let count = 0;
+
+    Object.values(library).forEach(s => {
+      if (categorizeShow(s) === 'inpari' && Object.keys(s.watched || {}).length) {
+        const times = Object.values(s.watched).filter(v => typeof v === 'number');
+        const t = times.length ? Math.max(...times) : Date.now();
+        batch.set(fbDb.collection('activity').doc(), {
+          uid: currentUser.uid, name: myName, photo: myPhoto,
+          type: 'finished_show', showId: s.id, title: s.name || '', image: s.image || null,
+          createdAt: firebase.firestore.Timestamp.fromMillis(t)
+        });
+        count++;
+      }
+    });
+    Object.values(filmLibrary).forEach(f => {
+      if (f.watched) {
+        const t = typeof f.watchedAt === 'number' ? f.watchedAt : Date.now();
+        batch.set(fbDb.collection('activity').doc(), {
+          uid: currentUser.uid, name: myName, photo: myPhoto,
+          type: 'watched_film', showId: f.id, title: f.title || '', image: f.image || null,
+          createdAt: firebase.firestore.Timestamp.fromMillis(t)
+        });
+        count++;
+      }
+    });
+    if (count) await batch.commit();
   } catch(e) {}
 }
 
