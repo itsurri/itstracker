@@ -418,7 +418,7 @@
   .markallbtn {
     width: 100%; padding: 7px 16px; border-radius: 18px; border: 1px solid #5fd97a;
     background: #0d3320; color: #7fe89a; font-size: 13px; font-weight: 700;
-    font-family: inherit; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 10px;
+    font-family: inherit; letter-spacing: 0.02em; margin-bottom: 10px;
   }
   .markallbtn.danger { border-color: #ff8a80; background: #3a0f0f; color: #ff8a80; }
 
@@ -616,17 +616,29 @@
   .chat-time.mine { align-self: flex-end; }
   .chat-time.theirs { align-self: flex-start; }
   .chat-inputrow {
-    display: flex; align-items: center; gap: 8px; padding: 10px 14px calc(env(safe-area-inset-bottom) + 12px);
-    border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); flex-shrink: 0;
-    background: rgba(var(--overlay-rgb),0.02);
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px calc(env(safe-area-inset-bottom) + 14px);
+    flex-shrink: 0; border-top: none;
+    background: transparent;
   }
   .chat-inputrow textarea {
-    flex: 1; min-width: 0; min-height: 40px; max-height: 100px; resize: none; padding: 10px 16px; border-radius: 20px;
-    border: 0.5px solid rgba(var(--overlay-rgb),0.12); background: rgba(var(--overlay-rgb),0.06);
+    flex: 1; min-width: 0; min-height: 42px; max-height: 100px; resize: none; padding: 11px 18px; border-radius: 22px;
+    background: rgba(var(--overlay-rgb),0.08);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.2);
+    box-shadow: inset 0 1px 0 rgba(var(--overlay-rgb),0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
     color: var(--fg); font-family: inherit; font-size: 14px; line-height: 1.4;
   }
   .chat-inputrow .commentReplySendBtn {
-    width: 38px; height: 38px; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.4);
+    width: 42px; height: 42px; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.4);
+    flex-shrink: 0;
+  }
+  /* Durante lo slide di apertura/chiusura disattiviamo temporaneamente i blur:
+     ricalcolarli ad ogni frame mentre il foglio si muove è pesante e causa
+     il lag percepito all'apertura/chiusura della chat. */
+  .chat-sheet.chat-animating .chat-head,
+  .chat-sheet.chat-animating .chat-inputrow textarea {
+    -webkit-backdrop-filter: none; backdrop-filter: none;
   }
 
   /* ritaglio avatar */
@@ -3816,6 +3828,10 @@ function openChat(uid, name, photoURL) {
   // invece di chiudere tutto e finire nell'app.
   chatReturnToList = document.getElementById('chatListPanel').classList.contains('open');
   closeChatListPanel();
+  const chatSheetEl = document.getElementById('chatSheetInner');
+  chatSheetEl.classList.add('chat-animating');
+  clearTimeout(chatSheetEl._animTimer);
+  chatSheetEl._animTimer = setTimeout(() => chatSheetEl.classList.remove('chat-animating'), 420);
   currentChatUid = uid;
   currentChatPeerName = name;
   currentChatPeerPhoto = photoURL || '';
@@ -3909,6 +3925,10 @@ async function sendChatMessage() {
 
 function closeChat() {
   document.getElementById('chatBg').classList.remove('open');
+  const chatSheetEl = document.getElementById('chatSheetInner');
+  chatSheetEl.classList.add('chat-animating');
+  clearTimeout(chatSheetEl._animTimer);
+  chatSheetEl._animTimer = setTimeout(() => chatSheetEl.classList.remove('chat-animating'), 420);
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   currentChatUid = null;
   if (chatReturnToList) { chatReturnToList = false; openChatListPanel(); }
@@ -4760,7 +4780,8 @@ async function quickAddSilent(id) {
 async function addFromSheet(id) { await quickAdd(id); openShow(id); }
 
 async function removeShow(id) {
-  delete library[id]; saveLibrary(); renderLibrary(); closeSheet(); showToast('Serie rimossa');
+  delete library[id]; saveLibrary(); renderLibrary(); showToast('Serie rimossa');
+  if (document.getElementById('sheetBg').classList.contains('open')) openShow(id);
 }
 
 // ---------- commenti episodio ----------
@@ -5256,7 +5277,10 @@ async function toggleFilmWatched(id) {
     logActivity({ type: 'watched_film', showId: Number(id), title: filmLibrary[id].title || '', image: filmLibrary[id].image || null });
   }
 }
-async function removeFilm(id) { delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); closeSheet(); showToast('Film rimosso'); }
+async function removeFilm(id) {
+  delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); showToast('Film rimosso');
+  if (document.getElementById('sheetBg').classList.contains('open')) openFilm(id);
+}
 
 function closeSheet() {
   document.getElementById('sheetBg').classList.remove('open');
