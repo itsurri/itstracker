@@ -749,6 +749,19 @@
   .view { display: none; }
   .view.active { display: block; animation: viewIn 0.28s ease; }
   @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  /* piccola transizione ovunque un contenuto viene ricaricato (cambio categoria,
+     refresh, ricerca, ecc.), applicata via MutationObserver senza toccare ogni
+     singola funzione di render */
+  @keyframes fadeRefresh { from { opacity: 0.35; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-refresh { animation: fadeRefresh 0.22s ease; }
+  /* feedback tattile su ogni elemento interattivo */
+  button, .icon-btn, .filebtn, .checkbtn, .seasontab, .card, .list-item, .personcard, .notifItem, .lb-row {
+    transition: transform 0.15s ease;
+  }
+  button:active, .icon-btn:active, .filebtn:active, .checkbtn:active, .seasontab:active,
+  .card:active, .list-item:active, .personcard:active, .notifItem:active, .lb-row:active {
+    transform: scale(0.96);
+  }
 
   /* coriandoli fine serie */
   .confetti-layer { position: fixed; inset: 0; z-index: 300; pointer-events: none; overflow: hidden; }
@@ -2774,8 +2787,8 @@ function renderProfile() {
   let html = '';
   if (currentUser) {
     html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
-      <button class="seasontab active" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
-      <button class="seasontab" data-ptab="suggestions" onclick="setProfilePeopleTab('suggestions')">Amici suggeriti</button>
+      <button class="seasontab${profilePeopleTab==='feed'?' active':''}" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
+      <button class="seasontab${profilePeopleTab==='suggestions'?' active':''}" data-ptab="suggestions" onclick="setProfilePeopleTab('suggestions')">Amici suggeriti</button>
     </div>
     <div class="wrap-card glass" style="padding:14px 16px; margin-bottom:16px"><div id="profilePeopleBody"></div></div>`;
   }
@@ -4495,6 +4508,21 @@ function initSheetParallax() {
 }
 
 // ---------- tilt 3D delle card alla pressione ----------
+// Piccola animazione di comparsa ogni volta che uno di questi contenitori
+// viene ricaricato (cambio categoria/tab, ricerca, refresh...), senza dover
+// toccare ogni singola funzione di render sparsa nel file.
+function initContentFadeIn() {
+  ['tvContent', 'filmContent', 'searchResults', 'profileBody'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new MutationObserver(() => {
+      el.classList.remove('fade-refresh');
+      void el.offsetWidth;
+      el.classList.add('fade-refresh');
+    }).observe(el, { childList: true });
+  });
+}
+
 function initCardTilt() {
   let active = null, sx = 0, sy = 0, pendingCard = null, pendingEv = null, timer = null;
   const MAX = 10;
@@ -5640,6 +5668,7 @@ moveTabIndicator(document.querySelector('.tabbtn.active'));
 initSheetParallax();
 initCardTilt();
 initBackButton();
+initContentFadeIn();
 </script>
 </body>
 </html>
