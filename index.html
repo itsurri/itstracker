@@ -1974,7 +1974,7 @@ function switchTab(tab) {
   // Le view condividono lo scroll della pagina: senza reset, cambiando tab si
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
-  document.getElementById('topbarRight').style.display = (tab === 'tv' || tab === 'film' || tab === 'search') ? 'flex' : 'none';
+  document.getElementById('topbarRight').style.display = 'flex';
   if (tab === 'profile') renderProfile();
   if (tab === 'search' && !document.getElementById('searchInput').value.trim() && !document.getElementById('searchResults').innerHTML.trim()) {
     loadPopular(searchMode);
@@ -5308,9 +5308,11 @@ function pickCol(row, candidates) {
   }
   return null;
 }
-function findZipEntry(zip, pattern) {
-  const name = Object.keys(zip.files).find(n => pattern.test(n));
-  return name ? zip.files[name] : null;
+// TV Time spezza le tabelle grandi in piu' file numerati (es. watched_on_episode.csv,
+// watched_on_episode_2.csv, ...): li leggiamo e uniamo tutti, altrimenti si perde
+// quasi tutto lo storico e restano solo le poche righe del primo pezzo.
+function findAllZipEntries(zip, pattern) {
+  return Object.keys(zip.files).filter(n => pattern.test(n) && !zip.files[n].dir).map(n => zip.files[n]);
 }
 async function matchShowOnTmdb(name) {
   if (!name) return null;
@@ -5351,10 +5353,11 @@ async function importTvTimeZip(file) {
   setStatus('Leggo il file zip…');
   try {
     const zip = await JSZip.loadAsync(file);
-    const watchedEntry = findZipEntry(zip, /watched_on_episode/i);
-    if (!watchedEntry) { setStatus('Non ho trovato "watched_on_episode" nello zip: import non riuscito.'); return; }
+    const watchedEntries = findAllZipEntries(zip, /watched_on_episode/i);
+    if (!watchedEntries.length) { setStatus('Non ho trovato "watched_on_episode" nello zip: import non riuscito.'); return; }
 
-    const watchedRows = parseCSV(await watchedEntry.async('string'));
+    const watchedRows = [];
+    for (const entry of watchedEntries) watchedRows.push(...parseCSV(await entry.async('string')));
     // watched_on_episode.csv include gia' il nome della serie in ogni riga
     // (tv_show_name), quindi raggruppiamo direttamente per nome.
     const byShow = {};
