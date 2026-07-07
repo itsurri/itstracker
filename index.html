@@ -4824,11 +4824,24 @@ function selectSeason(showId, season) {
   renderEpisodeList(showId, episodesCache[showId], season);
 }
 
+// Impagina la lista episodi: renderizzare centinaia di .epitem.glass insieme
+// (serie molto lunghe tipo Camera Café, con stagioni da centinaia di episodi)
+// creava centinaia di layer backdrop-filter e faceva crashare Safari su iOS
+// per esaurimento memoria GPU. Ne mostriamo un blocco alla volta.
+const EPISODE_PAGE = 40;
+let episodePageState = { key: '', shown: EPISODE_PAGE };
+
 function renderEpisodeList(showId, episodes, season) {
   const list = document.getElementById('episodeList');
   const watched = (library[showId]&&library[showId].watched)||{};
   const filtered = episodes.filter(e=>e.season===season).sort((a,b)=>a.number-b.number);
-  list.innerHTML = filtered.map(ep => {
+  // Reset del contatore quando cambia serie/stagione; mantienilo quando la
+  // lista viene solo rigenerata (es. dopo aver segnato un episodio).
+  const stateKey = `${showId}_${season}`;
+  if (episodePageState.key !== stateKey) episodePageState = { key: stateKey, shown: EPISODE_PAGE };
+  const shown = Math.min(episodePageState.shown, filtered.length);
+  const remaining = filtered.length - shown;
+  list.innerHTML = filtered.slice(0, shown).map(ep => {
     const key = `${ep.season}x${ep.number}`;
     const isW = !!watched[key];
     const thumb = ep.image || null;
@@ -4880,8 +4893,16 @@ function renderEpisodeList(showId, episodes, season) {
       </div>
     </div>`;
   }).join('');
+  if (remaining > 0) {
+    list.innerHTML += `<button class="filebtn" style="width:100%; margin-top:4px" onclick="showMoreEpisodes(${showId},${season})">Mostra altri ${Math.min(EPISODE_PAGE, remaining)} episodi (ne restano ${remaining})</button>`;
+  }
   loadSeasonCommentCounts(showId, season);
   loadSeasonReactions(showId, season);
+}
+
+function showMoreEpisodes(showId, season) {
+  episodePageState.shown += EPISODE_PAGE;
+  renderEpisodeList(showId, episodesCache[showId], season);
 }
 
 function isAiringToday(ep) {
