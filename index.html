@@ -443,6 +443,14 @@
   .seasontab.active { background: var(--fg); color: var(--bg); }
   .cat-tabs { justify-content: center; }
   .cat-tabs .seasontab { text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; }
+  .people-search-tab { display: inline-flex; align-items: center; justify-content: center; padding: 7px 14px; }
+  .people-search-tab svg { display: block; }
+  .people-search-input {
+    width: 100%; padding: 11px 16px; border-radius: 14px; border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+    background: rgba(var(--overlay-rgb),0.06); color: var(--fg); font: inherit; font-size: 14px; margin-bottom: 12px;
+    -webkit-appearance: none; appearance: none;
+  }
+  .people-search-input:focus { outline: none; border-color: rgba(var(--overlay-rgb),0.3); }
   .genre-chips { padding: 0 0 14px; }
   .genre-chips .seasontab { padding: 6px 14px; font-size: 12px; }
   .tab-badge {
@@ -561,6 +569,8 @@
   .person-hero .ph-name { font-size: 19px; font-weight: 700; }
   .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .person-hero .ph-level { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; }
+  .ph-mutual { font-size: 11px; font-weight: 500; color: rgba(var(--overlay-rgb),0.45); }
+  .person-follow-full { width: 100%; margin-top: 12px; }
   .person-hero-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
   .person-msg-btn {
     display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 16px;
@@ -1596,6 +1606,7 @@ function syncPublicProfile() {
     nicknameLower: (getNickname() || '').toLowerCase(),
     photoURL: getAvatarUrl(),
     coverImage: getCoverImage() || null,
+    following: followingList.slice(),
     shows, films,
     monthKey: currentMonthKey(),
     monthHours: hoursInMonth(new Date().getFullYear(), new Date().getMonth()),
@@ -3002,6 +3013,9 @@ function renderProfile() {
     html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
       <button class="seasontab${profilePeopleTab==='feed'?' active':''}" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
       <button class="seasontab${profilePeopleTab==='suggestions'?' active':''}" data-ptab="suggestions" onclick="setProfilePeopleTab('suggestions')">Amici suggeriti</button>
+      <button class="seasontab people-search-tab${profilePeopleTab==='search'?' active':''}" data-ptab="search" onclick="setProfilePeopleTab('search')" title="Cerca persone">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
     </div>
     <div class="wrap-card glass" style="padding:14px 16px; margin-bottom:16px"><div id="profilePeopleBody"></div></div>`;
   }
@@ -3777,6 +3791,9 @@ async function toggleFollow(uid) {
   try {
     await fbDb.collection('users').doc(currentUser.uid).set({ following: myOp }, { merge: true });
     await fbDb.collection('publicProfiles').doc(uid).set({ followers: followerOp }, { merge: true });
+    // Aggiorna anche la mia lista "following" pubblica, così gli altri possono
+    // calcolare gli amici in comune.
+    await fbDb.collection('publicProfiles').doc(currentUser.uid).set({ following: followingList.slice() }, { merge: true });
   } catch(e) {}
   if (!following) {
     const myName = commentAuthorName();
@@ -3890,6 +3907,13 @@ function setProfilePeopleTab(tab) {
 async function loadProfilePeople() {
   const body = document.getElementById('profilePeopleBody');
   if (!body || !fbDb || !currentUser) return;
+  if (profilePeopleTab === 'search') {
+    body.innerHTML = `<input class="people-search-input" id="peopleSearchInput" placeholder="Cerca per nickname…" autocomplete="off" oninput="onPeopleSearch(this.value)">
+      <div id="peopleSearchResults"><div class="wrap-note" style="padding:6px 2px">Scrivi un nickname per trovare altre persone.</div></div>`;
+    const inp = document.getElementById('peopleSearchInput');
+    if (inp) inp.focus();
+    return;
+  }
   body.innerHTML = `<div class="spinner"></div>`;
   try {
     if (profilePeopleTab === 'feed') {
@@ -3901,6 +3925,29 @@ async function loadProfilePeople() {
       body.innerHTML = results.length ? results.map(personCardHtml).join('') : `<div class="wrap-note" style="padding:6px 2px">Nessun suggerimento disponibile.</div>`;
     }
   } catch(e) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Errore nel caricamento.</div>`; }
+}
+
+let peopleSearchTimer = null;
+function onPeopleSearch(q) {
+  clearTimeout(peopleSearchTimer);
+  const query = (q||'').trim().toLowerCase();
+  const res = document.getElementById('peopleSearchResults');
+  if (!res) return;
+  if (!query) { res.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Scrivi un nickname per trovare altre persone.</div>`; return; }
+  peopleSearchTimer = setTimeout(async () => {
+    if (!fbDb) return;
+    res.innerHTML = `<div class="spinner"></div>`;
+    try {
+      // Ricerca per prefisso su nicknameLower (Firestore non ha "contains").
+      const snap = await fbDb.collection('publicProfiles')
+        .where('nicknameLower', '>=', query)
+        .where('nicknameLower', '<=', query + '')
+        .limit(15).get();
+      const results = snap.docs.map(d => d.data()).filter(p => p.uid !== currentUser.uid);
+      res.innerHTML = results.length ? results.map(personCardHtml).join('') : `<div class="wrap-note" style="padding:6px 2px">Nessuna persona trovata.</div>`;
+      fetchPresence(results.map(p => p.uid)).then(() => applyPresenceDots(res));
+    } catch(e) { res.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Errore nella ricerca.</div>`; }
+  }, 300);
 }
 
 function renderProfileFeedBody() {
@@ -3945,20 +3992,38 @@ function renderPersonSheet(p) {
   const shows = (p.shows||[]).slice().sort((a,b) => (b.watched||0) - (a.watched||0));
   const films = (p.films||[]).slice();
   const canMessage = currentUser && currentUser.uid !== p.uid;
+  const episodes = shows.reduce((s,x) => s + (x.watched||0), 0);
+  const filmsWatched = films.filter(f => f.watched).length;
+  const followers = (p.followers||[]).length;
+  const following = (p.following||[]).length;
+  // Amici in comune = persone che seguiamo entrambi.
+  const mutual = currentUser ? followingList.filter(u => u !== p.uid && (p.following||[]).includes(u)).length : 0;
+  const mutualHtml = mutual > 0 ? `<span class="ph-mutual"> · ${mutual} ${mutual === 1 ? 'amico in comune' : 'amici in comune'}</span>` : '';
+  const nameEsc = escapeHtml(p.nickname || p.displayName || 'Utente');
   sheet.innerHTML = `
-    <div class="person-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
-    <div class="person-hero has-cover">
-      <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
-      <div class="ph-name">${onlineDot(p.lastActive)}${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
-      <div class="ph-level">Livello: ${getUserLevel(p.totalHours||0).label}</div>
-      <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
-      ${canMessage ? `<div class="person-hero-btns">
-        <button class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
-        <button class="person-msg-btn" onclick="openChat('${p.uid}','${escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-          Messaggio
-        </button>
-      </div>` : ''}
+    <div class="profile-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
+    <div class="profile-inner">
+      <div class="profile-top">
+        <div class="avatar-wrap">${p.photoURL ? `<img class="profile-avatar cover-lift" src="${p.photoURL}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}</div>
+        <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-4px">
+          <div class="profile-name">${onlineDot(p.lastActive)}${nameEsc}${mutualHtml}</div>
+          <div class="profile-level-line">Livello: ${getUserLevel(p.totalHours||0).label}</div>
+        </div>
+        ${canMessage ? `<button class="profile-share-btn" onclick="openChat('${p.uid}','${nameEsc.replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')" title="Messaggio">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        </button>` : ''}
+      </div>
+      <div class="follow-inline">
+        <span><b>${followers}</b> Follower</span>
+        <span><b>${following}</b> Seguiti</span>
+      </div>
+      <div class="statrow profile-stats-inline" style="margin-top:12px;margin-bottom:0">
+        <div class="stat"><div class="v">${shows.length}</div><div class="l">serie</div></div>
+        <div class="stat"><div class="v">${episodes}</div><div class="l">episodi</div></div>
+        <div class="stat"><div class="v">${filmsWatched}</div><div class="l">film</div></div>
+        <div class="stat"><div class="v">${p.totalHours||0}</div><div class="l">ore</div></div>
+      </div>
+      ${canMessage ? `<button class="follow-btn person-follow-full${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>` : ''}
     </div>
     <div class="section">
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
