@@ -1349,12 +1349,7 @@
       <h2 class="settings-h2">TMDb</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">API Key</div><div class="sd">Opzionale: l'app funziona già con una chiave condivisa. Incollane una tua se preferisci</div></div>
-          <div style="display:flex; gap:8px">
-            <input type="text" id="tmdbKeyInput" placeholder="Usa quella predefinita (opzionale)" autocomplete="off"
-              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
-            <button class="filebtn" onclick="saveTmdbKey()">Salva</button>
-          </div>
+          <div class="st"><div class="sn">API Key</div><div class="sd">L'app usa una chiave TMDb condivisa integrata: non serve configurare nulla.</div></div>
           <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
         </div>
       </div>
@@ -1552,6 +1547,16 @@
     </div>
   </div>
 </div>
+<div class="confirmbg" id="avatarMenuBg">
+  <div class="confirmbox">
+    <h3>Foto profilo</h3>
+    <div class="cbrow" style="flex-direction:column">
+      <button class="cb-cancel" onclick="closeAvatarMenu();document.getElementById('avatarFileInput').click()">Cambia foto</button>
+      <button class="cb-confirm" onclick="removeCustomAvatar()">Rimuovi foto</button>
+      <button class="cb-cancel" onclick="closeAvatarMenu()">Annulla</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
@@ -1658,7 +1663,7 @@ function renderProfileAuth() {
       </div>
       <div class="profile-inner">
         <div class="profile-top">
-          <div class="avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="avatar-wrap" onclick="tapAvatarEdit()">
             ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
@@ -5859,14 +5864,6 @@ function updateThemeButtons() {
   if (db) db.classList.toggle('active', dark);
 }
 
-// ---------- TMDb key ----------
-function saveTmdbKey() {
-  const v = document.getElementById('tmdbKeyInput').value.trim();
-  try { localStorage.setItem('serietracker_tmdb_key', v); } catch(e) {}
-  scheduleCloudSync();
-  showToast(v ? 'API key salvata' : 'API key rimossa');
-}
-
 // ---------- nickname ----------
 function saveNickname() {
   const v = document.getElementById('nicknameInput').value.trim();
@@ -6140,6 +6137,29 @@ async function saveCroppedAvatar() {
   showToast('Foto profilo aggiornata');
 }
 
+// Tap sull'avatar: se c'è una foto personalizzata offre di cambiarla o
+// rimuoverla (come per la copertina); altrimenti apre subito la galleria.
+function tapAvatarEdit() {
+  if (getCustomAvatar()) {
+    document.getElementById('avatarMenuBg').classList.add('open');
+  } else {
+    document.getElementById('avatarFileInput').click();
+  }
+}
+function closeAvatarMenu() { document.getElementById('avatarMenuBg').classList.remove('open'); }
+async function removeCustomAvatar() {
+  try { localStorage.removeItem('serietracker_avatar'); } catch(e) {}
+  closeAvatarMenu();
+  renderProfileAuth();
+  showToast('Foto profilo rimossa');
+  if (fbDb && currentUser) {
+    try {
+      await fbDb.collection('users').doc(currentUser.uid).set({ customPhotoURL: firebase.firestore.FieldValue.delete() }, { merge: true });
+      syncPublicProfile();
+    } catch(e) {}
+  }
+}
+
 // ---------- installa su home ----------
 let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
@@ -6187,7 +6207,7 @@ function dismissInstallBanner() {
 // Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
 // il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
 // di uscire dall'app. Le chiusure dalla UI (X/sfondo) consumano l'entry.
-const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','coverPickerBg','wrappedBg','peopleListBg','notifPanel','chatListPanel','followPanel'];
+const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','avatarMenuBg','coverPickerBg','wrappedBg','peopleListBg','notifPanel','chatListPanel','followPanel'];
 let backGuardArmed = false;
 let closingViaBack = false;
 function isOverlayOpen(id) { const el = document.getElementById(id); return !!el && el.classList.contains('open'); }
@@ -6199,6 +6219,7 @@ function armBackGuard() {
 function closeTopOverlay() {
   if (isOverlayOpen('wrappedBg')) { closeWrapped(); return true; }
   if (isOverlayOpen('coverPickerBg')) { closeCoverPicker(); return true; }
+  if (isOverlayOpen('avatarMenuBg')) { closeAvatarMenu(); return true; }
   if (isOverlayOpen('confirmBg')) { closeConfirm(); return true; }
   if (isOverlayOpen('peopleListBg')) { closePeopleList(); return true; }
   if (isOverlayOpen('personBg')) { closePerson(); return true; }
@@ -6249,7 +6270,6 @@ updateLogo();
   if (splash) splash.addEventListener('animationend', e => { if (e.animationName === 'splashOut') { splash.remove(); document.body.classList.remove('splash-active'); } });
 })();
 updateThemeButtons();
-document.getElementById('tmdbKeyInput').value = getOwnTmdbKey();
 document.getElementById('nicknameInput').value = getNickname();
 updateViewButtons();
 renderLibrary();
