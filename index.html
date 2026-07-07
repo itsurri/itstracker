@@ -191,7 +191,8 @@
     font-size: 10px; font-weight: 700; padding: 3px 6px; border-radius: 7px;
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.7); /* leggibile anche sul tratto giallo pieno */
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.85); /* leggibile anche sul tratto giallo pieno */
   }
   .card .badge-green { background: rgba(48,209,88,0.85); }
   .card .badge-blue  { background: rgba(247,181,56,0.85); }
@@ -3417,7 +3418,7 @@ function renderCardTv(key, s) {
   const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
   const badgeStyle = (cat === 'continua' && total) ? ` style="background:linear-gradient(90deg,#F7B538 ${pct}%,rgba(0,0,0,0.75) ${pct}%)"` : '';
   const badgeText = watched > 0
-    ? `${s.next?`S${s.next.season} E${s.next.number} · `:''}${watched}${total?'/'+total:''}`
+    ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `${watched}${total?'/'+total:''}`)
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
   return `<div class="card" data-poster="${s.image?thumbImg(s.image,'w92'):''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
@@ -3446,8 +3447,9 @@ function renderListTv(key, s) {
       <div class="li-meta">${[
         s.rating ? `★ ${s.rating}` : null,
         s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
-        watched > 0 ? (s.next ? `S${s.next.season} E${s.next.number}` : null) : null,
-        watched > 0 ? `Episodio ${watched}${total?'/'+total:''}` : (total ? `${total} Episodi` : null)
+        watched > 0
+          ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `Episodio ${watched}${total?'/'+total:''}`)
+          : (total ? `${total} Episodi` : null)
       ].filter(Boolean).join(' · ')}</div>
       ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
     </div>
