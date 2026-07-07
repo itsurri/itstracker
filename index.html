@@ -392,7 +392,7 @@
   .ach-chevron { transition: transform 0.25s ease; color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0; }
   .ach-details[open] .ach-chevron { transform: rotate(180deg); }
   .ach-details .ach-grid-wrap { padding: 0 16px 16px; }
-  .ach-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 8px; }
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 18px 8px; }
   .ach { display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; opacity: 0.45; transition: transform 0.15s ease; }
   .ach.unlocked { opacity: 1; }
   .ach-icon {
