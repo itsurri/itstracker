@@ -1010,8 +1010,8 @@
   /* pallino "online" sugli avatar */
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
   .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
-    position: absolute; width: 10px; height: 10px; border-radius: 50%;
-    background: #30D158; border: 2px solid var(--sheet-bg); bottom: 2px; right: 2px;
+    position: absolute; inset: -2.5px; border-radius: 50%;
+    border: 2.5px solid #30D158; background: none; pointer-events: none;
   }
   /* nel mio profilo l'avatar (.cover-lift) ha un suo z-index che altrimenti
      coprirebbe il pallino: qui lo forziamo sopra solo in questo contesto. */
