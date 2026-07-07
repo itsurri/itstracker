@@ -996,7 +996,8 @@
   .hm-l4 { background: #F7B538; color: #1a1508; }
   .hm-future { opacity: 0.35; }
   .hm-cell.hm-today { box-shadow: inset 0 0 0 2px rgba(var(--overlay-rgb),0.6); }
-  .hm-legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 14px; }
+  .hm-legend { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 14px; }
+  .hm-legend .hm-leg-item { display: inline-flex; align-items: center; gap: 3px; }
   .hm-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; background: rgba(var(--overlay-rgb),0.07); }
   /* classifica amici */
   .lb-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.5); margin-bottom: 10px; }
@@ -2551,7 +2552,13 @@ function renderHeatmap() {
     </div>
     <div class="hm-dow">${DOW.map(l => `<span>${l}</span>`).join('')}</div>
     <div class="hm-calgrid">${cells}</div>
-    <div class="hm-legend">Meno <i></i><i class="hm-l1"></i><i class="hm-l2"></i><i class="hm-l3"></i><i class="hm-l4"></i> Più</div>`;
+    <div class="hm-legend">
+      <span class="hm-leg-item"><i></i>0</span>
+      <span class="hm-leg-item"><i class="hm-l1"></i>1-2</span>
+      <span class="hm-leg-item"><i class="hm-l2"></i>3-4</span>
+      <span class="hm-leg-item"><i class="hm-l3"></i>5-7</span>
+      <span class="hm-leg-item"><i class="hm-l4"></i>8+</span>
+    </div>`;
 }
 
 // ---------- classifica amici (ore viste questo mese) ----------
