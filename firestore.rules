@@ -106,6 +106,10 @@ service cloud.firestore {
                     && request.auth.uid in request.resource.data.participants;
       allow update: if request.auth != null
                     && request.auth.uid in resource.data.participants;
+      // Eliminazione chat (swipe nella lista messaggi): chiunque dei due
+      // partecipanti può eliminare l'intera conversazione.
+      allow delete: if request.auth != null
+                    && request.auth.uid in resource.data.participants;
 
       // Le sotto-collection "messages" sono sempre lette/scritte tramite un
       // chatId noto (mai in query aperta su più chat), quindi qui la verifica
@@ -117,6 +121,10 @@ service cloud.firestore {
         allow create: if request.auth != null
                       && request.auth.uid in chatId.split('_')
                       && request.resource.data.from == request.auth.uid;
+        // Necessario per poter cancellare tutti i messaggi quando si elimina
+        // l'intera chat, non solo i propri.
+        allow delete: if request.auth != null
+                      && request.auth.uid in chatId.split('_');
       }
     }
   }

@@ -1095,6 +1095,14 @@
     background: linear-gradient(180deg, rgba(var(--overlay-rgb),0.02), transparent 160px);
   }
   .chat-newsection { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.4); padding: 16px 8px 6px; }
+  /* swipe verso sinistra per eliminare una chat */
+  .chatRowSwipe { position: relative; overflow: hidden; border-radius: 16px; }
+  .chatRowDelete {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 76px;
+    background: #ff453a; color: #fff; display: flex; align-items: center; justify-content: center;
+    border: none; padding: 0;
+  }
+  .chatRowContent { position: relative; background: var(--sheet-bg); transition: transform 0.2s ease; touch-action: pan-y; border-radius: 16px; margin: 0; }
   .notifItem { display: flex; gap: 12px; padding: 10px 8px; border-radius: 16px; transition: background 0.15s ease; }
   .notifItem.clickable { cursor: pointer; }
   .notifItem.clickable:active { background: rgba(var(--overlay-rgb),0.07); }
@@ -4106,11 +4114,11 @@ async function markAllChatsRead() {
   try { await batch.commit(); } catch(e) {}
 }
 
-function chatRowHtml(uid, name, photo, subtitle, unread) {
+function chatRowHtml(uid, name, photo, subtitle, unread, chatId) {
   const safeName = escapeHtml(name).replace(/'/g,"\\'");
   const safePhoto = (photo||'').replace(/'/g,"\\'");
   // nickname/riga -> apre la chat; avatar -> apre il profilo.
-  return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${uid}','${safeName}','${safePhoto}')">
+  const content = `<div class="notifItem chatRowContent${unread ? ' unread' : ''}" style="cursor:pointer" onclick="onChatRowTap(this,'${uid}','${safeName}','${safePhoto}')">
       <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">
         <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       </div>
@@ -4119,6 +4127,85 @@ function chatRowHtml(uid, name, photo, subtitle, unread) {
         <div class="notifTime">${escapeHtml(subtitle || '')}</div>
       </div>
     </div>`;
+  // Solo le chat esistenti (chatId noto) si possono eliminare con lo swipe;
+  // le righe suggerite (persone che segui ma senza chat) restano semplici.
+  if (!chatId) return content;
+  return `<div class="chatRowSwipe" data-chat-id="${chatId}">
+      <button class="chatRowDelete" onclick="event.stopPropagation();confirmDeleteChat('${chatId}')" title="Elimina chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+      </button>
+      ${content}
+    </div>`;
+}
+
+// ---------- swipe verso sinistra per eliminare una chat ----------
+let chatSwipeState = null;
+function initChatSwipe() {
+  const body = document.getElementById('chatListBody');
+  if (!body || body._swipeInit) return;
+  body._swipeInit = true;
+  body.addEventListener('touchstart', e => {
+    const row = e.target.closest('.chatRowSwipe');
+    if (!row) { chatSwipeState = null; return; }
+    body.querySelectorAll('.chatRowSwipe.swiped-open').forEach(r => { if (r !== row) closeChatRowSwipe(r); });
+    const t = e.touches[0];
+    chatSwipeState = { row, startX: t.clientX, startY: t.clientY, dragging: false, dx: row.classList.contains('swiped-open') ? -76 : 0 };
+  }, { passive: true });
+  body.addEventListener('touchmove', e => {
+    if (!chatSwipeState) return;
+    const t = e.touches[0];
+    const dx0 = t.clientX - chatSwipeState.startX, dy0 = t.clientY - chatSwipeState.startY;
+    if (!chatSwipeState.dragging) {
+      if (Math.abs(dy0) > Math.abs(dx0)) { chatSwipeState = null; return; }
+      chatSwipeState.dragging = true;
+      chatSwipeState.base = chatSwipeState.row.classList.contains('swiped-open') ? -76 : 0;
+    }
+    e.preventDefault();
+    const x = Math.max(-76, Math.min(0, chatSwipeState.base + dx0));
+    chatSwipeState.dx = x;
+    chatSwipeState.row.querySelector('.chatRowContent').style.transform = `translateX(${x}px)`;
+  }, { passive: false });
+  body.addEventListener('touchend', () => {
+    if (!chatSwipeState) return;
+    const { row, dx, dragging } = chatSwipeState;
+    if (dragging) { if (dx < -38) openChatRowSwipe(row); else closeChatRowSwipe(row); }
+    chatSwipeState = null;
+  });
+}
+function openChatRowSwipe(row) {
+  row.classList.add('swiped-open');
+  row.querySelector('.chatRowContent').style.transform = 'translateX(-76px)';
+}
+function closeChatRowSwipe(row) {
+  row.classList.remove('swiped-open');
+  row.querySelector('.chatRowContent').style.transform = 'translateX(0)';
+}
+function onChatRowTap(el, uid, name, photo) {
+  const row = el.closest('.chatRowSwipe');
+  if (row && row.classList.contains('swiped-open')) { closeChatRowSwipe(row); return; }
+  openChat(uid, name, photo);
+}
+function confirmDeleteChat(chatId) {
+  const chat = chatListCache.find(c => c.id === chatId);
+  const peerUid = chat ? (chat.participants||[]).find(u => u !== currentUser.uid) : null;
+  const name = (chat && chat.names && chat.names[peerUid]) || 'questa persona';
+  document.getElementById('confirmTitle').textContent = 'Eliminare la chat?';
+  document.getElementById('confirmMsg').textContent = `La conversazione con ${name} verrà eliminata definitivamente.`;
+  const okBtn = document.getElementById('confirmOk');
+  okBtn.textContent = 'Elimina';
+  okBtn.onclick = () => { closeConfirm(); deleteChat(chatId); };
+  document.getElementById('confirmBg').classList.add('open');
+}
+async function deleteChat(chatId) {
+  if (!fbDb || !currentUser) return;
+  try {
+    const msgsSnap = await fbDb.collection('chats').doc(chatId).collection('messages').get();
+    const batch = fbDb.batch();
+    msgsSnap.forEach(d => batch.delete(d.ref));
+    batch.delete(fbDb.collection('chats').doc(chatId));
+    await batch.commit();
+    showToast('Chat eliminata');
+  } catch(e) { showToast('Errore durante l\'eliminazione'); }
 }
 
 async function renderChatListPanel() {
@@ -4129,9 +4216,10 @@ async function renderChatListPanel() {
     const name = (c.names && c.names[peerUid]) || 'Utente';
     const photo = (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
-    return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread);
+    return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread, c.id);
   }).join('');
   el.innerHTML = existing || '<div class="spinner"></div>';
+  initChatSwipe();
   // Persone che segui con cui non hai ancora una chat: suggerite per iniziarne una.
   const chatted = new Set(chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid)));
   let suggestions = [];
