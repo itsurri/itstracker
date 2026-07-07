@@ -406,6 +406,12 @@
   }
   .ach.unlocked .ach-emoji { filter: none; opacity: 1; }
   .ach-lock { position: absolute; bottom: -2px; right: -2px; font-size: 11px; background: var(--sheet-bg); border-radius: 50%; padding: 2px; line-height: 1; }
+  .ach-cat-select {
+    width: 100%; padding: 9px 30px 9px 14px; border-radius: 14px; border: none;
+    background: rgba(var(--overlay-rgb),0.07) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
+    background-size: 14px; color: var(--fg); font: inherit; font-weight: 600; font-size: 13px;
+    -webkit-appearance: none; appearance: none;
+  }
   .ach-label { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); line-height: 1.25; }
   .ach.unlocked .ach-label { color: var(--fg); font-weight: 700; }
   .removebtn, .markallbtn.danger {
@@ -2772,7 +2778,6 @@ let achievementTab = 'serie';
 
 function setAchievementTab(cat) {
   achievementTab = cat;
-  document.querySelectorAll('#achTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
   const body = document.getElementById('achGridBody');
   if (body) body.innerHTML = achievementGridHtml(getAchievements(computeWrapped()));
 }
@@ -2792,13 +2797,15 @@ function achievementGridHtml(defs) {
 function renderAchievements(w) {
   const defs = getAchievements(w);
   const unlockedCount = defs.filter(a => a.unlocked).length;
-  const tabs = ACH_CATEGORIES.map(c => `<button class="seasontab${achievementTab===c.id?' active':''}" data-cat="${c.id}" onclick="setAchievementTab('${c.id}')">${c.label}</button>`).join('');
+  const options = ACH_CATEGORIES.map(c => `<option value="${c.id}"${achievementTab===c.id?' selected':''}>${c.label}</option>`).join('');
   return `<details class="wrap-card glass ach-details">
     <summary>
       <span><span class="ach-summary-title">🏆 Trofei</span><span class="ach-summary-count">${unlockedCount}/${defs.length}</span></span>
       <svg class="ach-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </summary>
-    <div class="seasontabs cat-tabs" id="achTabs" style="padding:0 16px 12px">${tabs}</div>
+    <div style="padding:0 16px 12px">
+      <select class="ach-cat-select" onclick="event.stopPropagation()" onchange="setAchievementTab(this.value)">${options}</select>
+    </div>
     <div class="ach-grid-wrap"><div class="ach-grid" id="achGridBody">${achievementGridHtml(defs)}</div></div>
   </details>`;
 }
