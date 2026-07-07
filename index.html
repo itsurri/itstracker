@@ -95,10 +95,6 @@
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   .topbar-logo { height: 44px; width: auto; display: block; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
-  .donateBar {
-    display: block; text-align: center; padding: 5px 16px 9px; font-size: 11px; font-weight: 600;
-    color: var(--fg); text-decoration: none;
-  }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); display: flex; align-items: center; justify-content: center;
@@ -1008,13 +1004,17 @@
   .lb-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); flex-shrink: 0; }
   .lb-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
-  /* pallino "online": centrato, subito dopo il nickname (non piu' sull'avatar) */
+  /* pallino di presenza: centrato, subito dopo il nickname (non piu' sull'avatar).
+     verde = online ora, giallo = attivo nell'ultima ora, grigio = da piu' di un'ora. */
   .online-dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: #30D158; margin-left: 6px; vertical-align: middle;
+    background: #8e8e93; margin-left: 6px; vertical-align: middle;
   }
-  .online-dot.pending { display: none; }
-  .online-dot.pending.is-online { display: inline-block; }
+  .online-dot.dot-online { background: #30D158; }
+  .online-dot.dot-recent { background: #FFD60A; }
+  .online-dot.dot-offline { background: #8e8e93; }
+  .online-dot.pending { visibility: hidden; }
+  .online-dot.pending.dot-online, .online-dot.pending.dot-recent, .online-dot.pending.dot-offline { visibility: visible; }
   .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
   .lb-row.me .lb-name { font-weight: 800; }
@@ -1138,6 +1138,9 @@
       <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
     </div>
     <div class="topbar-right" id="topbarRight">
+      <a class="icon-btn" id="btnSatispay" title="Offrimi un caffé su Satispay" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">
+        <img src="satispay-logo.png" alt="Satispay" width="18" height="18" style="display:block">
+      </a>
       <button class="icon-btn" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
         <span class="notif-badge" id="chatListBadge"></span>
@@ -1148,7 +1151,6 @@
       </button>
     </div>
   </div>
-  <a class="donateBar" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">Ti piace l'app? Puoi offrirmi un caffé! Grazie del supporto ☕️😊</a>
   </div>
 
   <div class="notifOverlay" id="notifOverlay" onclick="closeNotifPanel()"></div>
@@ -3624,7 +3626,10 @@ async function loadPopular(mode) {
       const pages = await Promise.all([1,2,3,4,5,6,7,8].map(p => fetch(tmdbUrl(path, Object.assign({ sort_by: 'popularity.desc', page: p }, extraParams))).then(r => r.json())));
       const all = pages.flatMap(d => d.results || []);
       const seen = new Set();
-      const items = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      // Niente titoli giapponesi/cinesi tra i consigliati: restano cercabili
+      // esplicitamente, ma non vengono proposti in automatico.
+      const excludedLangs = ['ja', 'zh', 'cn'];
+      const items = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); if (excludedLangs.includes(r.original_language)) return false; return true; });
       pool = { items, at: Date.now() };
       popularPool[cacheKey] = pool;
     }
@@ -5624,9 +5629,22 @@ function startPresenceHeartbeat() {
 function stopPresenceHeartbeat() { clearInterval(presenceInterval); presenceInterval = null; }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) pingPresence(); });
 const ONLINE_WINDOW_MS = 3 * 60 * 1000;
+const RECENT_WINDOW_MS = 60 * 60 * 1000;
 function isOnline(lastActive) { return typeof lastActive === 'number' && (Date.now() - lastActive) < ONLINE_WINDOW_MS; }
-// Pallino verde da affiancare a un avatar quando l'utente è online.
-function onlineDot(lastActive) { return isOnline(lastActive) ? '<span class="online-dot" title="Online"></span>' : ''; }
+// 'online' (verde, attivo ora) / 'recent' (giallo, nell'ultima ora) / 'offline' (grigio).
+function presenceStatus(lastActive) {
+  if (typeof lastActive !== 'number') return 'offline';
+  const diff = Date.now() - lastActive;
+  if (diff < ONLINE_WINDOW_MS) return 'online';
+  if (diff < RECENT_WINDOW_MS) return 'recent';
+  return 'offline';
+}
+// Pallino di presenza (verde/giallo/grigio) da affiancare al nickname.
+function onlineDot(lastActive) {
+  const status = presenceStatus(lastActive);
+  const title = status === 'online' ? 'Online' : status === 'recent' ? 'Attivo nell\'ultima ora' : 'Non attivo di recente';
+  return `<span class="online-dot dot-${status}" title="${title}"></span>`;
+}
 // Testo "Online" / "Attivo X fa" da mostrare accanto al nickname in chat.
 function formatLastSeen(lastActive) {
   if (isOnline(lastActive)) return 'Online';
@@ -5661,7 +5679,8 @@ async function fetchPresence(uids) {
 function applyPresenceDots(container) {
   (container || document).querySelectorAll('[data-presence-uid]').forEach(el => {
     const uid = el.getAttribute('data-presence-uid');
-    if (isOnline(presenceCache[uid])) el.classList.add('is-online');
+    el.classList.remove('dot-online', 'dot-recent', 'dot-offline');
+    el.classList.add('dot-' + presenceStatus(presenceCache[uid]));
   });
   (container || document).querySelectorAll('[data-presence-text-uid]').forEach(el => {
     const uid = el.getAttribute('data-presence-text-uid');
@@ -5674,19 +5693,25 @@ function getAvatarUrl() {
   if (custom) return custom;
   return getOrCreateRandomAvatar();
 }
+// v2: colore scelto in base ad un hash dello uid (invece che Math.random),
+// cosi' resta identico su ogni dispositivo dello stesso utente, e la tavolozza
+// è più ampia/diversificata (prima capitava che molti finissero sullo stesso rosa).
+const AVATAR_CACHE_VERSION = 2;
 function getOrCreateRandomAvatar() {
   const uid = currentUser ? currentUser.uid : 'anon';
   try {
     const saved = JSON.parse(localStorage.getItem('serietracker_random_avatar') || 'null');
-    if (saved && saved.uid === uid) return saved.url;
+    if (saved && saved.uid === uid && saved.v === AVATAR_CACHE_VERSION) return saved.url;
   } catch(e) {}
-  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA94D','#A78BFA','#F783AC','#69DB7C','#FFD43B','#4D96FF','#FF922B'];
-  const color = colors[Math.floor(Math.random()*colors.length)];
+  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA94D','#A78BFA','#F783AC','#69DB7C','#FFD43B','#4D96FF','#FF922B','#20C997','#845EF7','#FF8787','#38D9A9','#FCC419','#5C7CFA','#EE6AB0','#94D82D'];
+  let hash = 0;
+  for (let i = 0; i < uid.length; i++) hash = (hash * 31 + uid.charCodeAt(i)) | 0;
+  const color = colors[Math.abs(hash) % colors.length];
   const source = (getNickname() || (currentUser && currentUser.displayName) || '?').trim();
   const letter = (source[0] || '?').toUpperCase();
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="${color}"/><text x="50%" y="50%" font-size="90" font-family="-apple-system,sans-serif" fill="#fff" text-anchor="middle" dominant-baseline="central">${letter}</text></svg>`;
   const url = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-  try { localStorage.setItem('serietracker_random_avatar', JSON.stringify({ uid, url })); } catch(e) {}
+  try { localStorage.setItem('serietracker_random_avatar', JSON.stringify({ uid, url, v: AVATAR_CACHE_VERSION })); } catch(e) {}
   return url;
 }
 
