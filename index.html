@@ -3479,7 +3479,9 @@ function initPullToRefresh() {
     if (document.getElementById('personBg').classList.contains('open')) return;
     if (document.getElementById('chatBg').classList.contains('open')) return;
     if (document.getElementById('wrappedBg').classList.contains('open')) return;
+    if (document.getElementById('peopleListBg').classList.contains('open')) return;
     if (document.getElementById('confirmBg').classList.contains('open')) return;
+    if (document.getElementById('avatarMenuBg').classList.contains('open')) return;
     if (document.getElementById('coverPickerBg').classList.contains('open')) return;
     if (document.getElementById('nicknameOnboardBg').classList.contains('open')) return;
     if (document.getElementById('notifPanel').classList.contains('open')) return;
@@ -4358,7 +4360,7 @@ async function deleteChat(chatId) {
 async function renderChatListPanel() {
   const el = document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
-  const peerUids = chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid));
+  const peerUids = chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid)).filter(Boolean);
   // Foto/nome dal profilo live, non dalla copia salvata nel documento chat:
   // quella resta congelata all'ultimo messaggio inviato e non si aggiorna mai
   // da sola se l'altra persona cambia avatar/nickname senza scriverti di nuovo.
