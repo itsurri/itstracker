@@ -1096,11 +1096,11 @@
   }
   .chat-newsection { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.4); padding: 16px 8px 6px; }
   /* swipe verso sinistra per eliminare una chat */
-  .chatRowSwipe { position: relative; overflow: hidden; border-radius: 16px; }
+  .chatRowSwipe { position: relative; overflow: hidden; border-radius: 16px; -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
   .chatRowDelete {
     position: absolute; top: 0; right: 0; bottom: 0; width: 76px;
     background: #ff453a; color: #fff; display: flex; align-items: center; justify-content: center;
-    border: none; padding: 0;
+    border: none; outline: none; padding: 0; border-radius: 0 16px 16px 0;
   }
   .chatRowContent { position: relative; background: var(--sheet-bg); transition: transform 0.2s ease; touch-action: pan-y; border-radius: 16px; margin: 0; }
   .notifItem { display: flex; gap: 12px; padding: 10px 8px; border-radius: 16px; transition: background 0.15s ease; }
@@ -3813,7 +3813,7 @@ async function fetchFriendFeedItems() {
 
 // Sezione persone nel profilo: feed di chi segui + amici suggeriti, divisi in due tab.
 let profilePeopleTab = 'feed';
-let profileFeedShown = 10;
+let profileFeedShown = 3;
 let profileFeedItemsCache = [];
 
 function setProfilePeopleTab(tab) {
@@ -3846,7 +3846,7 @@ function renderProfileFeedBody() {
   const shown = profileFeedItemsCache.slice(0, profileFeedShown);
   let html = shown.map(feedItemHtml).join('');
   if (profileFeedItemsCache.length > profileFeedShown) {
-    html += `<button class="filebtn" style="width:100%; margin-top:10px" onclick="profileFeedShown+=10; renderProfileFeedBody()">Mostra altro</button>`;
+    html += `<button class="filebtn" style="width:100%; margin-top:10px" onclick="profileFeedShown+=3; renderProfileFeedBody()">Mostra altro</button>`;
   }
   body.innerHTML = html;
   fetchPresence(shown.map(a => a.uid)).then(() => applyPresenceDots(body));
