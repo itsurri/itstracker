@@ -1462,6 +1462,17 @@
     </div>
   </div>
 </div>
+<div class="sheetbg" id="peopleListBg">
+  <div class="sheet" id="peopleListSheet">
+    <div class="section" style="padding-top:calc(env(safe-area-inset-top) + 20px)">
+      <div class="wrap-sec-title" id="peopleListTitle" style="margin-bottom:12px"></div>
+      <div id="peopleListBody"></div>
+    </div>
+  </div>
+  <button class="closebtn plain" onclick="closePeopleList()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+</div>
 <div class="cropBg" id="cropBg">
   <div class="cropCard">
     <div class="cropCard-title">Sposta e ingrandisci</div>
@@ -3830,6 +3841,35 @@ function closeFollowPanel() {
   document.getElementById('followOverlay').classList.remove('open');
 }
 
+// Lista follower/seguiti come overlay a tutta pagina (sopra la scheda persona,
+// che il pannello header non può coprire per via dello z-index inferiore).
+async function showPeopleList(uids, title) {
+  const bg = document.getElementById('peopleListBg');
+  const body = document.getElementById('peopleListBody');
+  document.getElementById('peopleListTitle').textContent = title;
+  bg.classList.add('open');
+  if (!uids || !uids.length) {
+    body.innerHTML = `<div class="commentsEmpty">${title === 'Seguiti' ? 'Non segue ancora nessuno.' : 'Nessun follower ancora.'}</div>`;
+    return;
+  }
+  body.innerHTML = `<div class="spinner"></div>`;
+  if (!fbDb) return;
+  try {
+    const docs = await Promise.all(uids.slice(0, 200).map(u => fbDb.collection('publicProfiles').doc(u).get()));
+    const people = docs.filter(d => d.exists).map(d => d.data());
+    body.innerHTML = people.length ? people.map(personCardHtml).join('') : `<div class="commentsEmpty">Nessun profilo trovato.</div>`;
+    fetchPresence(people.map(p => p.uid)).then(() => applyPresenceDots(body));
+  } catch(e) { body.innerHTML = '<div class="commentsEmpty">Errore nel caricamento.</div>'; }
+}
+function closePeopleList() {
+  document.getElementById('peopleListBg').classList.remove('open');
+}
+function showPersonFollowList(which) {
+  if (!currentPersonProfile) return;
+  if (which === 'followers') showPeopleList(currentPersonProfile.followers || [], 'Follower');
+  else showPeopleList(currentPersonProfile._seguitiUids || currentPersonProfile.following || [], 'Seguiti');
+}
+
 async function logActivity(payload) {
   if (!fbDb || !currentUser) return;
   try {
@@ -3976,6 +4016,7 @@ let currentPersonProfile = null;
 
 async function openPerson(uid) {
   if (!fbDb) return;
+  closePeopleList();
   const bg = document.getElementById('personBg');
   const sheet = document.getElementById('personSheet');
   sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="spinner"></div></div>`;
@@ -3984,6 +4025,14 @@ async function openPerson(uid) {
     const doc = await fbDb.collection('publicProfiles').doc(uid).get();
     if (!doc.exists) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Profilo non trovato.</div></div>`; return; }
     currentPersonProfile = doc.data();
+    // "Seguiti" affidabile: chi ha questo utente tra i propri follower è, per
+    // definizione, seguito da lui. Deriva dal campo followers (sempre aggiornato
+    // lato server) invece che dal suo following (che dipende dalla versione
+    // dell'app che ha in uso e potrebbe non essersi ancora sincronizzato).
+    try {
+      const seg = await fbDb.collection('publicProfiles').where('followers', 'array-contains', uid).limit(500).get();
+      currentPersonProfile._seguitiUids = seg.docs.map(d => d.id);
+    } catch(e) { currentPersonProfile._seguitiUids = currentPersonProfile.following || []; }
     renderPersonSheet(currentPersonProfile);
   } catch(e) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Errore nel caricamento.</div></div>`; }
 }
@@ -3995,10 +4044,12 @@ function renderPersonSheet(p) {
   const canMessage = currentUser && currentUser.uid !== p.uid;
   const episodes = shows.reduce((s,x) => s + (x.watched||0), 0);
   const filmsWatched = films.filter(f => f.watched).length;
-  const followers = (p.followers||[]).length;
-  const following = (p.following||[]).length;
+  const followerUidsP = p.followers || [];
+  const seguitiUids = p._seguitiUids || p.following || [];
+  const followers = followerUidsP.length;
+  const following = seguitiUids.length;
   // Amici in comune = persone che seguiamo entrambi.
-  const mutual = currentUser ? followingList.filter(u => u !== p.uid && (p.following||[]).includes(u)).length : 0;
+  const mutual = currentUser ? followingList.filter(u => u !== p.uid && seguitiUids.includes(u)).length : 0;
   const mutualHtml = mutual > 0 ? `<span class="ph-mutual"> · ${mutual} ${mutual === 1 ? 'amico in comune' : 'amici in comune'}</span>` : '';
   const nameEsc = escapeHtml(p.nickname || p.displayName || 'Utente');
   sheet.innerHTML = `
@@ -4012,8 +4063,8 @@ function renderPersonSheet(p) {
         </div>
       </div>
       <div class="follow-inline">
-        <span><b>${followers}</b> Follower</span>
-        <span><b>${following}</b> Seguiti</span>
+        <span onclick="showPersonFollowList('followers')"><b>${followers}</b> Follower</span>
+        <span onclick="showPersonFollowList('seguiti')"><b>${following}</b> Seguiti</span>
       </div>
       <div class="statrow profile-stats-inline" style="margin-top:12px;margin-bottom:0">
         <div class="stat"><div class="v">${shows.length}</div><div class="l">serie</div></div>
@@ -4071,10 +4122,12 @@ async function addFilmFromPerson(id) {
 }
 
 function closePerson() {
+  closePeopleList();
   document.getElementById('personBg').classList.remove('open');
   currentPersonProfile = null;
 }
 document.getElementById('personBg').addEventListener('click', e => { if (e.target.id === 'personBg') closePerson(); });
+document.getElementById('peopleListBg').addEventListener('click', e => { if (e.target.id === 'peopleListBg') closePeopleList(); });
 
 // ---------- chat (base) ----------
 let currentChatUid = null;
@@ -6111,7 +6164,7 @@ function dismissInstallBanner() {
 // Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
 // il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
 // di uscire dall'app. Le chiusure dalla UI (X/sfondo) consumano l'entry.
-const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','coverPickerBg','wrappedBg','notifPanel','chatListPanel','followPanel'];
+const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','coverPickerBg','wrappedBg','peopleListBg','notifPanel','chatListPanel','followPanel'];
 let backGuardArmed = false;
 let closingViaBack = false;
 function isOverlayOpen(id) { const el = document.getElementById(id); return !!el && el.classList.contains('open'); }
@@ -6124,6 +6177,7 @@ function closeTopOverlay() {
   if (isOverlayOpen('wrappedBg')) { closeWrapped(); return true; }
   if (isOverlayOpen('coverPickerBg')) { closeCoverPicker(); return true; }
   if (isOverlayOpen('confirmBg')) { closeConfirm(); return true; }
+  if (isOverlayOpen('peopleListBg')) { closePeopleList(); return true; }
   if (isOverlayOpen('personBg')) { closePerson(); return true; }
   if (isOverlayOpen('sheetBg')) { closeSheet(); return true; }
   if (isOverlayOpen('notifPanel') || isOverlayOpen('chatListPanel') || isOverlayOpen('followPanel')) { closeAllHeaderPanels(); return true; }
