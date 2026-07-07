@@ -104,6 +104,7 @@
   .icon-btn.active-view { background: rgba(var(--overlay-rgb),0.2); border-color: rgba(var(--overlay-rgb),0.35); }
   .topbar-right .icon-btn { width: 38px; height: 38px; }
   .topbar-right .icon-btn svg { width: 18px; height: 18px; }
+  .topbar-right #btnSatispay { width: 42px; height: 42px; }
 
   /* glass */
   .glass {
@@ -554,6 +555,7 @@
   .person-hero.has-cover img, .person-hero.has-cover .noimg-s { border: 3px solid var(--sheet-bg); }
   .person-hero .ph-name { font-size: 19px; font-weight: 700; }
   .person-hero .ph-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .person-hero .ph-level { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; }
   .person-hero-btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
   .person-msg-btn {
     display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 16px;
@@ -1008,7 +1010,7 @@
      verde = online ora, giallo = attivo nell'ultima ora, grigio = da piu' di un'ora. */
   .online-dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: #8e8e93; margin-left: 6px; vertical-align: middle;
+    background: #8e8e93; margin-right: 6px; vertical-align: middle;
   }
   .online-dot.dot-online { background: #30D158; }
   .online-dot.dot-recent { background: #FFD60A; }
@@ -1139,7 +1141,7 @@
     </div>
     <div class="topbar-right" id="topbarRight">
       <a class="icon-btn" id="btnSatispay" title="Offrimi un caffé su Satispay" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">
-        <img src="satispay-logo.png" alt="Satispay" width="18" height="18" style="display:block">
+        <img src="satispay-logo.png" alt="Satispay" width="21" height="21" style="display:block;filter:brightness(0) invert(1)">
       </a>
       <button class="icon-btn" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
@@ -1600,7 +1602,7 @@ function renderProfileAuth() {
             ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
-            <div class="profile-name">${escapeHtml(displayHandle)}${onlineDot(Date.now())}</div>
+            <div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>
             <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <div style="display:flex; gap:6px">
@@ -2556,7 +2558,7 @@ function leaderboardRowsHtml(rows) {
     <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
       <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}</div>
-      <div class="lb-name">${escapeHtml(r.name)}${onlineDot(r.lastActive)}</div>
+      <div class="lb-name">${onlineDot(r.lastActive)}${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
 }
@@ -3721,7 +3723,7 @@ function personCardHtml(p) {
   return `<div class="personcard" onclick="openPerson('${p.uid}')">
     <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
     <div class="pc-info">
-      <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}${onlineDot(p.lastActive)}</div>
+      <div class="pc-name">${onlineDot(p.lastActive)}${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
     </div>
     ${canAct ? `<div class="pc-actions" onclick="event.stopPropagation()">
@@ -3746,7 +3748,7 @@ function feedItemHtml(a) {
   return `<div class="feed-item" onclick="${onclick}">
     <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
     <div class="fi-body">
-      <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b><span class="online-dot pending" data-presence-uid="${a.uid}"></span> ${feedActionText(a)}</div>
+      <div class="fi-text"><span class="online-dot pending" data-presence-uid="${a.uid}"></span><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
     </div>
     ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
@@ -3833,7 +3835,8 @@ function renderPersonSheet(p) {
     <div class="person-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
     <div class="person-hero has-cover">
       <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
-      <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}${onlineDot(p.lastActive)}</div>
+      <div class="ph-name">${onlineDot(p.lastActive)}${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="ph-level">Livello: ${getUserLevel(p.totalHours||0).label}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
       ${canMessage ? `<div class="person-hero-btns">
         <button class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
@@ -4077,7 +4080,7 @@ function chatRowHtml(uid, name, photo, subtitle, unread) {
         <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       </div>
       <div class="notifBody">
-        <div class="notifText"><b>${escapeHtml(name)}</b><span class="online-dot pending" data-presence-uid="${uid}"></span> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
+        <div class="notifText"><span class="online-dot pending" data-presence-uid="${uid}"></span><b>${escapeHtml(name)}</b> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
         <div class="notifTime">${escapeHtml(subtitle || '')}</div>
       </div>
     </div>`;
@@ -5228,7 +5231,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   return `<div class="commentItem" id="comment-${c.id}">
     <div class="avatar-wrap"><div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
     <div class="commentBody">
-      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="online-dot pending" data-presence-uid="${c.uid}"></span><span class="commentDate">${when}</span></div>
+      <div class="commentHeadline"><span class="online-dot pending" data-presence-uid="${c.uid}"></span><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
