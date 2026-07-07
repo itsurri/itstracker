@@ -1007,16 +1007,14 @@
   .lb-row.me { background: rgba(10,132,255,0.1); }
   .lb-rank { width: 22px; text-align: center; font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); flex-shrink: 0; }
   .lb-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
-  /* pallino "online" sugli avatar */
   .avatar-wrap { position: relative; display: inline-block; line-height: 0; flex-shrink: 0; }
-  .avatar-wrap .online-dot, .avatar-wrap.is-online::after {
-    position: absolute; inset: -2.5px; border-radius: 50%;
-    border: 2.5px solid #30D158; background: none; pointer-events: none;
+  /* pallino "online": centrato, subito dopo il nickname (non piu' sull'avatar) */
+  .online-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #30D158; margin-left: 6px; vertical-align: middle;
   }
-  /* nel mio profilo l'avatar (.cover-lift) ha un suo z-index che altrimenti
-     coprirebbe il pallino: qui lo forziamo sopra solo in questo contesto. */
-  .profile-top .avatar-wrap .online-dot, .profile-top .avatar-wrap.is-online::after { z-index: 2; }
-  .avatar-wrap.is-online::after { content: ''; }
+  .online-dot.pending { display: none; }
+  .online-dot.pending.is-online { display: inline-block; }
   .presence-text { font-size: 11px; font-weight: 600; color: rgba(var(--overlay-rgb),0.4); }
   .lb-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; font-weight: 600; }
   .lb-row.me .lb-name { font-weight: 800; }
@@ -1597,10 +1595,10 @@ function renderProfileAuth() {
       <div class="profile-inner">
         <div class="profile-top">
           <div class="avatar-wrap" onclick="document.getElementById('avatarFileInput').click()">
-            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}${onlineDot(Date.now())}
+            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
-            <div class="profile-name">${escapeHtml(displayHandle)}</div>
+            <div class="profile-name">${escapeHtml(displayHandle)}${onlineDot(Date.now())}</div>
             <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <div style="display:flex; gap:6px">
@@ -2555,8 +2553,8 @@ function leaderboardRowsHtml(rows) {
   return rows.slice(0, 10).map((r,i) => `
     <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
-      <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}${onlineDot(r.lastActive)}</div>
-      <div class="lb-name">${escapeHtml(r.name)}</div>
+      <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}</div>
+      <div class="lb-name">${escapeHtml(r.name)}${onlineDot(r.lastActive)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
 }
@@ -3716,9 +3714,9 @@ function personCardHtml(p) {
   const canAct = currentUser && p.uid !== currentUser.uid;
   const safeName = escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'");
   return `<div class="personcard" onclick="openPerson('${p.uid}')">
-    <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}${onlineDot(p.lastActive)}</div>
+    <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
     <div class="pc-info">
-      <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="pc-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}${onlineDot(p.lastActive)}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
     </div>
     ${canAct ? `<div class="pc-actions" onclick="event.stopPropagation()">
@@ -3741,9 +3739,9 @@ function feedItemHtml(a) {
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
   return `<div class="feed-item" onclick="${onclick}">
-    <div class="avatar-wrap" data-presence-uid="${a.uid}" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
+    <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
     <div class="fi-body">
-      <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
+      <div class="fi-text"><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b><span class="online-dot pending" data-presence-uid="${a.uid}"></span> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
     </div>
     ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
@@ -3829,8 +3827,8 @@ function renderPersonSheet(p) {
   sheet.innerHTML = `
     <div class="person-cover" style="${p.coverImage ? `background-image:url('${p.coverImage}')` : ''}"></div>
     <div class="person-hero has-cover">
-      <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}${onlineDot(p.lastActive)}</div>
-      <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
+      <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
+      <div class="ph-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}${onlineDot(p.lastActive)}</div>
       <div class="ph-sub">${shows.length} serie · ${films.length} film</div>
       ${canMessage ? `<div class="person-hero-btns">
         <button class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
@@ -4070,11 +4068,11 @@ function chatRowHtml(uid, name, photo, subtitle, unread) {
   const safePhoto = (photo||'').replace(/'/g,"\\'");
   // nickname/riga -> apre la chat; avatar -> apre il profilo.
   return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${uid}','${safeName}','${safePhoto}')">
-      <div class="avatar-wrap" data-presence-uid="${uid}" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">
+      <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">
         <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       </div>
       <div class="notifBody">
-        <div class="notifText"><b>${escapeHtml(name)}</b> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
+        <div class="notifText"><b>${escapeHtml(name)}</b><span class="online-dot pending" data-presence-uid="${uid}"></span> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
         <div class="notifTime">${escapeHtml(subtitle || '')}</div>
       </div>
     </div>`;
@@ -5223,9 +5221,9 @@ function renderCommentItem(c, epKey, replies, isReply) {
   const replyBtn = `<button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')"><span class="emo">💬</span><span>${replies.length}</span></button>`;
   const likeBtn = `<button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')"><span class="emo">❤️</span><span>${likedBy.length}</span></button>`;
   return `<div class="commentItem" id="comment-${c.id}">
-    <div class="avatar-wrap" data-presence-uid="${c.uid}"><div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
+    <div class="avatar-wrap"><div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
     <div class="commentBody">
-      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
+      <div class="commentHeadline"><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="online-dot pending" data-presence-uid="${c.uid}"></span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
       <div class="commentActions">
         ${isReply ? likeBtn + replyBtn : replyBtn + likeBtn}
