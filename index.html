@@ -2612,8 +2612,15 @@ function leaderboardRowsHtml(rows, shown, kind) {
       <div class="lb-name">${onlineDot(r.lastActive)}${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
-  if (rows.length > shown) {
-    html += `<button class="filebtn" style="width:100%; margin-top:6px" onclick="lb${kind}Shown+=3; renderLeaderboardBody('${kind}')">Mostra altro</button>`;
+  if (rows.length > shown || shown > 3) {
+    html += `<div style="display:flex; gap:8px; margin-top:6px">`;
+    if (rows.length > shown) {
+      html += `<button class="filebtn" style="flex:1" onclick="lb${kind}Shown+=3; renderLeaderboardBody('${kind}')">Mostra altro</button>`;
+    }
+    if (shown > 3) {
+      html += `<button class="filebtn" style="flex:1" onclick="lb${kind}Shown=3; renderLeaderboardBody('${kind}')">Mostra meno</button>`;
+    }
+    html += `</div>`;
   }
   return html;
 }
@@ -3902,8 +3909,15 @@ function renderProfileFeedBody() {
   if (!profileFeedItemsCache.length) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`; return; }
   const shown = profileFeedItemsCache.slice(0, profileFeedShown);
   let html = shown.map(feedItemHtml).join('');
-  if (profileFeedItemsCache.length > profileFeedShown) {
-    html += `<button class="filebtn" style="width:100%; margin-top:10px" onclick="profileFeedShown+=3; renderProfileFeedBody()">Mostra altro</button>`;
+  if (profileFeedItemsCache.length > profileFeedShown || profileFeedShown > 3) {
+    html += `<div style="display:flex; gap:8px; margin-top:10px">`;
+    if (profileFeedItemsCache.length > profileFeedShown) {
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=3; renderProfileFeedBody()">Mostra altro</button>`;
+    }
+    if (profileFeedShown > 3) {
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown=3; renderProfileFeedBody()">Mostra meno</button>`;
+    }
+    html += `</div>`;
   }
   body.innerHTML = html;
   fetchPresence(shown.map(a => a.uid)).then(() => applyPresenceDots(body));
