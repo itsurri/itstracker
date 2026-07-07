@@ -1653,12 +1653,18 @@ if (fbAuth) {
           const raw = (snap.exists && snap.data().followers) || [];
           // Un vecchio bug scriveva per errore il proprio uid tra i propri follower:
           // lo filtriamo qui e lo ripuliamo anche lato server se presente.
-          followerUids = raw.filter(u => u !== user.uid);
+          const newFollowerUids = raw.filter(u => u !== user.uid);
           if (raw.includes(user.uid)) {
             fbDb.collection('publicProfiles').doc(user.uid)
               .set({ followers: firebase.firestore.FieldValue.arrayRemove(user.uid) }, { merge: true }).catch(()=>{});
           }
-          if (currentTab === 'profile') renderProfile();
+          // Questo documento cambia anche solo per l'heartbeat "lastActive" che
+          // scriviamo ogni minuto: senza questo controllo, il profilo si
+          // ricostruiva da capo ogni minuto (refresh percepito come automatico),
+          // interrompendo anche il fetch asincrono dei pallini di presenza.
+          const changed = newFollowerUids.length !== followerUids.length || newFollowerUids.some(u => !followerUids.includes(u));
+          followerUids = newFollowerUids;
+          if (changed && currentTab === 'profile') renderProfile();
         }, err => console.error('publicProfile onSnapshot', err));
     } else {
       remoteNotifications = [];
