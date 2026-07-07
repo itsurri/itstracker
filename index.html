@@ -4199,10 +4199,22 @@ async function deleteChat(chatId) {
 async function renderChatListPanel() {
   const el = document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
+  const peerUids = chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid));
+  // Foto/nome dal profilo live, non dalla copia salvata nel documento chat:
+  // quella resta congelata all'ultimo messaggio inviato e non si aggiorna mai
+  // da sola se l'altra persona cambia avatar/nickname senza scriverti di nuovo.
+  let liveProfiles = {};
+  if (fbDb) {
+    try {
+      const docs = await Promise.all(peerUids.map(u => fbDb.collection('publicProfiles').doc(u).get()));
+      docs.forEach((d, i) => { if (d.exists) liveProfiles[peerUids[i]] = d.data(); });
+    } catch(e) {}
+  }
   const existing = chatListCache.map(c => {
     const peerUid = (c.participants||[]).find(u => u !== currentUser.uid);
-    const name = (c.names && c.names[peerUid]) || 'Utente';
-    const photo = (c.photos && c.photos[peerUid]) || '';
+    const live = liveProfiles[peerUid];
+    const name = (live && (live.nickname || live.displayName)) || (c.names && c.names[peerUid]) || 'Utente';
+    const photo = (live && live.photoURL) || (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
     return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread, c.id);
   }).join('');
