@@ -2600,15 +2600,32 @@ function hoursInMonth(year, month) {
 }
 function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${n.getMonth()}`; }
 
-function leaderboardRowsHtml(rows) {
+let lbTotalShown = 3, lbMonthShown = 3;
+let lbTotalRowsCache = [], lbMonthRowsCache = [];
+
+function leaderboardRowsHtml(rows, shown, kind) {
   const medals = ['🥇','🥈','🥉'];
-  return rows.slice(0, 10).map((r,i) => `
+  let html = rows.slice(0, shown).map((r,i) => `
     <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
       <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}</div>
       <div class="lb-name">${onlineDot(r.lastActive)}${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
+  if (rows.length > shown) {
+    html += `<button class="filebtn" style="width:100%; margin-top:6px" onclick="lb${kind}Shown+=3; renderLeaderboardBody('${kind}')">Mostra altro</button>`;
+  }
+  return html;
+}
+
+function renderLeaderboardBody(kind) {
+  if (kind === 'Total') {
+    const el = document.getElementById('leaderboardTotalBody');
+    if (el) el.innerHTML = leaderboardRowsHtml(lbTotalRowsCache, lbTotalShown, 'Total');
+  } else {
+    const el = document.getElementById('leaderboardBody');
+    if (el) el.innerHTML = leaderboardRowsHtml(lbMonthRowsCache, lbMonthShown, 'Month');
+  }
 }
 
 async function renderLeaderboard() {
@@ -2635,8 +2652,10 @@ async function renderLeaderboard() {
   } catch(e) {}
   totalRows.sort((a,b) => b.hours - a.hours);
   monthRows.sort((a,b) => b.hours - a.hours);
-  if (totalEl) totalEl.innerHTML = leaderboardRowsHtml(totalRows);
-  if (monthEl) monthEl.innerHTML = leaderboardRowsHtml(monthRows);
+  lbTotalRowsCache = totalRows;
+  lbMonthRowsCache = monthRows;
+  if (totalEl) totalEl.innerHTML = leaderboardRowsHtml(totalRows, lbTotalShown, 'Total');
+  if (monthEl) monthEl.innerHTML = leaderboardRowsHtml(monthRows, lbMonthShown, 'Month');
 }
 
 function animateCountUp(el) {
