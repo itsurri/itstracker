@@ -1096,11 +1096,11 @@
   }
   .chat-newsection { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(var(--overlay-rgb),0.4); padding: 16px 8px 6px; }
   /* swipe verso sinistra per eliminare una chat */
-  .chatRowSwipe { position: relative; overflow: hidden; border-radius: 16px; -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
+  .chatRowSwipe { position: relative; overflow: hidden; border-radius: 16px; contain: paint; isolation: isolate; }
   .chatRowDelete {
-    position: absolute; top: 0; right: 0; bottom: 0; width: 76px;
+    position: absolute; top: 0; right: -6px; bottom: 0; width: 82px;
     background: #ff453a; color: #fff; display: flex; align-items: center; justify-content: center;
-    border: none; outline: none; padding: 0; border-radius: 0 16px 16px 0;
+    border: none; outline: none; padding: 0; border-radius: 0 16px 16px 0; z-index: 0;
   }
   .chatRowContent { position: relative; background: var(--sheet-bg); transition: transform 0.2s ease; touch-action: pan-y; border-radius: 16px; margin: 0; }
   .notifItem { display: flex; gap: 12px; padding: 10px 8px; border-radius: 16px; transition: background 0.15s ease; }
