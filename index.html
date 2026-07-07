@@ -1125,6 +1125,26 @@
   .notifBody { flex: 1; min-width: 0; }
   .notifText { font-size: 13px; line-height: 1.4; }
   .notifTime { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 3px; }
+
+  /* ---------- vista tablet/desktop ----------
+     Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
+     (qualsiasi telefono) nessuna di queste regole si applica, quindi la
+     versione mobile resta esattamente com'era. */
+  @media (min-width: 900px) {
+    #app { max-width: 1100px; }
+    .grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .tabbar { max-width: 520px; }
+    /* le schede (serie/film/persona/chat) diventano una card centrata invece
+       di un foglio a tutto schermo dal basso */
+    .sheetbg { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .sheet {
+      width: 720px; max-width: 90vw; height: 86vh; max-height: 860px;
+      border-radius: 28px; box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+      transform: translateY(0) scale(0.96); opacity: 0;
+      transition: transform 0.3s cubic-bezier(.32,.72,0,1), opacity 0.25s ease;
+    }
+    .sheetbg.open .sheet { transform: scale(1); opacity: 1; }
+  }
 </style>
 </head>
 <body>
