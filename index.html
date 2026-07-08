@@ -185,10 +185,12 @@
     color: #FFD60A; display: flex; align-items: center; gap: 2px;
   }
   .searchcard .scadd {
-    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%;
+    position: absolute; bottom: 8px; right: 8px; z-index: 3; width: 30px; height: 30px; border-radius: 50%;
     background: #F7B538; border: none; color: #1a1508;
     display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   }
+  .searchcard:not(.in-lib-card) .scinfo { padding-right: 44px; }
   .searchcard .scinfo {
     position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 8px 8px;
     background: linear-gradient(180deg, transparent, rgba(0,0,0,0.8));
@@ -636,6 +638,8 @@
     display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
   .person-item img, .person-item .noimg-s { width: 36px; height: 50px; border-radius: 7px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
+  .person-item .pi-main { flex: 1; min-width: 0; }
+  .person-item .pi-top { display: flex; align-items: center; gap: 8px; }
   .person-item .pi-info { flex: 1; min-width: 0; }
   .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
@@ -1694,7 +1698,18 @@ async function signInGoogle() {
   }
 }
 
-function signOutGoogle() { if (fbAuth) fbAuth.signOut(); }
+function signOutGoogle() {
+  if (!fbAuth) return;
+  // Uscendo puliamo i dati locali di questo account, così il prossimo accesso
+  // (o l'uso da ospite) parte pulito e non eredita libreria/profilo altrui.
+  // I dati restano al sicuro sul cloud e tornano al riaccesso.
+  ['serietracker_library','serietracker_filmLibrary','serietracker_nickname','serietracker_avatar','serietracker_cover','serietracker_achievements','serietracker_random_avatar']
+    .forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+  library = {}; filmLibrary = {}; followingList = []; followerUids = [];
+  fbAuth.signOut();
+  renderLibrary(); renderFilmLibrary(); renderProfileAuth();
+  if (currentTab === 'profile') renderProfile();
+}
 
 function renderProfileAuth() {
   const c = document.getElementById('profileAuthCard');
@@ -1783,6 +1798,8 @@ if (fbAuth) {
       remoteNotifications = [];
       followerUids = [];
       renderNotifPanel();
+      renderProfileAuth();
+      if (currentTab === 'profile') renderProfile();
     }
     startChatList();
     if (user) {
@@ -4166,23 +4183,31 @@ function renderPersonSheet(p) {
         const inLib = !!library[s.id];
         return `<div class="person-item" onclick="closePerson();openShow(${s.id})" style="cursor:pointer">
           ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
-          <div class="pi-info">
-            <div class="pi-name">${escapeHtml(s.name)}</div>
-            <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
+          <div class="pi-main">
+            <div class="pi-top">
+              <div class="pi-info">
+                <div class="pi-name">${escapeHtml(s.name)}</div>
+                <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
+              </div>
+              ${rowActionsTv(s.id)}
+            </div>
             ${s.total ? `<div class="pi-prog"><i style="--pct:${pct}%"></i></div>` : ''}
           </div>
-          ${rowActionsTv(s.id)}
         </div>`;
       }).join('')}` : ''}
       ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
         const inLib = !!filmLibrary[f.id];
         return `<div class="person-item" onclick="closePerson();openFilm(${f.id})" style="cursor:pointer">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
-        <div class="pi-info">
-          <div class="pi-name">${escapeHtml(f.title)}</div>
-          <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
+        <div class="pi-main">
+          <div class="pi-top">
+            <div class="pi-info">
+              <div class="pi-name">${escapeHtml(f.title)}</div>
+              <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
+            </div>
+            ${rowActionsFilm(f.id)}
+          </div>
         </div>
-        ${rowActionsFilm(f.id)}
       </div>`;
       }).join('')}` : ''}
       ${!shows.length && !films.length ? `<div class="wrap-note" style="text-align:center;padding:20px">Libreria vuota.</div>` : ''}
@@ -4751,6 +4776,7 @@ async function quickAdd(id) {
     library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
     renderTvResultsFromCache();
+    if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
   } catch(e) { showToast('Errore, riprova'); }
 }
 
@@ -4768,6 +4794,7 @@ async function quickAddFilm(id) {
     filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
     renderFilmResultsFromCache();
+    if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
   } catch(e) { showToast('Errore, riprova'); }
 }
 
