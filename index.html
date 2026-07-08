@@ -1544,7 +1544,7 @@
 <div class="ach-toast" id="achToast">
   <div class="ach-toast-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg></div>
   <div class="ach-toast-text">
-    <div class="ach-toast-title">Trofeo sbloccato</div>
+    <div class="ach-toast-title" id="achToastTitle">Trofeo sbloccato</div>
     <div class="ach-toast-label"></div>
   </div>
 </div>
@@ -2942,7 +2942,15 @@ function checkAchievements(notify) {
     if (a.unlocked && !unlocked.has(a.id)) { unlocked.add(a.id); newly.push(a); }
   });
   if (newly.length) saveUnlockedAchievementIds(unlocked);
-  if (notify !== false) newly.forEach(a => queueAchievementToast(a));
+  if (notify !== false && newly.length) {
+    // Se se ne sbloccano tanti in una volta (es. chi segna di colpo una serie
+    // lunghissima), un'unica notifica riassuntiva invece di una raffica.
+    if (newly.length > 3) {
+      queueAchievementToast({ label: `${newly[0].label} + altri ${newly.length - 1}`, title: 'Trofei sbloccati' });
+    } else {
+      newly.forEach(a => queueAchievementToast(a));
+    }
+  }
   return newly;
 }
 
@@ -2956,6 +2964,7 @@ function showNextAchievementToast() {
   if (!a) { achievementShowing = false; return; }
   achievementShowing = true;
   const el = document.getElementById('achToast');
+  document.getElementById('achToastTitle').textContent = a.title || 'Trofeo sbloccato';
   el.querySelector('.ach-toast-label').textContent = a.label;
   el.classList.add('show');
   haptic();
