@@ -202,6 +202,7 @@
     background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1);
   }
   .card .badge-txt { position: relative; z-index: 1; }
+  .list-item .li-prog i.no-anim, .card .badge-fill.no-anim, .person-item .pi-prog i.no-anim { animation: none; }
 
   /* LIST */
   .list-item {
@@ -1774,7 +1775,7 @@ if (fbAuth) {
           filmLibrary = data.filmLibrary || {};
           normalizeLibrary(); normalizeFilmLibrary();
           saveLibrary(); saveFilmLibrary();
-          renderLibrary(); renderFilmLibrary();
+          withoutBarAnim(() => { renderLibrary(); renderFilmLibrary(); });
           if (data.tmdbKey && data.tmdbKey !== getTmdbKey()) {
             try { localStorage.setItem('serietracker_tmdb_key', data.tmdbKey); } catch(e) {}
             const input = document.getElementById('tmdbKeyInput');
@@ -3091,6 +3092,13 @@ function setTvCategory(cat) {
   renderLibrary();
 }
 
+// Le barre di avanzamento si animano solo quando è un render "vero" (azione
+// dell'utente, primo caricamento). I re-render di eco (dato che torna da
+// Firestore) o di refresh totali NON devono rianimarle, altrimenti la barra
+// sembra avanzare due volte quando spunti un episodio.
+let animateProgressBars = true;
+function withoutBarAnim(fn) { animateProgressBars = false; try { fn(); } finally { animateProgressBars = true; } }
+
 function renderLibrary() {
   const container = document.getElementById('tvContent');
   const emptyEl = document.getElementById('libraryEmpty');
@@ -3452,7 +3460,7 @@ function renderCardTv(key, s) {
     ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `${watched}${total?'/'+total:''}`)
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
   const badgeInner = isContinua
-    ? `<span class="badge-fill" style="--pct:${pct}%"></span><span class="badge-txt">${badgeText}</span>`
+    ? `<span class="badge-fill${animateProgressBars?'':' no-anim'}" style="--pct:${pct}%"></span><span class="badge-txt">${badgeText}</span>`
     : badgeText;
   return `<div class="card" data-poster="${s.image?thumbImg(s.image,'w92'):''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
@@ -3485,7 +3493,7 @@ function renderListTv(key, s) {
           ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `Episodio ${watched}${total?'/'+total:''}`)
           : (total ? `${total} Episodi` : null)
       ].filter(Boolean).join(' · ')}</div>
-      ${total ? `<div class="li-prog"><i style="--pct:${pct}%"></i></div>` : ''}
+      ${total ? `<div class="li-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : ''}
     </div>
     <button class="checkbtn ${isDone?'checked':''}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})">
       ${isDone?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
@@ -5108,7 +5116,7 @@ function applyToggleEpisode(showId, season, number) {
   if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
-    refreshShowTotals(showId).then(changed => { if (changed) renderLibrary(); });
+    refreshShowTotals(showId).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
   }
   if (!wasWatched) checkAchievements();
 }
@@ -5177,7 +5185,7 @@ function toggleMarkAll(showId) {
   if (!wasAll && categorizeShow(show) === 'inpari') {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
-    refreshShowTotals(showId).then(ch => { if (ch) renderLibrary(); });
+    refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
   }
 }
 
@@ -5235,7 +5243,7 @@ async function markNext(id) {
   if (categorizeShow(s) === 'inpari') {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(id), title: s.name || '', image: s.image || null });
-    refreshShowTotals(id).then(changed => { if (changed) renderLibrary(); });
+    refreshShowTotals(id).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
   }
   checkAchievements();
 }
@@ -5727,7 +5735,7 @@ async function renderFilmSheet(f, inLib) {
       <div class="watch-providers" id="watchProviders"></div>
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">Aggiungi alla libreria</button>`
-        : `<div class="btnrow"><button class="addlibbtn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
+        : `<div class="btnrow"><button class="${f.watched?'removebtn':'addlibbtn'}" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
