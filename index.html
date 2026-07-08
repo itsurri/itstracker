@@ -150,6 +150,26 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .addbtn.in-lib, .searchcard .scadd.in-lib { background: rgba(255,69,58,0.9); }
+  /* azioni riga quando un titolo è già in libreria: Vista/Visto + rimuovi × */
+  .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .watch-btn {
+    padding: 7px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700; font-family: inherit;
+    background: #F7B538; color: #1a1508; white-space: nowrap;
+  }
+  .watch-btn.done { background: rgba(48,209,88,0.16); color: #30D158; }
+  .remove-mini {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; border: none;
+    background: rgba(255,69,58,0.14); color: #ff453a;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* barra azioni integrata in basso alla card della griglia */
+  .searchcard .sc-actions {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 2; display: flex; gap: 5px; padding: 6px;
+    background: rgba(0,0,0,0.78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  .searchcard .sc-actions .watch-btn { flex: 1; padding: 6px 4px; font-size: 11px; border-radius: 10px; }
+  .searchcard .sc-actions .remove-mini { width: 26px; height: 26px; }
+  .searchcard.in-lib-card .scinfo { bottom: 40px; }
 
   /* search results grid */
   .searchcard {
@@ -4151,9 +4171,7 @@ function renderPersonSheet(p) {
             <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
             ${s.total ? `<div class="pi-prog"><i style="--pct:${pct}%"></i></div>` : ''}
           </div>
-          <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addShowFromPerson(${s.id})">
-            ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-          </button>
+          ${rowActionsTv(s.id)}
         </div>`;
       }).join('')}` : ''}
       ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
@@ -4164,9 +4182,7 @@ function renderPersonSheet(p) {
           <div class="pi-name">${escapeHtml(f.title)}</div>
           <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
         </div>
-        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addFilmFromPerson(${f.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-        </button>
+        ${rowActionsFilm(f.id)}
       </div>`;
       }).join('')}` : ''}
       ${!shows.length && !films.length ? `<div class="wrap-note" style="text-align:center;padding:20px">Libreria vuota.</div>` : ''}
@@ -4174,15 +4190,6 @@ function renderPersonSheet(p) {
   `;
 }
 
-async function addShowFromPerson(id) {
-  await quickAdd(id);
-  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
-}
-
-async function addFilmFromPerson(id) {
-  await quickAddFilm(id);
-  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
-}
 
 function closePerson() {
   closePeopleList();
@@ -4561,9 +4568,7 @@ function renderTvResultsFromCache() {
           <div class="li-name">${escapeHtml(s.name)}</div>
           <div class="li-meta">${meta}</div>
         </div>
-        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-        </button>
+        ${rowActionsTv(s.id)}
       </div>`;
     }).join('')}</div>`;
     return;
@@ -4578,16 +4583,15 @@ function renderTvResultsFromCache() {
       s.totalSeasons ? `${s.totalSeasons} St.` : null,
       s.totalEpisodes ? `${s.totalEpisodes} ep` : null
     ].filter(Boolean).join(' · ') || (s.first_air_date?s.first_air_date.slice(0,4):'—');
-    return `<div class="searchcard" onclick="openShow(${s.id})">
+    return `<div class="searchcard${inLib?' in-lib-card':''}" onclick="openShow(${s.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAdd(${s.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-      </button>
+      ${!inLib ? `<button class="scadd" onclick="event.stopPropagation();quickAdd(${s.id})">${ICO_PLUS}</button>` : ''}
       <div class="scinfo">
         <div class="sn">${escapeHtml(s.name)}</div>
         <div class="sm">${meta}</div>
       </div>
+      ${inLib ? `<div class="sc-actions">${watchRemoveTv(s.id)}</div>` : ''}
     </div>`;
   }).join('')}</div>`;
 }
@@ -4649,9 +4653,7 @@ function renderFilmResultsFromCache() {
           <div class="li-name">${escapeHtml(f.title)}</div>
           <div class="li-meta">${rating?`★ ${rating} · `:''}${f.release_date?f.release_date.slice(0,4):'—'}</div>
         </div>
-        <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-          ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-        </button>
+        ${rowActionsFilm(f.id)}
       </div>`;
     }).join('')}</div>`;
     return;
@@ -4662,18 +4664,76 @@ function renderFilmResultsFromCache() {
     const poster = tmdbImg(f.poster_path, 'w342');
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
     const votes = formatVotes(f.vote_count);
-    return `<div class="searchcard" onclick="openFilm(${f.id})">
+    return `<div class="searchcard${inLib?' in-lib-card':''}" onclick="openFilm(${f.id})">
       ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
       ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <button class="scadd${inLib?' in-lib':''}" onclick="event.stopPropagation();quickAddFilm(${f.id})">
-        ${inLib ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
-      </button>
+      ${!inLib ? `<button class="scadd" onclick="event.stopPropagation();quickAddFilm(${f.id})">${ICO_PLUS}</button>` : ''}
       <div class="scinfo">
         <div class="sn">${escapeHtml(f.title)}</div>
         <div class="sm">${f.release_date?f.release_date.slice(0,4):'—'}</div>
       </div>
+      ${inLib ? `<div class="sc-actions">${watchRemoveFilm(f.id)}</div>` : ''}
     </div>`;
   }).join('')}</div>`;
+}
+
+// ---------- azioni rapide su liste/griglie (aggiungi · segna visto · rimuovi) ----------
+const ICO_PLUS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+const ICO_X = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+function addBtnTv(id) { return `<button class="addbtn" onclick="event.stopPropagation();quickAdd(${id})">${ICO_PLUS}</button>`; }
+function addBtnFilm(id) { return `<button class="addbtn" onclick="event.stopPropagation();quickAddFilm(${id})">${ICO_PLUS}</button>`; }
+// Bottoni "Vista/Da vedere" + rimuovi × per una serie già in libreria.
+function watchRemoveTv(id) {
+  const done = categorizeShow(library[id]) === 'inpari';
+  return `<button class="watch-btn${done?' done':''}" onclick="event.stopPropagation();toggleSeriesWatchedQuick(${id})">${done?'Da vedere':'Vista'}</button><button class="remove-mini" onclick="event.stopPropagation();quickAdd(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`;
+}
+function watchRemoveFilm(id) {
+  const done = !!(filmLibrary[id] && filmLibrary[id].watched);
+  return `<button class="watch-btn${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})">${done?'Da vedere':'Visto'}</button><button class="remove-mini" onclick="event.stopPropagation();quickAddFilm(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`;
+}
+// Controlli per una riga di lista: + se non in libreria, altrimenti Vista/Visto + ×.
+function rowActionsTv(id) { return library[id] ? `<div class="lib-actions">${watchRemoveTv(id)}</div>` : addBtnTv(id); }
+function rowActionsFilm(id) { return filmLibrary[id] ? `<div class="lib-actions">${watchRemoveFilm(id)}</div>` : addBtnFilm(id); }
+
+async function toggleFilmWatchedQuick(id) {
+  const f = filmLibrary[id];
+  if (!f) return;
+  f.watched = !f.watched;
+  if (f.watched) { f.watchedAt = Date.now(); haptic(); }
+  saveFilmLibrary(); renderFilmLibrary(); renderFilmResultsFromCache();
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
+  if (f.watched) { checkAchievements(); logActivity({ type: 'watched_film', showId: Number(id), title: f.title||'', image: f.image||null }); }
+}
+
+async function toggleSeriesWatchedQuick(id) {
+  const s = library[id];
+  if (!s) return;
+  showToast('Aggiorno gli episodi…');
+  if (!episodesCache[id]) await ensureEpisodes(id);
+  const eps = episodesCache[id] || [];
+  if (!eps.length) { showToast('Impossibile caricare gli episodi'); return; }
+  s.totalEpisodes = eps.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
+  const isAll = allAiredWatched(s, eps);
+  if (!s.watched) s.watched = {};
+  if (isAll) {
+    s.watched = {};
+    showToast('Serie segnata come da vedere');
+  } else {
+    eps.filter(e => !isFutureEpisode(e)).forEach(e => { s.watched[`${e.season}x${e.number}`] = Date.now(); });
+    s.lastWatchedAt = Date.now();
+    haptic();
+    showToast('Serie segnata come vista');
+  }
+  s.next = computeNextEp(eps, s.watched);
+  saveLibrary(); renderLibrary(); renderTvResultsFromCache();
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
+  if (!isAll) {
+    checkAchievements();
+    if (categorizeShow(s) === 'inpari') {
+      celebrateShowComplete();
+      logActivity({ type: 'finished_show', showId: Number(id), title: s.name||'', image: s.image||null });
+    }
+  }
 }
 
 // ---------- quick add ----------
@@ -4681,6 +4741,7 @@ async function quickAdd(id) {
   if (library[id]) {
     delete library[id]; saveLibrary(); renderLibrary(); showToast('Rimossa dalla libreria');
     renderTvResultsFromCache();
+    if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
     return;
   }
   if (!hasTmdbKey()) return;
@@ -4697,6 +4758,7 @@ async function quickAddFilm(id) {
   if (filmLibrary[id]) {
     delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); showToast('Rimosso dalla libreria');
     renderFilmResultsFromCache();
+    if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
     return;
   }
   if (!hasTmdbKey()) return;
