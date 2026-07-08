@@ -196,6 +196,12 @@
   }
   .card .badge-green { background: rgba(48,209,88,0.85); }
   .card .badge-blue  { background: rgba(247,181,56,0.85); }
+  .card .badge-prog  { background: rgba(0,0,0,0.72); }
+  .card .badge-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); z-index: 0; transform-origin: left;
+    background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1);
+  }
+  .card .badge-txt { position: relative; z-index: 1; }
 
   /* LIST */
   .list-item {
@@ -214,7 +220,8 @@
   .list-item .li-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .list-item .li-meta { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
   .list-item .li-prog { margin-top: 6px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
-  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); }
+  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
+  @keyframes barGrow { from { transform: scaleX(0); } }
 
   /* sheet */
   .sheetbg {
@@ -476,7 +483,7 @@
   .ep-actions { display: flex; flex-direction: row; align-items: center; gap: 10px; flex-shrink: 0; }
   .checkbtn {
     width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid rgba(var(--overlay-rgb),0.25);
-    background: transparent; display: flex; align-items: center; justify-content: center;
+    background: transparent; display: flex; align-items: center; justify-content: center; position: relative;
   }
   .checkbtn.checked { background: #30D158; border-color: #30D158; }
   .checkbtn.not-aired { opacity: 0.3; }
@@ -580,9 +587,21 @@
   }
   .follow-btn {
     padding: 9px 18px; border-radius: 16px; font-size: 13px; font-weight: 700; font-family: inherit;
-    background: #0A84FF; color: #fff;
+    background: #0A84FF; color: #fff; position: relative; overflow: hidden;
   }
   .follow-btn.following { background: rgba(var(--overlay-rgb),0.1); color: var(--fg); }
+  .follow-btn .fb-label { position: relative; z-index: 1; }
+  /* onda di conferma che si riempie da sinistra quando inizi a seguire */
+  .follow-btn.just-followed::before {
+    content: ''; position: absolute; inset: 0; z-index: 0; transform-origin: left;
+    background: linear-gradient(90deg,#F7B538,#FFD166);
+    animation: followFill 0.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes followFill {
+    0% { transform: scaleX(0); opacity: 0.95; }
+    65% { transform: scaleX(1); opacity: 0.95; }
+    100% { transform: scaleX(1); opacity: 0; }
+  }
   /* feed attività amici */
   .feed-item { display: flex; gap: 11px; align-items: center; padding: 11px 2px; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); cursor: pointer; }
   .feed-item .fi-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
@@ -600,7 +619,7 @@
   .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .person-item .pi-prog { margin-top: 5px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
-  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); }
+  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
 
   /* chat */
   .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; background: var(--sheet-bg); }
@@ -951,6 +970,13 @@
   /* ===== check pop ===== */
   .checkbtn.justchecked { animation: pop 0.32s cubic-bezier(.34,1.56,.64,1); }
   @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.28); } 100% { transform: scale(1); } }
+  /* anello che si espande quando spunti un episodio */
+  .checkbtn.justchecked::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%;
+    border: 2.5px solid #30D158; pointer-events: none;
+    animation: checkRing 0.5s ease-out forwards;
+  }
+  @keyframes checkRing { from { transform: scale(0.75); opacity: 0.85; } to { transform: scale(2.1); opacity: 0; } }
 
   /* ===== upcoming (In arrivo) ===== */
   .up-item { display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08); }
@@ -3420,15 +3446,18 @@ function renderCardTv(key, s) {
   const total = s.totalEpisodes || 0;
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const cat = categorizeShow(s);
-  const badgeClass = cat === 'inpari' ? 'badge-green' : cat === 'continua' ? 'badge-blue' : '';
-  const badgeStyle = (cat === 'continua' && total) ? ` style="background:linear-gradient(90deg,#F7B538 ${pct}%,rgba(0,0,0,0.75) ${pct}%)"` : '';
+  const isContinua = cat === 'continua' && !!total;
+  const badgeClass = cat === 'inpari' ? 'badge-green' : (cat === 'continua' ? (isContinua ? 'badge-prog' : 'badge-blue') : '');
   const badgeText = watched > 0
     ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `${watched}${total?'/'+total:''}`)
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
+  const badgeInner = isContinua
+    ? `<span class="badge-fill" style="--pct:${pct}%"></span><span class="badge-txt">${badgeText}</span>`
+    : badgeText;
   return `<div class="card" data-poster="${s.image?thumbImg(s.image,'w92'):''}" onclick="openShow(${id})">
     ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
     ${showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : ''}
-    <div class="badge ${badgeClass}"${badgeStyle}>${badgeText}</div>
+    <div class="badge ${badgeClass}">${badgeInner}</div>
   </div>`;
 }
 
@@ -3456,7 +3485,7 @@ function renderListTv(key, s) {
           ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `Episodio ${watched}${total?'/'+total:''}`)
           : (total ? `${total} Episodi` : null)
       ].filter(Boolean).join(' · ')}</div>
-      ${total ? `<div class="li-prog"><i style="width:${pct}%"></i></div>` : ''}
+      ${total ? `<div class="li-prog"><i style="--pct:${pct}%"></i></div>` : ''}
     </div>
     <button class="checkbtn ${isDone?'checked':''}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})">
       ${isDone?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
@@ -3807,6 +3836,16 @@ async function toggleFollow(uid) {
   if (!currentUser || !fbDb) { showToast('Accedi per seguire'); return; }
   const following = isFollowing(uid);
   if (following) followingList = followingList.filter(u => u !== uid); else followingList = [...followingList, uid];
+  // Aggiorna subito la UI (ottimistico) e fai partire l'animazione di riempimento
+  // del bottone, senza aspettare la scrittura su rete.
+  if (currentPersonProfile && currentPersonProfile.uid === uid) {
+    renderPersonSheet(currentPersonProfile);
+    if (!following) {
+      const fb = document.getElementById('personFollowBtn');
+      if (fb) { fb.classList.add('just-followed'); setTimeout(() => fb.classList.remove('just-followed'), 560); }
+    }
+  }
+  if (currentTab === 'profile') renderProfile();
   const myOp = following ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
   const followerOp = following ? firebase.firestore.FieldValue.arrayRemove(currentUser.uid) : firebase.firestore.FieldValue.arrayUnion(currentUser.uid);
   try {
@@ -3820,8 +3859,6 @@ async function toggleFollow(uid) {
     const myName = commentAuthorName();
     pushRemoteNotification(uid, { type: 'follow', text: `${myName} ha iniziato a seguirti`, fromUid: currentUser.uid, fromPhoto: getAvatarUrl() || null });
   }
-  if (currentPersonProfile && currentPersonProfile.uid === uid) renderPersonSheet(currentPersonProfile);
-  if (currentTab === 'profile') renderProfile();
 }
 
 async function toggleFollowList(mode) {
@@ -4082,8 +4119,8 @@ function renderPersonSheet(p) {
         <div class="stat"><div class="v">${p.totalHours||0}</div><div class="l">ore</div></div>
       </div>
       ${canMessage ? `<div class="person-action-btns">
-        <button class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')">${isFollowing(p.uid)?'Segui già':'Segui'}</button>
-        <button class="follow-btn following" onclick="openChat('${p.uid}','${nameEsc.replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')">Messaggia</button>
+        <button id="personFollowBtn" class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')"><span class="fb-label">${isFollowing(p.uid)?'Segui già':'Segui'}</span></button>
+        <button class="follow-btn following" onclick="openChat('${p.uid}','${nameEsc.replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')"><span class="fb-label">Messaggia</span></button>
       </div>` : ''}
     </div>
     <div class="section">
@@ -4095,7 +4132,7 @@ function renderPersonSheet(p) {
           <div class="pi-info">
             <div class="pi-name">${escapeHtml(s.name)}</div>
             <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
-            ${s.total ? `<div class="pi-prog"><i style="width:${pct}%"></i></div>` : ''}
+            ${s.total ? `<div class="pi-prog"><i style="--pct:${pct}%"></i></div>` : ''}
           </div>
           <button class="addbtn${inLib?' in-lib':''}" onclick="event.stopPropagation();addShowFromPerson(${s.id})">
             ${inLib ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>` : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>`}
@@ -5059,7 +5096,7 @@ function applyToggleEpisode(showId, season, number) {
   renderLibrary();
   if (!wasWatched) {
     const btn = document.querySelector(`#ep-${CSS.escape(key)} .checkbtn`);
-    if (btn) { btn.classList.add('justchecked'); btn.addEventListener('animationend', () => btn.classList.remove('justchecked'), { once: true }); }
+    if (btn) { btn.classList.add('justchecked'); setTimeout(() => btn.classList.remove('justchecked'), 550); }
   }
   const wc = Object.keys(library[showId].watched).length;
   const tot = episodesCache[showId] ? episodesCache[showId].length : 0;
@@ -5194,7 +5231,7 @@ async function markNext(id) {
   saveLibrary();
   renderLibrary();
   const btn = document.querySelector(`.checkbtn[data-show-id="${id}"]`);
-  if (btn) { btn.classList.add('justchecked'); btn.addEventListener('animationend', () => btn.classList.remove('justchecked'), { once: true }); }
+  if (btn) { btn.classList.add('justchecked'); setTimeout(() => btn.classList.remove('justchecked'), 550); }
   if (categorizeShow(s) === 'inpari') {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(id), title: s.name || '', image: s.image || null });
