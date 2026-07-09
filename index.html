@@ -614,6 +614,7 @@
   .feed-item .fi-body { flex: 1; min-width: 0; }
   .feed-item .fi-text { font-size: 13px; line-height: 1.4; }
   .feed-item .fi-text b { font-weight: 700; }
+  .feed-item .fi-range { color: rgba(var(--overlay-rgb),0.45); font-weight: 600; white-space: nowrap; }
   .feed-item .fi-time { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 2px; }
   .feed-item .fi-thumb { width: 34px; height: 48px; border-radius: 7px; object-fit: cover; background: rgba(var(--overlay-rgb),0.1); flex-shrink: 0; }
   .feed-icon { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 2px; }
@@ -3988,16 +3989,45 @@ function personCardHtml(p) {
   </div>`;
 }
 
+function epTag(a) { return (a && a.season != null && a.number != null) ? `S${a.season} E${a.number}` : ''; }
 function feedActionText(a) {
   if (a.type === 'finished_show') return `ha finito <b>${escapeHtml(a.title||'una serie')}</b>`;
   if (a.type === 'watched_film') return `ha visto <b>${escapeHtml(a.title||'un film')}</b>`;
   if (a.type === 'commented') return `ha commentato <b>${escapeHtml(a.title||'un episodio')}</b>`;
+  if (a.type === 'watched_episode') {
+    const eps = a.episodes || [a];
+    const title = `<b>${escapeHtml(a.title||'una serie')}</b>`;
+    if (eps.length === 1) return `ha visto ${title} ${epTag(a)}`;
+    // items in ordine dal più recente al più vecchio: il primo è l'ultimo visto.
+    const newest = epTag(eps[0]), oldest = epTag(eps[eps.length-1]);
+    return `ha visto ${eps.length} episodi di ${title} <span class="fi-range">${oldest} → ${newest}</span>`;
+  }
   return 'ha aggiornato la libreria';
+}
+
+// Accorpa episodi consecutivi della stessa serie e stesso utente in un unico
+// elemento del feed. Il raggruppamento si interrompe al cambio di utente,
+// serie o tipo di evento (film, commento, serie finita).
+function groupFeedItems(items) {
+  const groups = [];
+  for (const a of items) {
+    const last = groups[groups.length - 1];
+    if (a.type === 'watched_episode' && last && last.type === 'watched_episode'
+        && last.uid === a.uid && last.showId === a.showId) {
+      last.episodes.push(a);
+    } else if (a.type === 'watched_episode') {
+      groups.push({ ...a, episodes: [a] });
+    } else {
+      groups.push(a);
+    }
+  }
+  return groups;
 }
 function feedItemHtml(a) {
   const onclick = a.type === 'watched_film'
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
+  // per un gruppo di episodi l'orario è quello dell'ultimo (il più recente).
   return `<div class="feed-item" onclick="${onclick}">
     <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
     <div class="fi-body">
@@ -4013,12 +4043,16 @@ async function fetchFriendFeedItems() {
   const chunks = [];
   for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
   const snaps = await Promise.all(chunks.map(ch =>
-    fbDb.collection('activity').where('uid', 'in', ch).limit(60).get().catch(() => null)
+    fbDb.collection('activity').where('uid', 'in', ch).limit(150).get().catch(() => null)
   ));
   let items = [];
   snaps.forEach(s => { if (s) s.forEach(d => items.push(d.data())); });
+  // Ordina per data più recente. Alziamo il limite perché ora ogni episodio è
+  // un evento: il raggruppamento nel feed poi compatta i binge in un unico
+  // elemento, ma servono abbastanza dati grezzi perché non spingano fuori
+  // l'attività degli altri.
   items.sort((a, b) => actMillis(b) - actMillis(a));
-  return items.slice(0, 40);
+  return items.slice(0, 200);
 }
 
 // Sezione persone nel profilo: feed di chi segui + amici suggeriti, divisi in due tab.
@@ -4083,11 +4117,12 @@ function renderProfileFeedBody() {
   const body = document.getElementById('profilePeopleBody');
   if (!body) return;
   if (!profileFeedItemsCache.length) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`; return; }
-  const shown = profileFeedItemsCache.slice(0, profileFeedShown);
+  const grouped = groupFeedItems(profileFeedItemsCache);
+  const shown = grouped.slice(0, profileFeedShown);
   let html = shown.map(feedItemHtml).join('');
-  if (profileFeedItemsCache.length > profileFeedShown || profileFeedShown > 3) {
+  if (grouped.length > profileFeedShown || profileFeedShown > 3) {
     html += `<div style="display:flex; gap:8px; margin-top:10px">`;
-    if (profileFeedItemsCache.length > profileFeedShown) {
+    if (grouped.length > profileFeedShown) {
       html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=3; renderProfileFeedBody()">Mostra altro</button>`;
     }
     if (profileFeedShown > 3) {
@@ -5201,10 +5236,16 @@ function applyToggleEpisode(showId, season, number) {
   updateMarkAllBtn(showId);
 
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
-  if (!wasWatched && categorizeShow(library[showId]) === 'inpari') {
+  const becameInpari = !wasWatched && categorizeShow(library[showId]) === 'inpari';
+  if (becameInpari) {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
     refreshShowTotals(showId).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
+  } else if (!wasWatched) {
+    // Episodio singolo visto: lo registriamo nel feed (verrà accorpato con gli
+    // altri consecutivi della stessa serie). Se completa la serie, mostriamo
+    // invece "ha finito" per non duplicare.
+    logActivity({ type: 'watched_episode', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null, season, number });
   }
   if (!wasWatched) checkAchievements();
 }
@@ -5318,7 +5359,8 @@ async function markNext(id) {
   const eps = episodesCache[id];
   const nextEp = eps && eps.find(e => e.season===s.next.season && e.number===s.next.number);
   if (isFutureEpisode(nextEp)) { showToast('Episodio non ancora uscito'); return; }
-  const key = `${s.next.season}x${s.next.number}`;
+  const markedSeason = s.next.season, markedNumber = s.next.number;
+  const key = `${markedSeason}x${markedNumber}`;
   if (!s.watched) s.watched = {};
   s.watched[key] = Date.now();
   s.lastWatchedAt = Date.now();
@@ -5332,6 +5374,8 @@ async function markNext(id) {
     celebrateShowComplete();
     logActivity({ type: 'finished_show', showId: Number(id), title: s.name || '', image: s.image || null });
     refreshShowTotals(id).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
+  } else {
+    logActivity({ type: 'watched_episode', showId: Number(id), title: s.name || '', image: s.image || null, season: markedSeason, number: markedNumber });
   }
   checkAchievements();
 }
