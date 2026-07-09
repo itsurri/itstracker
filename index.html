@@ -144,20 +144,27 @@
   .cat-empty-ill span { font-size: 13px; }
 
   /* risultati ricerca */
-  /* pulsanti azione circolari coerenti: + (aggiungi) / ✓ (visto) / × (rimuovi),
-     stessa dimensione ovunque (lista, profili, griglia) */
+  /* + (aggiungi, giallo) e × (rimuovi, rosso) come cerchi; la pillola
+     Visto/Da Vedere è a larghezza fissa (verde = visto, blu = da vedere). */
   .act-btn {
-    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0;
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .act-add { background: #F7B538; color: #1a1508; }
-  .act-check { background: #0A84FF; color: #fff; }
-  .act-check.done { background: #30D158; color: #fff; }
   .act-remove { background: #FF453A; color: #fff; }
+  .watch-pill {
+    min-width: 96px; padding: 8px 12px; border-radius: 14px; border: none; flex-shrink: 0;
+    font-size: 12.5px; font-weight: 700; font-family: inherit; text-align: center;
+    background: #0A84FF; color: #fff;
+  }
+  .watch-pill.done { background: #30D158; }
+  .watch-pill.add-pill { background: #F7B538; color: #1a1508; }
   .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  /* gli stessi cerchi in basso a destra sulla card della griglia */
-  .searchcard .sc-actions { position: absolute; bottom: 8px; right: 8px; z-index: 3; display: flex; gap: 5px; }
-  .searchcard .sc-actions .act-btn { width: 28px; height: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  /* strip azioni sotto la card in griglia (libreria e ricerca) */
+  .gcard { display: flex; flex-direction: column; gap: 6px; }
+  .gcard-actions { display: flex; gap: 6px; align-items: stretch; }
+  .gcard-actions .watch-pill { flex: 1; min-width: 0; padding: 8px 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gcard-actions .act-btn { width: 34px; height: auto; border-radius: 12px; }
 
   /* search results grid */
   .searchcard {
@@ -172,8 +179,6 @@
     background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     color: #FFD60A; display: flex; align-items: center; gap: 2px;
   }
-  .searchcard:not(.in-lib-card) .scinfo { padding-right: 42px; }
-  .searchcard.in-lib-card .scinfo { padding-right: 70px; }
   .searchcard .scinfo {
     position: absolute; bottom: 0; left: 0; right: 0; padding: 22px 8px 8px;
     background: linear-gradient(180deg, transparent, rgba(0,0,0,0.8));
@@ -622,8 +627,6 @@
     display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
   .person-item img, .person-item .noimg-s { width: 36px; height: 50px; border-radius: 7px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
-  .person-item .pi-main { flex: 1; min-width: 0; }
-  .person-item .pi-top { display: flex; align-items: center; gap: 8px; }
   .person-item .pi-info { flex: 1; min-width: 0; }
   .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
@@ -3497,10 +3500,13 @@ function renderCardTv(key, s) {
   const badgeInner = isContinua
     ? `<span class="badge-fill${animateProgressBars?'':' no-anim'}" style="--pct:${pct}%"></span><span class="badge-txt">${badgeText}</span>`
     : badgeText;
-  return `<div class="card" data-poster="${s.image?thumbImg(s.image,'w92'):''}" onclick="openShow(${id})">
-    ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-    ${showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : ''}
-    <div class="badge ${badgeClass}">${badgeInner}</div>
+  return `<div class="gcard">
+    <div class="card" data-poster="${s.image?thumbImg(s.image,'w92'):''}" onclick="openShow(${id})">
+      ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
+      ${showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : ''}
+      <div class="badge ${badgeClass}">${badgeInner}</div>
+    </div>
+    ${gridActionsTv(id)}
   </div>`;
 }
 
@@ -3530,9 +3536,12 @@ function renderListTv(key, s) {
       ].filter(Boolean).join(' · ')}</div>
       ${total ? `<div class="li-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : ''}
     </div>
-    <button class="checkbtn ${isDone?'checked':''}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})">
-      ${isDone?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
-    </button>
+    <div class="lib-actions">
+      <button class="checkbtn ${isDone?'checked':''}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">
+        ${isDone?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
+      </button>
+      ${watchPillTv(id)}${removeBtnTv(id)}
+    </div>
   </div>`;
 }
 
@@ -3759,8 +3768,11 @@ function renderFilmLibrary() {
 
 function renderCardFilm(key, f) {
   const id = validId(f, key);
-  return `<div class="card" data-poster="${f.image?thumbImg(f.image,'w92'):''}" onclick="openFilm(${id})">
-    ${f.image ? `<img src="${thumbImg(f.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
+  return `<div class="gcard">
+    <div class="card" data-poster="${f.image?thumbImg(f.image,'w92'):''}" onclick="openFilm(${id})">
+      ${f.image ? `<img src="${thumbImg(f.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
+    </div>
+    ${gridActionsFilm(id)}
   </div>`;
 }
 
@@ -3772,23 +3784,10 @@ function renderListFilm(key, f) {
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
       <div class="li-meta">${f.year||'—'}${f.genre?' · '+escapeHtml(f.genre):''}</div>
     </div>
-    <button class="checkbtn ${f.watched?'checked':''}" onclick="event.stopPropagation();quickToggleFilmWatched(${id})">
-      ${f.watched?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:''}
-    </button>
+    <div class="lib-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>
   </div>`;
 }
 
-// Spunta rapida dalla lista: segna visto/da vedere senza aprire la scheda del film.
-function quickToggleFilmWatched(id) {
-  if (!filmLibrary[id]) return;
-  filmLibrary[id].watched = !filmLibrary[id].watched;
-  if (filmLibrary[id].watched) { filmLibrary[id].watchedAt = Date.now(); haptic(); }
-  saveFilmLibrary(); renderFilmLibrary();
-  if (filmLibrary[id].watched) {
-    checkAchievements();
-    logActivity({ type: 'watched_film', showId: Number(id), title: filmLibrary[id].title || '', image: filmLibrary[id].image || null });
-  }
-}
 
 function validId(obj, key) {
   const n = Number(obj.id ?? key);
@@ -4206,31 +4205,23 @@ function renderPersonSheet(p) {
         const inLib = !!library[s.id];
         return `<div class="person-item" onclick="openShowFromPerson(${s.id})" style="cursor:pointer">
           ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
-          <div class="pi-main">
-            <div class="pi-top">
-              <div class="pi-info">
-                <div class="pi-name">${escapeHtml(s.name)}</div>
-                <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
-              </div>
-              ${rowActionsTv(s.id)}
-            </div>
+          <div class="pi-info">
+            <div class="pi-name">${escapeHtml(s.name)}</div>
+            <div class="pi-meta">${s.next?`S${s.next.season} E${s.next.number} · `:''}${s.watched}${s.total?'/'+s.total:''}</div>
             ${s.total ? `<div class="pi-prog"><i style="--pct:${pct}%"></i></div>` : ''}
           </div>
+          ${rowActionsTv(s.id)}
         </div>`;
       }).join('')}` : ''}
       ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
         const inLib = !!filmLibrary[f.id];
         return `<div class="person-item" onclick="openFilmFromPerson(${f.id})" style="cursor:pointer">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
-        <div class="pi-main">
-          <div class="pi-top">
-            <div class="pi-info">
-              <div class="pi-name">${escapeHtml(f.title)}</div>
-              <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
-            </div>
-            ${rowActionsFilm(f.id)}
-          </div>
+        <div class="pi-info">
+          <div class="pi-name">${escapeHtml(f.title)}</div>
+          <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
         </div>
+        ${rowActionsFilm(f.id)}
       </div>`;
       }).join('')}` : ''}
       ${!shows.length && !films.length ? `<div class="wrap-note" style="text-align:center;padding:20px">Libreria vuota.</div>` : ''}
@@ -4631,14 +4622,16 @@ function renderTvResultsFromCache() {
       s.totalSeasons ? `${s.totalSeasons} St.` : null,
       s.totalEpisodes ? `${s.totalEpisodes} ep` : null
     ].filter(Boolean).join(' · ') || (s.first_air_date?s.first_air_date.slice(0,4):'—');
-    return `<div class="searchcard${inLib?' in-lib-card':''}" onclick="openShow(${s.id})">
-      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-      ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <div class="scinfo">
-        <div class="sn">${escapeHtml(s.name)}</div>
-        <div class="sm">${meta}</div>
+    return `<div class="gcard">
+      <div class="searchcard" onclick="openShow(${s.id})">
+        ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
+        ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
+        <div class="scinfo">
+          <div class="sn">${escapeHtml(s.name)}</div>
+          <div class="sm">${meta}</div>
+        </div>
       </div>
-      <div class="sc-actions">${inLib ? watchRemoveTv(s.id) : addBtnTv(s.id)}</div>
+      ${gridActionsTv(s.id)}
     </div>`;
   }).join('')}</div>`;
 }
@@ -4711,39 +4704,52 @@ function renderFilmResultsFromCache() {
     const poster = tmdbImg(f.poster_path, 'w342');
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
     const votes = formatVotes(f.vote_count);
-    return `<div class="searchcard${inLib?' in-lib-card':''}" onclick="openFilm(${f.id})">
-      ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
-      ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
-      <div class="scinfo">
-        <div class="sn">${escapeHtml(f.title)}</div>
-        <div class="sm">${f.release_date?f.release_date.slice(0,4):'—'}</div>
+    return `<div class="gcard">
+      <div class="searchcard" onclick="openFilm(${f.id})">
+        ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
+        ${rating ? `<div class="scrating">★ ${rating}${votes?` · ${votes}`:''}</div>` : ''}
+        <div class="scinfo">
+          <div class="sn">${escapeHtml(f.title)}</div>
+          <div class="sm">${f.release_date?f.release_date.slice(0,4):'—'}</div>
+        </div>
       </div>
-      <div class="sc-actions">${inLib ? watchRemoveFilm(f.id) : addBtnFilm(f.id)}</div>
+      ${gridActionsFilm(f.id)}
     </div>`;
   }).join('')}</div>`;
 }
 
-// ---------- azioni rapide su liste/griglie (aggiungi · segna visto · rimuovi) ----------
-// Tutti i pulsanti sono cerchi della stessa dimensione: + (aggiungi),
-// spunta ✓ (visto/da vedere, verde quando visto) e × (rimuovi). La spunta a
-// icona evita l'ambiguità dell'etichetta "Vista/Da vedere" (che sembrava uno
-// stato invece che un'azione).
+// ---------- azioni rapide su liste/griglie (aggiungi · visto/da vedere · rimuovi) ----------
+// + (aggiungi, giallo) e × (rimuovi, rosso) sono cerchi; la pillola a larghezza
+// fissa mostra lo stato: verde "Visto" (tutti gli episodi visti) o blu
+// "Da Vedere", e toccandola si alterna.
 const ICO_PLUS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
 const ICO_X = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-const ICO_CHECK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
 function addBtnTv(id) { return `<button class="act-btn act-add" onclick="event.stopPropagation();quickAdd(${id})" title="Aggiungi alla libreria">${ICO_PLUS}</button>`; }
 function addBtnFilm(id) { return `<button class="act-btn act-add" onclick="event.stopPropagation();quickAddFilm(${id})" title="Aggiungi alla libreria">${ICO_PLUS}</button>`; }
-function watchRemoveTv(id) {
+function watchPillTv(id) {
   const done = categorizeShow(library[id]) === 'inpari';
-  return `<button class="act-btn act-check${done?' done':''}" onclick="event.stopPropagation();toggleSeriesWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come vista'}">${ICO_CHECK}</button><button class="act-btn act-remove" onclick="event.stopPropagation();quickAdd(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`;
+  return `<button class="watch-pill${done?' done':''}" onclick="event.stopPropagation();toggleSeriesWatchedQuick(${id})">${done?'Visto':'Da Vedere'}</button>`;
 }
-function watchRemoveFilm(id) {
+function watchPillFilm(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
-  return `<button class="act-btn act-check${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_CHECK}</button><button class="act-btn act-remove" onclick="event.stopPropagation();quickAddFilm(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`;
+  return `<button class="watch-pill${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})">${done?'Visto':'Da Vedere'}</button>`;
 }
-// Controlli per una riga di lista: + se non in libreria, altrimenti ✓ + ×.
-function rowActionsTv(id) { return library[id] ? `<div class="lib-actions">${watchRemoveTv(id)}</div>` : addBtnTv(id); }
-function rowActionsFilm(id) { return filmLibrary[id] ? `<div class="lib-actions">${watchRemoveFilm(id)}</div>` : addBtnFilm(id); }
+function removeBtnTv(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();quickAdd(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
+function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();quickAddFilm(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
+// Riga lista/profilo: + se non in libreria, altrimenti [Visto/Da Vedere][×].
+function rowActionsTv(id) { return library[id] ? `<div class="lib-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : addBtnTv(id); }
+function rowActionsFilm(id) { return filmLibrary[id] ? `<div class="lib-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : addBtnFilm(id); }
+// Strip sotto la card in griglia.
+function gridActionsTv(id) {
+  return library[id]
+    ? `<div class="gcard-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>`
+    : `<div class="gcard-actions"><button class="watch-pill add-pill" onclick="event.stopPropagation();quickAdd(${id})">＋ Aggiungi</button></div>`;
+}
+function gridActionsFilm(id) {
+  return filmLibrary[id]
+    ? `<div class="gcard-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>`
+    : `<div class="gcard-actions"><button class="watch-pill add-pill" onclick="event.stopPropagation();quickAddFilm(${id})">＋ Aggiungi</button></div>`;
+}
 
 async function toggleFilmWatchedQuick(id) {
   const f = filmLibrary[id];
