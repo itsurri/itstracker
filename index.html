@@ -187,11 +187,13 @@
   }
   /* 4 badge agli angoli del poster: rating/%/stagione/episodio (libreria) o
      rating/stato/genere/anno (film) o rating/stagioni+episodi (ricerca). */
-  .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right { position: absolute; z-index: 3; }
+  .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right, .gc-bottom-center { position: absolute; z-index: 3; }
   .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
   .gc-top-right { top: 6px; right: 6px; }
   .gc-bottom-left { bottom: 6px; left: 6px; }
   .gc-bottom-right { bottom: 6px; right: 6px; }
+  .gc-bottom-center { bottom: 6px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 12px); }
+  .gc-bottom-center .grating { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .gc-bottom-left .grating { color: #C77DFF; }
   .gc-bottom-right .grating { color: rgba(255,255,255,0.85); }
   .gc-top-right .grating { color: #0A84FF; }
@@ -318,9 +320,12 @@
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
   .li-progrow .li-prog { flex: 1; min-width: 0; margin-top: 0; }
+  /* larghezza fissa (2 cifre + %): la barra finisce sempre nello stesso punto,
+     non si accorcia/allunga in base al numero di cifre della percentuale. */
   .li-pct {
     font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
     color: rgba(var(--overlay-rgb),0.6); flex-shrink: 0; white-space: nowrap;
+    width: 34px; text-align: right;
   }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
@@ -4428,8 +4433,8 @@ function renderCardFilm(key, f) {
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
     topLeft: f.rating ? `<span class="grating">★ ${fmtRating(f.rating)}</span>` : '',
-    topRight: f.year ? `<span class="grating">${f.year}</span>` : '',
-    bottomLeft: f.genre ? `<span class="grating">${escapeHtml(f.genre)}</span>` : '',
+    topRight: f.year ? `<span class="grating" style="color:rgba(255,255,255,0.85)">${f.year}</span>` : '',
+    bottomCenter: f.genre ? `<span class="grating" style="color:${genreColor(f.genre)}">${escapeHtml(f.genre)}</span>` : '',
     actions: filmCheckBtn(id) + removeBtnFilm(id)
   });
 }
@@ -4668,13 +4673,21 @@ function feedActionText(a) {
 
 // Accorpa episodi consecutivi della stessa serie e stesso utente in un unico
 // elemento del feed. Il raggruppamento si interrompe al cambio di utente,
-// serie o tipo di evento (film, commento, serie finita).
+// serie, tipo di evento (film, commento, serie finita) o GIORNO SOLARE:
+// altrimenti episodi visti in giorni diversi (es. 3 ieri + 2 oggi) si
+// sommavano in un unico gruppo mostrato con la data di oggi ("5 episodi oggi"
+// quando in realtà oggi ne erano solo 2).
+function sameCalendarDay(t1, t2) {
+  const a = new Date(t1), b = new Date(t2);
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
 function groupFeedItems(items) {
   const groups = [];
   for (const a of items) {
     const last = groups[groups.length - 1];
     if (a.type === 'watched_episode' && last && last.type === 'watched_episode'
-        && last.uid === a.uid && last.showId === a.showId) {
+        && last.uid === a.uid && last.showId === a.showId
+        && sameCalendarDay(actMillis(last.episodes[last.episodes.length-1]), actMillis(a))) {
       last.episodes.push(a);
     } else if (a.type === 'watched_episode') {
       groups.push({ ...a, episodes: [a] });
@@ -5295,7 +5308,7 @@ function renderTvResultsFromCache() {
       poster,
       title: s.name,
       topLeft: rating ? `<span class="grating">★ ${fmtRating(rating)}</span>` : '',
-      bottomLeft: `<span class="grating">${meta}</span>`,
+      bottomCenter: `<span class="grating" style="color:#C77DFF">${meta}</span>`,
       bottomActions: searchActionsTv(s.id, false),
       addMode: !library[s.id]
     });
@@ -5379,7 +5392,7 @@ function renderFilmResultsFromCache() {
       poster,
       title: f.title,
       topLeft: rating ? `<span class="grating">★ ${fmtRating(rating)}</span>` : '',
-      bottomLeft: `<span class="grating">${f.release_date?f.release_date.slice(0,4):'—'}</span>`,
+      topRight: `<span class="grating" style="color:rgba(255,255,255,0.85)">${f.release_date?f.release_date.slice(0,4):'—'}</span>`,
       bottomActions: searchActionsFilm(f.id, false),
       addMode: !filmLibrary[f.id]
     });
@@ -5395,8 +5408,8 @@ const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" strok
 const ICO_ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 // Bottone "Aggiungi": testo lungo ("in libreria") nella griglia dove c'è spazio,
 // corto ("Aggiungi") nelle liste dove deve stare quanto [Visto/Da Vedere][×].
-function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
-function addWideFilm(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAddFilm(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
+function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'+ Aggiungi in libreria':'+ Aggiungi'}</button>`; }
+function addWideFilm(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAddFilm(${id})">${full?'+ Aggiungi in libreria':'+ Aggiungi'}</button>`; }
 // Pillola stato Visto/Da Vedere (usata in ricerca e profili).
 function watchPillTv(id) {
   const done = categorizeShow(library[id]) === 'inpari';
@@ -5443,6 +5456,7 @@ function gridCard(o) {
       ${o.topRight ? `<div class="gc-top-right">${o.topRight}</div>` : ''}
       ${o.bottomLeft ? `<div class="gc-bottom-left">${o.bottomLeft}</div>` : ''}
       ${o.bottomRight ? `<div class="gc-bottom-right">${o.bottomRight}</div>` : ''}
+      ${o.bottomCenter ? `<div class="gc-bottom-center">${o.bottomCenter}</div>` : ''}
     </div>
     ${o.actions ? `<div class="gc-foot"><div class="gc-actions">${o.actions}</div></div>` : ''}
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
@@ -5676,7 +5690,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       </div>
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
-      ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
+      ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">+ Aggiungi alla libreria</button>`:''}
       ${inLib?`<div class="btnrow">
         <button class="markallbtn${allAiredWatched(library[show.id],episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(library[show.id],episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
         <button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>
@@ -6695,7 +6709,7 @@ async function renderFilmSheet(f, inLib) {
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
       ${!inLib
-        ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">Aggiungi alla libreria</button>`
+        ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">+ Aggiungi alla libreria</button>`
         : `<div class="btnrow"><button class="${f.watched?'removebtn':'addlibbtn'}" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
