@@ -198,17 +198,13 @@
   /* fasce colore per la percentuale in alto a destra */
   .gc-top-right .grating.tier-r { color: #FF453A; } .gc-top-right .grating.tier-o { color: #FF9F0A; }
   .gc-top-right .grating.tier-y { color: #FFD60A; } .gc-top-right .grating.tier-g { color: #30D158; }
-  /* footer solido sotto il poster: titolo fino a 2 righe + azioni centrate */
-  .gc-foot { padding: 7px 9px 9px; cursor: pointer; }
-  .gc-title {
-    font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--fg);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; min-height: 2.6em;
-  }
-  .gc-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 7px; cursor: default; }
+  /* footer compatto sotto il poster: solo la riga di azioni centrata, niente
+     titolo (in griglia parla solo la copertina). */
+  .gc-foot { padding: 8px 9px; }
+  .gc-actions { display: flex; align-items: center; justify-content: center; gap: 10px; cursor: default; }
   .gc-actions .ep-check, .gc-actions .act-btn { width: 30px; height: 30px; }
   /* azioni ricerca compatte sotto il footer */
-  .gc-bottom { padding: 0 8px 8px; }
+  .gc-bottom { padding: 8px; }
   .gc-bottom .row-actions { width: 100%; }
   .gc-bottom .watch-pill { flex: 1; min-width: 0; height: 32px; padding: 0 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gc-bottom .add-wide { min-width: 0; width: 100%; height: 32px; padding: 0 4px; font-size: 11px; }
@@ -2379,8 +2375,14 @@ function switchTab(tab) {
   window.scrollTo(0, 0);
   document.getElementById('topbarRight').style.display = 'flex';
   if (tab === 'profile') renderProfile();
-  if (tab === 'search' && !document.getElementById('searchInput').value.trim() && !document.getElementById('searchResults').innerHTML.trim()) {
-    loadPopular(searchMode);
+  if (tab === 'search') {
+    // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
+    // un'altra tab, i risultati di ricerca restano vecchi finché non ricambi
+    // TV/Film: qui li ridisegniamo sempre dalla cache (nessuna chiamata di
+    // rete) così riflettono subito il viewMode corrente.
+    const hasCache = searchMode === 'tv' ? lastTvResults.length : lastFilmResults.length;
+    if (hasCache) { searchMode === 'tv' ? renderTvResultsFromCache() : renderFilmResultsFromCache(); }
+    else if (!document.getElementById('searchInput').value.trim()) { loadPopular(searchMode); }
   }
 }
 window.addEventListener('resize', () => moveTabIndicator(document.querySelector('.tabbtn.active')));
@@ -5415,20 +5417,18 @@ function searchActionsTv(id, full) { return library[id] ? `<div class="row-actio
 function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id, full)}</div>`; }
 
 // Card di griglia: poster pulito con 4 badge agli angoli (topLeft/topRight/
-// bottomLeft/bottomRight), footer solido sotto con titolo (max 2 righe) e una
-// riga di azioni centrata (spunta+rimuovi per la libreria, Aggiungi per la ricerca).
+// bottomLeft/bottomRight) e, sotto, solo la riga di azioni centrata (niente
+// titolo: in vista griglia parla solo la copertina, il nome resta nella lista).
 function gridCard(o) {
   return `<div class="gcard${o.addMode?' gcard-add':''}">
-    <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
+    <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}" title="${escapeHtml(o.title||'')}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
       ${o.topLeft ? `<div class="gc-top-left">${o.topLeft}</div>` : ''}
       ${o.topRight ? `<div class="gc-top-right">${o.topRight}</div>` : ''}
       ${o.bottomLeft ? `<div class="gc-bottom-left">${o.bottomLeft}</div>` : ''}
       ${o.bottomRight ? `<div class="gc-bottom-right">${o.bottomRight}</div>` : ''}
     </div>
-    <div class="gc-foot">
-      <div class="gc-title" onclick="${o.onclick}">${escapeHtml(o.title||'')}</div>
-      ${o.actions ? `<div class="gc-actions">${o.actions}</div>` : ''}
+    ${o.actions ? `<div class="gc-foot"><div class="gc-actions">${o.actions}</div></div>` : ''}
     </div>
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
   </div>`;
