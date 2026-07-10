@@ -165,9 +165,10 @@
     line-height: 1.15; background: #F7B538; color: #1a1508;
   }
   .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  /* larghezza fissa: così le barre di avanzamento finiscono tutte allo stesso punto */
-  .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-shrink: 0; width: 150px; }
-  .row-actions .add-wide { flex: 1; }
+  /* larghezza fissa: le barre finiscono tutte allo stesso punto e "Aggiungi"
+     risulta grande esattamente quanto [Visto/Da Vedere][×]. */
+  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; width: 132px; }
+  .row-actions .add-wide, .row-actions .watch-pill { flex: 1; min-width: 0; }
 
   /* --- card griglia unificata: poster + info + bottoni come un unico blocco --- */
   .gcard { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: rgba(var(--overlay-rgb),0.05); --blend: rgba(var(--overlay-rgb),0.05); }
@@ -191,11 +192,15 @@
   .gcard-act .watch-pill { flex: 1; min-width: 0; padding: 7px 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gcard-act .ep-check, .gcard-act .act-btn { width: 32px; height: 32px; }
   .gcard-act .add-wide { flex: 1; width: 100%; text-align: center; }
-  /* stato "aggiungi": blocco giallo, poster sfumato nel giallo (foto 2) */
-  .gcard.gcard-add { background: #F7B538; --blend: #F7B538; }
-  .gcard.gcard-add .gcard-title { color: #1a1508; }
-  .gcard.gcard-add .gcard-sub { color: rgba(26,21,8,0.6); }
-  .gcard.gcard-add .add-wide { background: transparent; color: #1a1508; font-weight: 800; }
+  /* bottoni DENTRO la copertina (libreria): in basso, sopra il poster */
+  .gcard-overlay-act { position: absolute; left: 6px; right: 6px; bottom: 6px; z-index: 3; }
+  .gcard-overlay-act .lib-actions { justify-content: space-between; }
+  .gcard-overlay-act .ep-check, .gcard-overlay-act .act-btn { width: 32px; height: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+  /* stato "aggiungi": card scura, solo un accenno di giallo che sfuma verso il
+     bottone (che resta giallo pieno) — meno giallo di prima. */
+  .gcard.gcard-add { --blend: rgba(247,181,56,0.22); }
+  .gcard.gcard-add .gcard-act { background: linear-gradient(180deg, transparent, rgba(247,181,56,0.1)); }
+  .gcard.gcard-add .add-wide { background: #F7B538; color: #1a1508; font-weight: 800; }
   .searchcard-skel { border-radius: 16px; aspect-ratio: 2/3; }
 
   /* GRID */
@@ -240,7 +245,7 @@
   }
   .list-item .noimg-s { display: flex; align-items: center; justify-content: center; }
   .list-item .li-info { flex: 1; min-width: 0; }
-  .list-item .li-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-item .li-name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
   .list-item .li-meta { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
   .list-item .li-prog { margin-top: 6px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
@@ -3516,7 +3521,8 @@ function renderCardTv(key, s) {
     sub,
     prog: total ? `<div class="gcard-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : '',
     corner: showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : '',
-    actions: libActionsTv(id)
+    actions: libActionsTv(id),
+    overlay: true
   });
 }
 
@@ -3779,7 +3785,8 @@ function renderCardFilm(key, f) {
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
     sub: `${f.year||'—'}${f.watched?' · Visto':''}`,
-    actions: libActionsFilm(id)
+    actions: libActionsFilm(id),
+    overlay: true
   });
 }
 
@@ -4634,7 +4641,7 @@ function renderTvResultsFromCache() {
       title: s.name,
       sub: meta,
       corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
-      actions: searchActionsTv(s.id),
+      actions: searchActionsTv(s.id, true),
       addMode: !library[s.id]
     });
   }).join('')}</div>`;
@@ -4713,7 +4720,7 @@ function renderFilmResultsFromCache() {
       title: f.title,
       sub: f.release_date?f.release_date.slice(0,4):'—',
       corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
-      actions: searchActionsFilm(f.id),
+      actions: searchActionsFilm(f.id, true),
       addMode: !filmLibrary[f.id]
     });
   }).join('')}</div>`;
@@ -4722,9 +4729,10 @@ function renderFilmResultsFromCache() {
 // ---------- azioni rapide su liste/griglie (aggiungi · visto/da vedere · rimuovi) ----------
 const ICO_X = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
-// Bottone largo "Aggiungi in libreria" (occupa lo spazio di Visto/Da Vedere + ×).
-function addWideTv(id) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">Aggiungi in libreria</button>`; }
-function addWideFilm(id) { return `<button class="add-wide" onclick="event.stopPropagation();quickAddFilm(${id})">Aggiungi in libreria</button>`; }
+// Bottone "Aggiungi": testo lungo ("in libreria") nella griglia dove c'è spazio,
+// corto ("Aggiungi") nelle liste dove deve stare quanto [Visto/Da Vedere][×].
+function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
+function addWideFilm(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAddFilm(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
 // Pillola stato Visto/Da Vedere (usata in ricerca e profili).
 function watchPillTv(id) {
   const done = categorizeShow(library[id]) === 'inpari';
@@ -4748,22 +4756,25 @@ function libActionsTv(id) { return `<div class="lib-actions">${epCheckBtn(id)}${
 function libActionsFilm(id) { return `<div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>`; }
 // RICERCA/PROFILO (lista+griglia): non in libreria → "Aggiungi in libreria";
 // in libreria → [Visto/Da Vedere][×]. Larghezza fissa così le barre coincidono.
-function searchActionsTv(id) { return library[id] ? `<div class="row-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : `<div class="row-actions">${addWideTv(id)}</div>`; }
-function searchActionsFilm(id) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id)}</div>`; }
+function searchActionsTv(id, full) { return library[id] ? `<div class="row-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : `<div class="row-actions">${addWideTv(id, full)}</div>`; }
+function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id, full)}</div>`; }
 
 // Card di griglia unificata: poster (con tilt/glow) + info + bottoni, un blocco solo.
+// Con overlay=true i bottoni stanno DENTRO la copertina (in basso), come chiesto
+// per la libreria; altrimenti sotto (ricerca).
 function gridCard(o) {
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
       ${o.corner||''}
+      ${o.overlay ? `<div class="gcard-overlay-act">${o.actions}</div>` : ''}
     </div>
     <div class="gcard-body" onclick="${o.onclick}">
       <div class="gcard-title">${escapeHtml(o.title||'')}</div>
       ${o.sub ? `<div class="gcard-sub">${o.sub}</div>` : ''}
       ${o.prog||''}
     </div>
-    <div class="gcard-act">${o.actions}</div>
+    ${o.overlay ? '' : `<div class="gcard-act">${o.actions}</div>`}
   </div>`;
 }
 
