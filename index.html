@@ -314,8 +314,8 @@
   #tvCount-davedere { background: #8E8E93; }
   #filmCount-visti { background: #30D158; }
   #filmCount-davedere { background: #0A84FF; }
-  .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
-  .li-progrow .li-prog { flex: 1; margin-top: 0; }
+  .li-progrow { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 6px; }
+  .li-progrow .li-prog { flex: 0 1 65%; max-width: 130px; margin-top: 0; }
   .li-pct { font-size: 10px; font-weight: 800; color: rgba(var(--overlay-rgb),0.55); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
@@ -4140,7 +4140,7 @@ function renderCardTv(key, s) {
   const topLeft = corner + (s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '');
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
-  const bottomRight = next ? `<span class="grating" style="color:#5AC8FA">S${next.season} E${next.number}</span>` : (done ? `<span class="grating" style="color:#30D158">Completata</span>` : '');
+  const bottomRight = next ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>` : (done ? `<span class="grating" style="color:#30D158">Completata</span>` : '');
   return gridCard({
     onclick: `openShow(${id}, this)`,
     poster: s.image ? thumbImg(s.image,'w342') : '',
@@ -4180,7 +4180,7 @@ function renderListTv(key, s) {
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
-      ${total ? `<div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div>` : ''}
+      ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div><span class="li-pct ${tier}">${pct}%</span></div>` : ''}
     </div>
     <div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
@@ -5429,7 +5429,6 @@ function gridCard(o) {
       ${o.bottomRight ? `<div class="gc-bottom-right">${o.bottomRight}</div>` : ''}
     </div>
     ${o.actions ? `<div class="gc-foot"><div class="gc-actions">${o.actions}</div></div>` : ''}
-    </div>
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
   </div>`;
 }
