@@ -314,9 +314,15 @@
   #tvCount-davedere { background: #8E8E93; }
   #filmCount-visti { background: #30D158; }
   #filmCount-davedere { background: #0A84FF; }
-  .li-progrow { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 6px; }
-  .li-progrow .li-prog { flex: 0 1 65%; max-width: 130px; margin-top: 0; }
-  .li-pct { font-size: 10px; font-weight: 800; color: rgba(var(--overlay-rgb),0.55); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  /* la barra corre per tutta la larghezza disponibile (come il titolo), la
+     % è staccata sotto, grande e ben leggibile, in un font diverso dal resto. */
+  .li-progrow { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 6px; }
+  .li-progrow .li-prog { width: 100%; margin-top: 0; }
+  .li-pct {
+    font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums;
+    font-family: Georgia, 'Times New Roman', serif; letter-spacing: -0.02em;
+    color: rgba(var(--overlay-rgb),0.6);
+  }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .list-item .lib-actions .ep-check, .list-item .lib-actions .act-btn { width: 30px; height: 30px; }
@@ -5384,6 +5390,10 @@ function renderFilmResultsFromCache() {
 // ---------- azioni rapide su liste/griglie (aggiungi · visto/da vedere · rimuovi) ----------
 const ICO_X = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+// Freccia: usata al posto della spunta quando c'è ancora un episodio dopo
+// quello che stai per segnare (serie in corso). La V resta solo quando
+// completi la serie o per i film (un solo tocco, nessun "dopo").
+const ICO_ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 // Bottone "Aggiungi": testo lungo ("in libreria") nella griglia dove c'è spazio,
 // corto ("Aggiungi") nelle liste dove deve stare quanto [Visto/Da Vedere][×].
 function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
@@ -5402,9 +5412,16 @@ function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick=
 // Spunta episodio. Colore per stato: vuoto (da vedere), blu (in corso), verde
 // (in pari). Segna il prossimo episodio, con animazione.
 function epCheckBtn(id) {
-  const cat = library[id] ? categorizeShow(library[id]) : 'davedere';
+  const s = library[id];
+  const cat = s ? categorizeShow(s) : 'davedere';
   const cls = cat === 'inpari' ? 'done' : (cat === 'continua' ? 'prog' : 'empty');
-  return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_V}</button>`;
+  // Freccia se segnando questo episodio ne resta almeno un altro dopo; V se
+  // questo è l'ultimo (la serie si completerebbe) o se è già completa.
+  const watched = s ? Object.keys(s.watched || {}).length : 0;
+  const total = s ? (s.totalEpisodes || 0) : 0;
+  const isLastOne = total > 0 && watched + 1 >= total;
+  const icon = (cls === 'done' || isLastOne) ? ICO_V : ICO_ARROW;
+  return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${icon}</button>`;
 }
 // Spunta film: verde con V quando visto, vuota quando no; toggle.
 function filmCheckBtn(id) {
