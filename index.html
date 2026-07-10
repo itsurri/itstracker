@@ -878,7 +878,7 @@
   }
 
   /* coriandoli fine serie */
-  .confetti-layer { position: fixed; inset: 0; z-index: 300; pointer-events: none; overflow: hidden; }
+  .confetti-layer { position: fixed; inset: 0; z-index: 320; pointer-events: none; overflow: hidden; }
   .confetti-layer i {
     position: absolute; top: -10px; width: 8px; height: 14px; border-radius: 2px;
     opacity: 0.95; animation: confettiFall ease-in forwards;
@@ -887,6 +887,28 @@
     0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.95; }
     100% { transform: translateY(105vh) translateX(var(--drift)) rotate(var(--rotate)); opacity: 0.3; }
   }
+  /* card celebrativa fine serie */
+  .celebrate-layer {
+    position: fixed; inset: 0; z-index: 310; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .celebrate-layer.show { opacity: 1; }
+  .celebrate-card {
+    position: relative; width: 100%; max-width: 300px; padding: 22px 22px 24px; border-radius: 28px;
+    text-align: center; color: var(--fg); overflow: hidden;
+    transform: scale(0.82) translateY(12px); transition: transform 0.42s cubic-bezier(.34,1.56,.64,1);
+  }
+  .celebrate-layer.show .celebrate-card { transform: scale(1) translateY(0); }
+  .celebrate-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(120% 80% at 50% 0%, var(--accent, transparent) 0%, transparent 62%); opacity: 0.5; mix-blend-mode: screen; }
+  .celebrate-card > * { position: relative; z-index: 1; }
+  .celebrate-poster { width: 116px; aspect-ratio: 2/3; object-fit: cover; border-radius: 16px; margin: 0 auto 6px; display: block; box-shadow: 0 12px 34px rgba(0,0,0,0.45); }
+  .celebrate-trophy { font-size: 30px; margin-top: -30px; margin-bottom: 8px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); animation: trophyPop 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s both; }
+  @keyframes trophyPop { from { transform: scale(0) rotate(-25deg); } to { transform: scale(1) rotate(0); } }
+  .celebrate-eyebrow { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #F7B538; margin-bottom: 5px; }
+  .celebrate-name { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+  .celebrate-sub { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-top: 6px; }
 
   .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid rgba(var(--overlay-rgb),0.2); border-top-color: var(--fg); animation: spin 0.7s linear infinite; margin: 30px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -1031,6 +1053,13 @@
   @keyframes skelPulse { 0%, 100% { background: rgba(var(--overlay-rgb),0.07); } 50% { background: rgba(var(--overlay-rgb),0.1); } }
   .sheet-skel { padding: 0; }
   .sheet-skel .sk-hero { height: 230px; border-radius: 0; }
+  .sheet-skel .sk-hero-img { background-size: cover; background-position: top center; background-color: rgba(var(--overlay-rgb),0.08); }
+
+  /* ===== transizione poster → scheda (View Transitions API) ===== */
+  .vt-hero .sheet-skel .sk-hero { view-transition-name: hero-poster; }
+  .vt-hero .sheet { transition: none !important; transform: translateY(0) !important; }
+  ::view-transition-group(hero-poster) { animation-duration: 0.42s; animation-timing-function: cubic-bezier(.32,.72,0,1); }
+  ::view-transition-old(hero-poster), ::view-transition-new(hero-poster) { object-fit: cover; object-position: top center; }
   .sheet-skel .sk-body { padding: 20px; }
   .sheet-skel .sk-line { height: 14px; margin-bottom: 10px; }
 
@@ -2209,16 +2238,16 @@ window.addEventListener('resize', () => moveTabIndicator(document.querySelector(
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
 
 // Piccola pioggia di coriandoli quando finisci tutti gli episodi di una serie.
-function celebrateShowComplete() {
+function celebrateShowComplete(show) {
   const layer = document.createElement('div');
   layer.className = 'confetti-layer';
-  const n = 26;
+  const n = 34;
   for (let i = 0; i < n; i++) {
     const p = document.createElement('i');
     const color = GENRE_PALETTE[i % GENRE_PALETTE.length];
     const left = Math.random() * 100;
-    const delay = Math.random() * 0.15;
-    const duration = 1.1 + Math.random() * 0.6;
+    const delay = Math.random() * 0.2;
+    const duration = 1.1 + Math.random() * 0.7;
     const rotate = Math.random() * 360;
     const drift = (Math.random() - 0.5) * 80;
     p.style.cssText = `left:${left}%; background:${color}; animation-delay:${delay}s; animation-duration:${duration}s; --rotate:${rotate}deg; --drift:${drift}px;`;
@@ -2226,7 +2255,38 @@ function celebrateShowComplete() {
   }
   document.body.appendChild(layer);
   haptic();
-  setTimeout(() => layer.remove(), 2000);
+  setTimeout(() => layer.remove(), 2200);
+
+  // "Momento" di completamento: card centrale con poster + messaggio.
+  if (show) showCompleteCard(show);
+}
+
+// Card celebrativa mostrata quando finisci una serie. Auto-scompare, o tap per chiudere.
+function showCompleteCard(show) {
+  document.querySelectorAll('.celebrate-layer').forEach(el => el.remove());
+  const eps = show.totalEpisodes || 0;
+  const mins = eps * (show.runtime || 42);
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const timeLbl = h > 0 ? `${h} h${m ? ' ' + m + ' min' : ''}` : `${m} min`;
+  const sub = [eps ? `${eps} episodi` : '', mins ? timeLbl : ''].filter(Boolean).join(' · ');
+
+  const layer = document.createElement('div');
+  layer.className = 'celebrate-layer';
+  layer.innerHTML = `
+    <div class="celebrate-card glass">
+      <div class="celebrate-glow" id="celebGlow"></div>
+      ${show.image ? `<img class="celebrate-poster" src="${thumbImg(show.image,'w342')}" alt="">` : ''}
+      <div class="celebrate-trophy">🏆</div>
+      <div class="celebrate-eyebrow">Serie completata!</div>
+      <div class="celebrate-name">${escapeHtml(show.name || '')}</div>
+      ${sub ? `<div class="celebrate-sub">${sub}</div>` : ''}
+    </div>`;
+  const close = () => { layer.classList.remove('show'); setTimeout(() => layer.remove(), 320); };
+  layer.addEventListener('click', close);
+  document.body.appendChild(layer);
+  requestAnimationFrame(() => layer.classList.add('show'));
+  if (show.image) posterAccent(show.image).then(col => { const g = document.getElementById('celebGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  layer._t = setTimeout(close, 3200);
 }
 
 const USER_LEVELS = [
@@ -3306,7 +3366,7 @@ function renderResumeRail(items) {
     const bg = s.backdrop || s.image;
     const mins = s.runtime ? `${s.runtime} min` : '';
     const epMeta = [`S${n.season}E${n.number}`, mins, n.name ? escapeHtml(n.name) : ''].filter(Boolean).join(' · ');
-    return `<div class="resume-card" onclick="openShow(${id})" data-poster="${bg ? thumbImg(bg,'w92') : ''}">
+    return `<div class="resume-card" onclick="openShow(${id}, this)" data-poster="${bg ? thumbImg(bg,'w92') : ''}">
       ${bg ? `<img src="${thumbImg(bg,'w500')}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="rc-shade"></div>
       <div class="rc-body">
@@ -3547,13 +3607,13 @@ async function renderUpcoming(container) {
     const soon = daysLeft <= 7;
     const daysLabel = daysLeft <= 0 ? 'Oggi' : ('-' + daysLeft);
     if (viewMode === 'grid') {
-      return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
+      return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
         ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg">${escapeHtml(u.name)}</div>`}
         <div class="up-ep-badge">S${u.season} E${u.number}</div>
         <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}</span><span class="ud-days-mini">${daysLabel}</span></div>
       </div>`;
     }
-    return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id})">
+    return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
@@ -3577,7 +3637,7 @@ function renderCardTv(key, s) {
     ? (s.next ? `S${s.next.season} E${s.next.number}${total?'/'+total:''}` : `${watched}${total?'/'+total:''}`)
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
   return gridCard({
-    onclick: `openShow(${id})`,
+    onclick: `openShow(${id}, this)`,
     poster: s.image ? thumbImg(s.image,'w342') : '',
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
@@ -3601,7 +3661,7 @@ function renderListTv(key, s) {
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const cat = categorizeShow(s);
   const isDone = cat === 'inpari';
-  return `<div class="list-item" onclick="openShow(${id})">
+  return `<div class="list-item" onclick="openShow(${id}, this)">
     ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
@@ -3842,7 +3902,7 @@ function renderFilmLibrary() {
 function renderCardFilm(key, f) {
   const id = validId(f, key);
   return gridCard({
-    onclick: `openFilm(${id})`,
+    onclick: `openFilm(${id}, this)`,
     poster: f.image ? thumbImg(f.image,'w342') : '',
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
@@ -3853,7 +3913,7 @@ function renderCardFilm(key, f) {
 
 function renderListFilm(key, f) {
   const id = validId(f, key);
-  return `<div class="list-item" onclick="openFilm(${id})">
+  return `<div class="list-item" onclick="openFilm(${id}, this)">
     ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
@@ -4676,7 +4736,7 @@ function renderTvResultsFromCache() {
         s.totalEpisodes ? `${s.totalEpisodes} ep` : null,
         !rating && !s.totalSeasons ? (s.first_air_date?s.first_air_date.slice(0,4):'—') : null
       ].filter(Boolean).join(' · ');
-      return `<div class="list-item" onclick="openShow(${s.id})">
+      return `<div class="list-item" onclick="openShow(${s.id}, this)">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
         <div class="li-info">
           <div class="li-name">${escapeHtml(s.name)}</div>
@@ -4697,7 +4757,7 @@ function renderTvResultsFromCache() {
       s.totalEpisodes ? `${s.totalEpisodes} ep` : null
     ].filter(Boolean).join(' · ') || (s.first_air_date?s.first_air_date.slice(0,4):'—');
     return gridCard({
-      onclick: `openShow(${s.id})`,
+      onclick: `openShow(${s.id}, this)`,
       poster,
       title: s.name,
       sub: meta,
@@ -4759,7 +4819,7 @@ function renderFilmResultsFromCache() {
       const inLib = !!filmLibrary[f.id];
       const poster = tmdbImg(f.poster_path, 'w185');
       const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
-      return `<div class="list-item" onclick="openFilm(${f.id})">
+      return `<div class="list-item" onclick="openFilm(${f.id}, this)">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
         <div class="li-info">
           <div class="li-name">${escapeHtml(f.title)}</div>
@@ -4776,7 +4836,7 @@ function renderFilmResultsFromCache() {
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
     const votes = formatVotes(f.vote_count);
     return gridCard({
-      onclick: `openFilm(${f.id})`,
+      onclick: `openFilm(${f.id}, this)`,
       poster,
       title: f.title,
       sub: f.release_date?f.release_date.slice(0,4):'—',
@@ -4895,7 +4955,7 @@ async function toggleSeriesWatchedQuick(id) {
   if (!isAll) {
     checkAchievements();
     if (categorizeShow(s) === 'inpari') {
-      celebrateShowComplete();
+      celebrateShowComplete(s);
       logActivity({ type: 'finished_show', showId: Number(id), title: s.name||'', image: s.image||null });
     }
   }
@@ -4939,9 +4999,12 @@ async function quickAddFilm(id) {
 }
 
 // ---------- open show ----------
-function sheetSkeleton() {
+function sheetSkeleton(posterSrc) {
+  const hero = posterSrc
+    ? `<div class="sk-hero sk-hero-img" style="background-image:url('${posterSrc}')"></div>`
+    : `<div class="sk-hero skel"></div>`;
   return `<div class="sheet-skel">
-    <div class="sk-hero skel"></div>
+    ${hero}
     <div class="sk-body">
       <div class="skel sk-line" style="width:62%;height:22px"></div>
       <div class="skel sk-line" style="width:42%"></div>
@@ -4953,6 +5016,37 @@ function sheetSkeleton() {
       </div>
     </div>
   </div>`;
+}
+
+// Transizione "poster → scheda": il poster toccato si espande nell'hero della
+// scheda (View Transitions API). Se non supportata o riduzione movimento attiva,
+// apre normalmente. doOpen(posterSrc) monta lo skeleton e apre la sheet.
+function heroPosterImg(originEl) {
+  const host = originEl && originEl.closest && originEl.closest('.card, .gcard, .list-item, .resume-card, .person-item');
+  return host ? host.querySelector('img') : null;
+}
+function vtOpenSheet(originEl, doOpen) {
+  const img = heroPosterImg(originEl);
+  const src = img ? (img.currentSrc || img.src || '') : '';
+  const sheetBg = document.getElementById('sheetBg');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const alreadyOpen = sheetBg && sheetBg.classList.contains('open');
+  if (img && !reduce && !alreadyOpen && typeof document.startViewTransition === 'function') {
+    img.style.viewTransitionName = 'hero-poster';
+    document.documentElement.classList.add('vt-hero');
+    const cleanup = () => { img.style.viewTransitionName = ''; document.documentElement.classList.remove('vt-hero'); };
+    try {
+      const vt = document.startViewTransition(() => {
+        // Tolgo il nome dall'origine dentro il callback: così nello stato finale
+        // l'unico elemento "hero-poster" è l'hero della scheda (niente conflitti).
+        img.style.viewTransitionName = '';
+        doOpen(src);
+      });
+      vt.finished.then(cleanup, cleanup);
+    } catch (e) { cleanup(); doOpen(src); }
+  } else {
+    doOpen(src);
+  }
 }
 
 function computeNextEp(episodes, watched) {
@@ -4985,7 +5079,7 @@ async function fetchTvEpisodes(id, seasonNumbers) {
   return lists.flat();
 }
 
-async function openShow(id) {
+async function openShow(id, originEl) {
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
   currentShowId = id;
   sheetNavOpener = 'show';
@@ -4993,8 +5087,7 @@ async function openShow(id) {
   sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
-  sheet.innerHTML = sheetSkeleton();
-  sheetBg.classList.add('open');
+  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheetBg.classList.add('open'); });
 
   if (!hasTmdbKey()) { closeSheet(); return; }
 
@@ -5360,7 +5453,7 @@ function applyToggleEpisode(showId, season, number) {
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
   const becameInpari = !wasWatched && categorizeShow(library[showId]) === 'inpari';
   if (becameInpari) {
-    celebrateShowComplete();
+    celebrateShowComplete(library[showId]);
     logActivity({ type: 'finished_show', showId: Number(showId), title: library[showId].name || '', image: library[showId].image || null });
     refreshShowTotals(showId).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
   } else if (!wasWatched) {
@@ -5434,7 +5527,7 @@ function toggleMarkAll(showId) {
   const sp = document.getElementById('statP'); if (sp) sp.textContent = (eps.length?Math.round(wc/eps.length*100):0)+'%';
   updateMarkAllBtn(showId);
   if (!wasAll && categorizeShow(show) === 'inpari') {
-    celebrateShowComplete();
+    celebrateShowComplete(show);
     logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
     refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
   }
@@ -5493,7 +5586,7 @@ async function markNext(id) {
   const btn = document.querySelector(`.ep-check[data-show-id="${id}"]`);
   if (btn) { btn.classList.add('justchecked'); setTimeout(() => btn.classList.remove('justchecked'), 550); }
   if (categorizeShow(s) === 'inpari') {
-    celebrateShowComplete();
+    celebrateShowComplete(s);
     logActivity({ type: 'finished_show', showId: Number(id), title: s.name || '', image: s.image || null });
     refreshShowTotals(id).then(changed => { if (changed) withoutBarAnim(renderLibrary); });
   } else {
@@ -5967,15 +6060,14 @@ async function deleteComment(commentId) {
 }
 
 // ---------- film detail ----------
-async function openFilm(id) {
+async function openFilm(id, originEl) {
   currentFilmId = id;
   sheetNavOpener = 'film';
   sheetNavIds = filmCategoryIds.slice();
   sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
-  sheet.innerHTML = sheetSkeleton();
-  sheetBg.classList.add('open');
+  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheetBg.classList.add('open'); });
 
   let f = filmLibrary[id];
   if (!f) {
