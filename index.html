@@ -452,6 +452,7 @@
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
+  .pill-rating { background: rgba(255,214,10,0.16); color: #FFD60A; font-weight: 800; }
   .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .summary.expanded { -webkit-line-clamp: unset; overflow: visible; }
   .summary-more { display: none; font-size: 13px; font-weight: 700; color: var(--fg); margin: 0 0 16px; }
@@ -5676,9 +5677,9 @@ async function renderSheet(show, episodes, seasons, inLib) {
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
       <div class="metarow">
-        <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
+        ${rating?`<span class="pill pill-rating">★ ${fmtRating(rating)}${votes?` · ${votes}`:''}</span>`:''}
         ${genres.map(g=>genrePill(g)).join('')}
-        ${rating?`<span class="pill">★ ${fmtRating(rating)}${votes?` · ${votes}`:''}</span>`:''}
+        <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <button class="summary-more" id="showSummaryMore" onclick="toggleSummaryClamp('showSummary')">Mostra altro</button>
@@ -6699,9 +6700,9 @@ async function renderFilmSheet(f, inLib) {
     <div class="sheetbody">
       <h2>${escapeHtml(f.title)}</h2>
       <div class="metarow">
-        <span class="pill">${f.year||'—'}</span>
+        ${f.rating?`<span class="pill pill-rating">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
         ${(f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : [])).map(g=>genrePill(g)).join('')}
-        ${f.rating?`<span class="pill">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
+        <span class="pill">${f.year||'—'}</span>
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
