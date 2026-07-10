@@ -181,21 +181,25 @@
   .gcard .card { border-radius: 0; background: rgba(var(--overlay-rgb),0.06); }
   .gcard .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.3); font-size: 10px; text-align: center; padding: 8px; }
   .gcard .grating {
-    position: absolute; top: 6px; left: 6px; z-index: 3; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px;
     background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    color: #FFD60A; display: flex; align-items: center; gap: 2px;
+    color: #FFD60A; display: flex; align-items: center; gap: 2px; width: fit-content;
   }
-  /* × rimuovi: piccola e vetrosa in alto a destra sul poster */
+  /* rating in alto a sx, stagioni totali in basso a sx sul poster */
+  .gc-top-left { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .gc-bottom-left { position: absolute; bottom: 6px; left: 6px; z-index: 3; }
+  .gc-bottom-left .grating { color: #C77DFF; }
+  /* × rimuovi: rosso acceso con la X bianca, in alto a destra sul poster */
   .gc-x { position: absolute; top: 6px; right: 6px; z-index: 5; }
   .gc-x .act-btn {
-    width: 26px; height: 26px; background: rgba(0,0,0,0.45); color: #fff;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    width: 26px; height: 26px; background: #FF3B30; color: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   }
   .gc-x .act-btn svg { width: 12px; height: 12px; }
-  /* spunta avanti-episodio in basso a destra sul poster */
+  /* spunta avanti-episodio: stessa dimensione della × */
   .gc-check { position: absolute; right: 7px; bottom: 7px; z-index: 5; }
-  .gc-check .ep-check { width: 34px; height: 34px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+  .gc-check .ep-check { width: 26px; height: 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .gc-check .ep-check svg { width: 12px; height: 12px; }
   .gc-check .ep-check.empty { background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.65); }
   /* footer solido sotto il poster: titolo fino a 2 righe, info, barra blu */
   .gc-foot { padding: 7px 9px 9px; cursor: pointer; }
@@ -680,7 +684,6 @@
   }
   .live-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: livePulse 1.2s infinite; }
   @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .card .live-corner { position: absolute; top: 6px; left: 6px; z-index: 2; }
   /* badge "Nuovo ep": episodio appena uscito e non ancora visto */
   .new-ep-badge {
     display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em;
@@ -2574,6 +2577,12 @@ function levelColor(hours) {
 }
 // Anello colorato in base al livello, da applicare agli avatar.
 function levelRing(hours, w) { return `box-shadow:0 0 0 ${w||2.5}px ${levelColor(hours)}`; }
+// Come levelRing ma da un'etichetta livello già salvata (es. nei commenti, dove
+// non abbiamo le ore esatte dell'autore, solo il nome del livello raggiunto).
+function levelRingByLabel(label, w) {
+  const idx = USER_LEVELS.findIndex(l => l.label === label);
+  return `box-shadow:0 0 0 ${w||2.5}px ${LEVEL_COLORS[Math.max(0, idx)]}`;
+}
 function renderLevelBadge(hours) {
   const level = getUserLevel(hours);
   return `<span class="level-badge" title="${level.min}+ ore guardate">${level.label}</span>`;
@@ -3078,7 +3087,7 @@ function showHeatmapDay(ts, label) {
   Object.values(filmLibrary).forEach(f => {
     if (!f.watched || typeof f.watchedAt !== 'number') return;
     const d = new Date(f.watchedAt); d.setHours(0,0,0,0);
-    if (d.getTime() === ts) items['🍿 ' + (f.title || 'Film')] = 'film';
+    if (d.getTime() === ts) items[f.title || 'Film'] = 'film';
   });
   const keys = Object.keys(items);
   box.innerHTML = keys.length
@@ -3543,31 +3552,6 @@ function renderWeekCard() {
 }
 
 // Card "Il tuo ritmo": media ep/giorno attivo, mese top, giorno preferito.
-function renderRhythmCard() {
-  const ev = watchEventsAll().filter(e => e.ep);
-  if (!ev.length) return '';
-  const daySet = new Set(); const dowTally = Array(7).fill(0); const monthTally = {};
-  ev.forEach(e => {
-    const d = new Date(e.t);
-    const k = new Date(d); k.setHours(0,0,0,0); daySet.add(k.getTime());
-    dowTally[(d.getDay()+6)%7]++;
-    monthTally[d.getMonth()] = (monthTally[d.getMonth()]||0) + 1;
-  });
-  const avg = (ev.length / Math.max(daySet.size, 1)).toFixed(1).replace('.', ',');
-  const DOWFULL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
-  const bestDow = DOWFULL[dowTally.indexOf(Math.max.apply(null, dowTally))];
-  let bestM = 0, bestC = -1;
-  Object.entries(monthTally).forEach(([m, c]) => { if (c > bestC) { bestC = c; bestM = Number(m); } });
-  return `<div class="wrap-card glass" style="padding:16px; margin-bottom:16px">
-    <div class="lb-title">Il tuo ritmo</div>
-    <div class="sheet-kpis" style="margin:0">
-      <span class="skpi skpi-b">📺 <b>${avg}</b> ep/giorno attivo</span>
-      <span class="skpi tier-o">🗓 mese top: <b>${WRAP_MONTHS[bestM].toLowerCase()}</b></span>
-      <span class="skpi skpi-v">❤️ <b>${bestDow}</b></span>
-    </div>
-  </div>`;
-}
-
 function renderProfile() {
   renderProfileAuth();
   const statsRow = document.getElementById('profileStatsRow');
@@ -3587,7 +3571,7 @@ function renderProfile() {
     return;
   }
 
-  let html = renderWeekCard() + renderRhythmCard();
+  let html = renderWeekCard();
   if (currentUser) {
     html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
       <button class="seasontab${profilePeopleTab==='feed'?' active':''}" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
@@ -4052,21 +4036,22 @@ function renderCardTv(key, s) {
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
   const chips = [
-    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (done ? `<span class="chip chip-done">Completata</span>` : null),
-    s.rating ? `<span class="chip chip-star">★ ${s.rating}</span>` : null,
-    s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
+    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (done ? `<span class="chip chip-done">Completata</span>` : null)
   ].filter(Boolean).join('');
   const corner = showAiringToday(s)
-    ? `<span class="live-badge live-corner">In onda</span>`
-    : (hasNewEp(s) ? `<span class="new-ep-badge live-corner">Nuovo ep</span>` : '');
+    ? `<span class="live-badge">In onda</span>`
+    : (hasNewEp(s) ? `<span class="new-ep-badge">Nuovo ep</span>` : '');
+  const topLeft = (corner ? corner : '') + (s.rating ? `<span class="grating">★ ${s.rating}</span>` : '');
+  const bottomLeft = s.totalSeasons ? `<span class="grating">${s.totalSeasons} St.</span>` : '';
   return gridCard({
     onclick: `openShow(${id}, this)`,
     poster: s.image ? thumbImg(s.image,'w342') : '',
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
     chips,
+    topLeft,
+    bottomLeft,
     progPct: total ? pct : null,
-    corner,
     xBtn: removeBtnTv(id),
     check: epCheckBtn(id)
   });
@@ -4088,17 +4073,17 @@ function renderListTv(key, s) {
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
   const tier = pctTier(pct);
   const chips = [
-    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
-    hasNewEp(s) ? `<span class="chip chip-new">Nuovo ep</span>` : null,
     s.rating ? `<span class="chip chip-star">★ ${s.rating}</span>` : null,
-    s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
+    s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null,
+    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
+    hasNewEp(s) ? `<span class="chip chip-new">Nuovo ep</span>` : null
   ].filter(Boolean).join('');
   return `<div class="list-item" onclick="openShow(${id}, this)">
     ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
-      ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div><span class="li-pct ${tier}">${pct}%</span></div>` : ''}
+      ${total ? `<div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div>` : ''}
     </div>
     <div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
@@ -4343,9 +4328,9 @@ function renderCardFilm(key, f) {
     chips: [
       f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
       f.year ? `<span class="chip">${f.year}</span>` : null,
-      f.genre ? genreChip(f.genre) : null,
-      f.rating ? `<span class="chip chip-star">★ ${f.rating}</span>` : null
+      f.genre ? genreChip(f.genre) : null
     ].filter(Boolean).join(''),
+    topLeft: f.rating ? `<span class="grating">★ ${f.rating}</span>` : '',
     xBtn: removeBtnFilm(id),
     check: filmCheckBtn(id)
   });
@@ -4554,7 +4539,7 @@ function personCardHtml(p) {
   const canAct = currentUser && p.uid !== currentUser.uid;
   const safeName = escapeHtml(p.nickname || p.displayName || 'Utente').replace(/'/g,"\\'");
   return `<div class="personcard" onclick="openPerson('${p.uid}')">
-    <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="">` : `<div class="noimg-s"></div>`}</div>
+    <div class="avatar-wrap">${p.photoURL ? `<img src="${p.photoURL}" alt="" style="${levelRing(p.totalHours||0, 2)}">` : `<div class="noimg-s" style="${levelRing(p.totalHours||0, 2)}"></div>`}</div>
     <div class="pc-info">
       <div class="pc-name">${onlineDot(p.lastActive)}${escapeHtml(p.nickname || p.displayName || 'Utente')}</div>
       <div class="pc-sub">${(p.shows||[]).length} serie · ${(p.films||[]).length} film</div>
@@ -4864,10 +4849,15 @@ function openChat(uid, name, photoURL) {
   currentChatPeerName = name;
   currentChatPeerPhoto = photoURL || '';
   document.getElementById('chatHeadName').textContent = name;
-  document.getElementById('chatAvatar').innerHTML = photoURL ? `<img src="${photoURL}" alt="">` : '';
+  const chatAvatarEl = document.getElementById('chatAvatar');
+  chatAvatarEl.style.cssText = 'cursor:pointer';
+  chatAvatarEl.innerHTML = photoURL ? `<img src="${photoURL}" alt="">` : '';
   const statusEl = document.getElementById('chatHeadStatus');
   statusEl.textContent = '';
   fetchPresence([uid]).then(map => { if (currentChatUid === uid) statusEl.textContent = formatLastSeen(map[uid]); });
+  if (fbDb) fbDb.collection('publicProfiles').doc(uid).get().then(d => {
+    if (currentChatUid === uid && d.exists) chatAvatarEl.style.cssText = 'cursor:pointer;' + levelRing((d.data()||{}).totalHours||0, 2);
+  }).catch(()=>{});
   document.getElementById('chatMessages').innerHTML = `<div class="spinner"></div>`;
   document.getElementById('chatBg').classList.add('open');
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
@@ -4996,7 +4986,7 @@ async function markAllChatsRead() {
   try { await batch.commit(); } catch(e) {}
 }
 
-function chatRowHtml(uid, name, photo, subtitle, unread, chatId) {
+function chatRowHtml(uid, name, photo, subtitle, unread, chatId, hours) {
   const safeName = escapeHtml(name).replace(/'/g,"\\'");
   const safePhoto = (photo||'').replace(/'/g,"\\'");
   // Solo le chat esistenti (chatId noto) mostrano il bottone elimina; le righe
@@ -5007,7 +4997,7 @@ function chatRowHtml(uid, name, photo, subtitle, unread, chatId) {
   // nickname/riga -> apre la chat; avatar -> apre il profilo.
   return `<div class="notifItem${unread ? ' unread' : ''}" style="cursor:pointer" onclick="openChat('${uid}','${safeName}','${safePhoto}')">
       <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${uid}')">
-        <div class="notifIcon" style="overflow:hidden;padding:0">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
+        <div class="notifIcon" style="overflow:hidden;padding:0;${levelRing(hours||0, 2)}">${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤'}</div>
       </div>
       <div class="notifBody">
         <div class="notifText"><span class="online-dot pending" data-presence-uid="${uid}"></span><b>${escapeHtml(name)}</b> <span class="presence-text" data-presence-text-uid="${uid}"></span></div>
@@ -5060,7 +5050,7 @@ async function renderChatListPanel() {
     const name = (live && (live.nickname || live.displayName)) || (c.names && c.names[peerUid]) || 'Utente';
     const photo = (live && live.photoURL) || (c.photos && c.photos[peerUid]) || '';
     const unread = c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid);
-    return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread, c.id);
+    return chatRowHtml(peerUid, name, photo, c.lastMessage || '', unread, c.id, live && live.totalHours);
   }).join('');
   el.innerHTML = existing || '<div class="spinner"></div>';
   // Persone che segui con cui non hai ancora una chat: suggerite per iniziarne una.
@@ -5073,7 +5063,7 @@ async function renderChatListPanel() {
   let html = existing;
   if (suggestions.length) {
     html += `<div class="chat-newsection">Inizia una chat</div>` +
-      suggestions.map(p => chatRowHtml(p.uid, p.nickname || p.displayName || 'Utente', p.photoURL || '', 'Tocca per scrivere', false)).join('');
+      suggestions.map(p => chatRowHtml(p.uid, p.nickname || p.displayName || 'Utente', p.photoURL || '', 'Tocca per scrivere', false, null, p.totalHours)).join('');
   } else if (existing && followingList.length) {
     // Nessun suggerimento ma segui gente: chiariamo perché (già tutti in chat),
     // invece di lasciare un silenzio che sembra un bug.
@@ -5340,7 +5330,8 @@ function gridCard(o) {
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
-      ${o.corner||''}
+      ${(o.topLeft || o.corner) ? `<div class="gc-top-left">${o.topLeft || o.corner}</div>` : ''}
+      ${o.bottomLeft ? `<div class="gc-bottom-left">${o.bottomLeft}</div>` : ''}
       ${o.xBtn ? `<div class="gc-x">${o.xBtn}</div>` : ''}
       ${o.check ? `<div class="gc-check">${o.check}</div>` : ''}
     </div>
@@ -6435,7 +6426,7 @@ function renderCommentItem(c, epKey, replies, isReply) {
   const replyBtn = `<button class="commentEmojiBtn" onclick="toggleReplyForm('${c.id}')"><span class="emo">💬</span><span>${replies.length}</span></button>`;
   const likeBtn = `<button class="commentEmojiBtn${liked ? ' liked' : ''}" onclick="toggleLikeComment('${c.id}')"><span class="emo">❤️</span><span>${likedBy.length}</span></button>`;
   return `<div class="commentItem" id="comment-${c.id}">
-    <div class="avatar-wrap"><div class="commentAvatarWrap">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
+    <div class="avatar-wrap"><div class="commentAvatarWrap" style="${c.authorLevel ? levelRingByLabel(c.authorLevel, 2) : ''}">${c.photoURL ? `<img src="${c.photoURL}" alt="">` : ''}</div></div>
     <div class="commentBody">
       <div class="commentHeadline"><span class="online-dot pending" data-presence-uid="${c.uid}"></span><span class="commentAuthor" onclick="event.stopPropagation();openPerson('${c.uid}')" style="cursor:pointer">${escapeHtml(c.displayName || 'Utente')}${c.authorLevel ? `<span class="level-badge">${escapeHtml(c.authorLevel)}</span>` : ''}</span><span class="commentDate">${when}</span></div>
       <div class="commentText">${highlightMentions(c.text)}</div>
