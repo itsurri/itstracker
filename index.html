@@ -159,47 +159,45 @@
     font-size: 12.5px; font-weight: 700; font-family: inherit; text-align: center; background: #0A84FF; color: #fff;
   }
   .watch-pill.done { background: #30D158; }
-  /* bottone largo "Aggiungi in libreria" (va a capo se serve) */
+  /* bottone "Aggiungi": stesso stile di watch-pill (stessa altezza e raggio) */
   .add-wide {
-    padding: 7px 10px; border-radius: 14px; border: none; font-family: inherit; font-size: 11.5px; font-weight: 700;
-    line-height: 1.15; background: #F7B538; color: #1a1508;
+    min-width: 92px; padding: 8px 12px; border-radius: 14px; border: none; font-family: inherit;
+    font-size: 12.5px; font-weight: 700; line-height: 1.15; text-align: center; background: #F7B538; color: #1a1508;
   }
   .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   /* larghezza fissa: le barre finiscono tutte allo stesso punto e "Aggiungi"
      risulta grande esattamente quanto [Visto/Da Vedere][×]. */
-  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; width: 132px; }
+  .row-actions { display: flex; align-items: stretch; gap: 6px; flex-shrink: 0; width: 132px; }
   .row-actions .add-wide, .row-actions .watch-pill { flex: 1; min-width: 0; }
 
-  /* --- card griglia unificata: poster + info + bottoni come un unico blocco --- */
-  .gcard { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: rgba(var(--overlay-rgb),0.05); --blend: rgba(var(--overlay-rgb),0.05); }
-  .gcard .card { border-radius: 0; background: transparent; }
-  .gcard .card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; pointer-events: none; background: linear-gradient(180deg, transparent, var(--blend)); }
+  /* --- card griglia: poster con titolo/info e azioni sovrapposti --- */
+  .gcard { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: rgba(var(--overlay-rgb),0.05); }
+  .gcard .card { border-radius: 0; background: rgba(var(--overlay-rgb),0.06); }
+  /* scrim scuro in basso per rendere leggibili titolo/info sovrapposti */
+  .gcard .card::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%; pointer-events: none; background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85)); }
   .gcard .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.3); font-size: 10px; text-align: center; padding: 8px; }
   .gcard .grating {
-    position: absolute; top: 6px; left: 6px; z-index: 2; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px;
+    position: absolute; top: 6px; left: 6px; z-index: 3; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 8px;
     background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     color: #FFD60A; display: flex; align-items: center; gap: 2px;
   }
-  .gcard-body { padding: 6px 9px 2px; }
-  .gcard-title { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gcard-sub { font-size: 10px; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gcard-prog { margin-top: 4px; height: 3px; background: rgba(var(--overlay-rgb),0.14); border-radius: 2px; overflow: hidden; }
-  .gcard-prog i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
-  .gcard-prog i.no-anim { animation: none; }
-  .gcard-act { padding: 5px 8px 8px; }
-  .gcard-act .lib-actions { width: 100%; justify-content: space-between; }
-  .gcard-act .row-actions { width: 100%; }
-  .gcard-act .watch-pill { flex: 1; min-width: 0; padding: 7px 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gcard-act .ep-check, .gcard-act .act-btn { width: 32px; height: 32px; }
-  .gcard-act .add-wide { flex: 1; width: 100%; text-align: center; }
-  /* bottoni DENTRO la copertina (libreria): in basso, sopra il poster */
-  .gcard-overlay-act { position: absolute; left: 6px; right: 6px; bottom: 6px; z-index: 3; }
-  .gcard-overlay-act .lib-actions { justify-content: space-between; }
-  .gcard-overlay-act .ep-check, .gcard-overlay-act .act-btn { width: 32px; height: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-  /* stato "aggiungi": card scura, solo un accenno di giallo che sfuma verso il
-     bottone (che resta giallo pieno) — meno giallo di prima. */
-  .gcard.gcard-add { --blend: rgba(247,181,56,0.22); }
-  .gcard.gcard-add .gcard-act { background: linear-gradient(180deg, transparent, rgba(247,181,56,0.1)); }
+  /* azioni libreria in alto sul poster */
+  .gc-top { position: absolute; top: 6px; left: 6px; right: 6px; z-index: 3; }
+  .gc-top .lib-actions { width: 100%; justify-content: space-between; }
+  .gc-top .ep-check, .gc-top .act-btn { width: 32px; height: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.55); }
+  /* titolo/info sovrapposti in basso al poster */
+  .gc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 18px 9px 8px; }
+  .gc-title { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+  .gc-sub { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+  .gc-prog { margin-top: 5px; height: 3px; background: rgba(255,255,255,0.28); border-radius: 2px; overflow: hidden; }
+  .gc-prog i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
+  .gc-prog i.no-anim { animation: none; }
+  /* azioni ricerca compatte sotto il poster */
+  .gc-bottom { padding: 6px 8px 8px; }
+  .gc-bottom .row-actions { width: 100%; }
+  .gc-bottom .watch-pill { flex: 1; min-width: 0; padding: 7px 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gc-bottom .add-wide { min-width: 0; padding: 7px 4px; font-size: 11px; }
+  .gc-bottom .ep-check, .gc-bottom .act-btn { width: 32px; height: 32px; }
   .gcard.gcard-add .add-wide { background: #F7B538; color: #1a1508; font-weight: 800; }
   .searchcard-skel { border-radius: 16px; aspect-ratio: 2/3; }
 
@@ -1891,6 +1889,7 @@ function thumbImg(url, size) { return url ? url.replace(/\/original\//, `/${size
 let library = {};
 let filmLibrary = {};
 let currentShowId = null;
+let currentFilmId = null;
 let currentSeason = null;
 let tvCategoryIds = [];
 let filmCategoryIds = [];
@@ -3519,10 +3518,9 @@ function renderCardTv(key, s) {
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
     sub,
-    prog: total ? `<div class="gcard-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : '',
+    prog: total ? `<div class="gc-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : '',
     corner: showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : '',
-    actions: libActionsTv(id),
-    overlay: true
+    topActions: libActionsTv(id)
   });
 }
 
@@ -3785,8 +3783,7 @@ function renderCardFilm(key, f) {
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
     sub: `${f.year||'—'}${f.watched?' · Visto':''}`,
-    actions: libActionsFilm(id),
-    overlay: true
+    topActions: libActionsFilm(id)
   });
 }
 
@@ -4641,7 +4638,7 @@ function renderTvResultsFromCache() {
       title: s.name,
       sub: meta,
       corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
-      actions: searchActionsTv(s.id, true),
+      bottomActions: searchActionsTv(s.id, false),
       addMode: !library[s.id]
     });
   }).join('')}</div>`;
@@ -4720,7 +4717,7 @@ function renderFilmResultsFromCache() {
       title: f.title,
       sub: f.release_date?f.release_date.slice(0,4):'—',
       corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
-      actions: searchActionsFilm(f.id, true),
+      bottomActions: searchActionsFilm(f.id, false),
       addMode: !filmLibrary[f.id]
     });
   }).join('')}</div>`;
@@ -4742,8 +4739,8 @@ function watchPillFilm(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
   return `<button class="watch-pill${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})">${done?'Visto':'Da Vedere'}</button>`;
 }
-function removeBtnTv(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();quickAdd(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
-function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();quickAddFilm(${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
+function removeBtnTv(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('tv',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
+function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('film',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
 // Spunta verde con V. Serie: segna il prossimo episodio (con animazione).
 function epCheckBtn(id) { return `<button class="ep-check" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_V}</button>`; }
 // Spunta film: verde con V quando visto, vuota quando no; toggle.
@@ -4759,22 +4756,22 @@ function libActionsFilm(id) { return `<div class="lib-actions">${filmCheckBtn(id
 function searchActionsTv(id, full) { return library[id] ? `<div class="row-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : `<div class="row-actions">${addWideTv(id, full)}</div>`; }
 function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id, full)}</div>`; }
 
-// Card di griglia unificata: poster (con tilt/glow) + info + bottoni, un blocco solo.
-// Con overlay=true i bottoni stanno DENTRO la copertina (in basso), come chiesto
-// per la libreria; altrimenti sotto (ricerca).
+// Card di griglia: poster con TUTTO sovrapposto (titolo/info in basso, azioni
+// eventualmente in alto). Le azioni possono stare in alto sul poster (libreria)
+// o sotto in modo compatto (ricerca).
 function gridCard(o) {
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
       ${o.corner||''}
-      ${o.overlay ? `<div class="gcard-overlay-act">${o.actions}</div>` : ''}
+      ${o.topActions ? `<div class="gc-top">${o.topActions}</div>` : ''}
+      <div class="gc-info" onclick="${o.onclick}">
+        <div class="gc-title">${escapeHtml(o.title||'')}</div>
+        ${o.sub ? `<div class="gc-sub">${o.sub}</div>` : ''}
+        ${o.prog||''}
+      </div>
     </div>
-    <div class="gcard-body" onclick="${o.onclick}">
-      <div class="gcard-title">${escapeHtml(o.title||'')}</div>
-      ${o.sub ? `<div class="gcard-sub">${o.sub}</div>` : ''}
-      ${o.prog||''}
-    </div>
-    ${o.overlay ? '' : `<div class="gcard-act">${o.actions}</div>`}
+    ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
   </div>`;
 }
 
@@ -5420,10 +5417,31 @@ async function quickAddSilent(id) {
 
 async function addFromSheet(id) { await quickAdd(id); openShow(id); }
 
-async function removeShow(id) {
-  delete library[id]; saveLibrary(); renderLibrary(); showToast('Serie rimossa');
-  if (document.getElementById('sheetBg').classList.contains('open')) openShow(id);
+// ---------- rimozione con conferma (usata ovunque: liste, griglie, schede) ----------
+function confirmRemove(kind, id) {
+  const isFilm = kind === 'film';
+  const name = isFilm ? ((filmLibrary[id] && filmLibrary[id].title) || 'questo film')
+                      : ((library[id] && library[id].name) || 'questa serie');
+  document.getElementById('confirmTitle').textContent = 'Rimuovere dalla libreria?';
+  document.getElementById('confirmMsg').textContent = `Vuoi rimuovere “${name}” dalla libreria?`;
+  const okBtn = document.getElementById('confirmOk');
+  okBtn.textContent = 'Rimuovi';
+  okBtn.onclick = () => { closeConfirm(); isFilm ? doRemoveFilm(id) : doRemoveShow(id); };
+  document.getElementById('confirmBg').classList.add('open');
 }
+function doRemoveShow(id) {
+  const inSheet = document.getElementById('sheetBg').classList.contains('open') && currentShowId == id;
+  delete library[id]; saveLibrary(); renderLibrary(); renderTvResultsFromCache(); showToast('Serie rimossa');
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
+  if (inSheet) openShow(id);
+}
+function doRemoveFilm(id) {
+  const inSheet = document.getElementById('sheetBg').classList.contains('open') && currentFilmId == id;
+  delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); renderFilmResultsFromCache(); showToast('Film rimosso');
+  if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
+  if (inSheet) openFilm(id);
+}
+async function removeShow(id) { confirmRemove('tv', id); }
 
 // ---------- commenti episodio ----------
 let commentsCache = {};
@@ -5858,6 +5876,7 @@ async function deleteComment(commentId) {
 
 // ---------- film detail ----------
 async function openFilm(id) {
+  currentFilmId = id;
   sheetNavOpener = 'film';
   sheetNavIds = filmCategoryIds.slice();
   sheetNavIndex = sheetNavIds.indexOf(id);
@@ -5920,10 +5939,7 @@ async function toggleFilmWatched(id) {
     logActivity({ type: 'watched_film', showId: Number(id), title: filmLibrary[id].title || '', image: filmLibrary[id].image || null });
   }
 }
-async function removeFilm(id) {
-  delete filmLibrary[id]; saveFilmLibrary(); renderFilmLibrary(); showToast('Film rimosso');
-  if (document.getElementById('sheetBg').classList.contains('open')) openFilm(id);
-}
+async function removeFilm(id) { confirmRemove('film', id); }
 
 function closeSheet() {
   document.getElementById('sheetBg').classList.remove('open');
