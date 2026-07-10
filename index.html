@@ -206,14 +206,20 @@
   }
   .gc-sub { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gc-sub b { color: #0A84FF; font-weight: 800; }
+  /* chip in griglia: stesse info della lista, formato mini */
+  .gc-chips { margin-top: 4px; flex-wrap: wrap; }
+  .gc-chips .chip { font-size: 8.5px; padding: 2px 6px; }
+  .gc-progrow { margin-top: 6px; }
+  .gc-progrow .gc-bar { flex: 1; margin-top: 0; }
   .gc-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; }
   .gc-bar i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: #0A84FF; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .gc-bar i.no-anim { animation: none; }
-  /* fasce di avanzamento: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde */
-  .gc-bar i.tier-r, .li-prog i.tier-r { background: #FF453A; }
-  .gc-bar i.tier-o, .li-prog i.tier-o { background: #FF9F0A; }
-  .gc-bar i.tier-y, .li-prog i.tier-y { background: #FFD60A; }
-  .gc-bar i.tier-g, .li-prog i.tier-g { background: #30D158; }
+  /* fasce di avanzamento: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde.
+     Il selettore include .list-item per vincere sulla regola base della lista. */
+  .gc-bar i.tier-r, .list-item .li-prog i.tier-r { background: #FF453A; }
+  .gc-bar i.tier-o, .list-item .li-prog i.tier-o { background: #FF9F0A; }
+  .gc-bar i.tier-y, .list-item .li-prog i.tier-y { background: #FFD60A; }
+  .gc-bar i.tier-g, .list-item .li-prog i.tier-g { background: #30D158; }
   .li-pct.tier-r { color: #FF453A; } .li-pct.tier-o { color: #FF9F0A; }
   .li-pct.tier-y { color: #FFD60A; } .li-pct.tier-g { color: #30D158; }
   .wall-bar.tier-r::after { background: #FF453A; } .wall-bar.tier-o::after { background: #FF9F0A; }
@@ -289,7 +295,7 @@
   .chip-done { background: rgba(48,209,88,0.14); color: #30D158; font-weight: 800; }
   .chip-new  { background: rgba(255,159,10,0.16); color: #FF9F0A; font-weight: 800; }
   .chip-star { background: rgba(255,214,10,0.16); color: #FFD60A; font-weight: 800; }
-  .chip-seasons { background: rgba(48,209,88,0.13); color: #30D158; font-weight: 800; }
+  .chip-seasons { background: rgba(191,90,242,0.18); color: #C77DFF; font-weight: 800; }
   /* KPI della scheda serie: visti, totali, % (a fasce), tempo rimanente */
   .sheet-kpis { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .skpi {
@@ -304,9 +310,18 @@
   .skpi.tier-o { background: rgba(255,159,10,0.15); color: #FF9F0A; }
   .skpi.tier-y { background: rgba(255,214,10,0.15); color: #FFD60A; }
   .skpi.tier-g { background: rgba(48,209,88,0.13); color: #30D158; }
-  /* contatori sulle tab categoria */
-  .tab-count { background: rgba(var(--overlay-rgb),0.14); color: inherit; }
-  .seasontab.active .tab-count { background: rgba(0,0,0,0.18); }
+  /* contatori sulle tab categoria: badge in alto a destra, come "In Arrivo" */
+  .tab-count {
+    display: flex; position: absolute; min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 9px; color: #fff; font-size: 9.5px; font-weight: 800;
+    align-items: center; justify-content: center; line-height: 1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  #tvCount-continua { background: #0A84FF; }
+  #tvCount-inpari { background: #30D158; }
+  #tvCount-davedere { background: #8E8E93; }
+  #filmCount-visti { background: #30D158; }
+  #filmCount-davedere { background: #0A84FF; }
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
   .li-progrow .li-prog { flex: 1; margin-top: 0; }
   .li-pct { font-size: 10px; font-weight: 800; color: rgba(var(--overlay-rgb),0.55); font-variant-numeric: tabular-nums; flex-shrink: 0; }
@@ -552,6 +567,10 @@
   }
   .ach-label { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); line-height: 1.25; }
   .ach.unlocked .ach-label { color: var(--fg); font-weight: 700; }
+  /* progresso verso il prossimo trofeo */
+  .ach-prog { width: 100%; height: 3px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); margin-top: 5px; overflow: hidden; }
+  .ach-prog i { display: block; height: 100%; border-radius: 2px; background: #F7B538; }
+  .ach-prog-txt { font-size: 9px; color: rgba(var(--overlay-rgb),0.45); margin-top: 2px; font-variant-numeric: tabular-nums; }
   .removebtn, .markallbtn.danger {
     border-color: #ff8a80; background: #3a0f0f; color: #ff8a80;
   }
@@ -991,6 +1010,10 @@
   .celebrate-eyebrow { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #F7B538; margin-bottom: 5px; }
   .celebrate-name { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
   .celebrate-sub { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-top: 6px; }
+  .celebrate-share {
+    margin-top: 14px; padding: 10px 24px; border-radius: 20px;
+    background: var(--fg); color: var(--bg); font-weight: 800; font-size: 13px; font-family: inherit;
+  }
 
   .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid rgba(var(--overlay-rgb),0.2); border-top-color: var(--fg); animation: spin 0.7s linear infinite; margin: 30px auto; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -1171,6 +1194,14 @@
     background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff;
   }
 
+  /* ===== la tua settimana ===== */
+  .week-bars { display: flex; gap: 8px; height: 80px; align-items: flex-end; padding-top: 4px; }
+  .wk-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+  .wk-bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg,#0A84FF,#5E5CE6); min-height: 4px; }
+  .wk-bar.today { background: linear-gradient(180deg,#F7B538,#FF9F0A); }
+  .wk-lbl { font-size: 10px; font-weight: 700; color: rgba(var(--overlay-rgb),0.45); }
+  .wk-lbl.today { color: #F7B538; }
+
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
   .wrap-hero .wh-num { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; background: linear-gradient(120deg,#0A84FF,#5E5CE6); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -1214,6 +1245,8 @@
   .hm-l4 { background: #C9720B; color: #fff; }
   .hm-future { opacity: 0.35; }
   .hm-cell.hm-today { box-shadow: inset 0 0 0 2px rgba(var(--overlay-rgb),0.6); }
+  .hm-detail { margin-top: 12px; font-size: 12px; color: rgba(var(--overlay-rgb),0.65); line-height: 1.6; background: rgba(var(--overlay-rgb),0.06); border-radius: 12px; padding: 10px 12px; }
+  .hm-detail b { color: var(--fg); }
   .hm-legend { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 14px; }
   .hm-legend .hm-leg-item { display: inline-flex; align-items: center; gap: 3px; }
   .hm-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; background: rgba(var(--overlay-rgb),0.07); }
@@ -1441,9 +1474,9 @@
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
     <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-badge tab-count" id="tvCount-continua"></span></button>
-      <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-badge tab-count" id="tvCount-inpari"></span></button>
-      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-badge tab-count" id="tvCount-davedere"></span></button>
+      <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
+      <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
+      <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
       <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
     </div>
     <div id="tvContent"></div>
@@ -1457,8 +1490,8 @@
   <!-- FILM -->
   <div class="view" id="view-film">
     <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-badge tab-count" id="filmCount-visti"></span></button>
-      <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-badge tab-count" id="filmCount-davedere"></span></button>
+      <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
+      <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
     </div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
@@ -1896,7 +1929,7 @@ function renderProfileAuth() {
       <div class="profile-inner">
         <div class="profile-top">
           <div class="avatar-wrap" onclick="tapAvatarEdit()">
-            ${avatarUrl ? `<img class="profile-avatar cover-lift" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}
+            ${avatarUrl ? `<img class="profile-avatar cover-lift" style="${levelRing(computeWrapped().hours, 3)}" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift" style="${levelRing(computeWrapped().hours, 3)}"></div>`}
           </div>
           <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
             <div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>
@@ -2283,7 +2316,7 @@ async function refreshInPariShows() {
   // ricategorizzata correttamente quando TMDb pubblica la data vera.
   const ids = Object.keys(library).filter(id => {
     const cat = categorizeShow(library[id]);
-    return cat === 'inpari' || cat === 'continua' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop;
+    return cat === 'inpari' || cat === 'continua' || !library[id].rating || !library[id].totalSeasons || !library[id].backdrop || !library[id].totalEpisodes;
   });
   if (!ids.length) return;
   const results = await Promise.all(ids.map(refreshShowTotals));
@@ -2348,6 +2381,22 @@ function switchTab(tab) {
 window.addEventListener('resize', () => moveTabIndicator(document.querySelector('.tabbtn.active')));
 
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
+// Ogni genere ha il suo colore fisso, ovunque nell'app.
+const GENRE_COLORS = {
+  'Dramma':'#BF5AF2','Crime':'#FF453A','Commedia':'#FFD60A','Fantascienza':'#64D2FF',
+  'Fantascienza e Fantasy':'#64D2FF','Fantasy':'#5E5CE6','Azione':'#FF9F0A','Azione e Avventura':'#FF9F0A',
+  'Avventura':'#FF9F0A','Horror':'#FF375F','Thriller':'#FF6961','Mistero':'#7D7AFF','Romance':'#FF2D92',
+  'Animazione':'#30D158','Famiglia':'#30D158','Documentario':'#8E8E93','Guerra':'#A2845E','Guerra e Politica':'#A2845E',
+  'Western':'#A2845E','Storia':'#A2845E','Musica':'#FF2D92','Kids':'#30D158','Reality':'#8E8E93','Soap':'#FF2D92',
+  'Talk':'#8E8E93','News':'#8E8E93','Film TV':'#8E8E93'
+};
+function genreColor(name) {
+  if (GENRE_COLORS[name]) return GENRE_COLORS[name];
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return GENRE_PALETTE[h % GENRE_PALETTE.length];
+}
+function genrePill(name) { const c = genreColor(name); return `<span class="pill" style="background:${c}22;color:${c};font-weight:700">${escapeHtml(name)}</span>`; }
+function genreChip(name) { const c = genreColor(name); return `<span class="chip" style="background:${c}22;color:${c};font-weight:800">${escapeHtml(name)}</span>`; }
 
 // Piccola pioggia di coriandoli quando finisci tutti gli episodi di una serie.
 function celebrateShowComplete(show) {
@@ -2392,6 +2441,7 @@ function showCompleteCard(show) {
       <div class="celebrate-eyebrow">Serie completata!</div>
       <div class="celebrate-name">${escapeHtml(show.name || '')}</div>
       ${sub ? `<div class="celebrate-sub">${sub}</div>` : ''}
+      ${show.id ? `<button class="celebrate-share" onclick="event.stopPropagation();clearTimeout(this.closest('.celebrate-layer')._t);shareShowResult(${Number(show.id)})">Condividi 📤</button>` : ''}
     </div>`;
   const close = () => { layer.classList.remove('show'); setTimeout(() => layer.remove(), 320); };
   layer.addEventListener('click', close);
@@ -2399,6 +2449,92 @@ function showCompleteCard(show) {
   requestAnimationFrame(() => layer.classList.add('show'));
   if (show.image) posterAccent(show.image).then(col => { const g = document.getElementById('celebGlow'); if (g && col) g.style.setProperty('--accent', col); });
   layer._t = setTimeout(close, 3200);
+}
+
+// Immagine condivisibile "serie completata": poster + le tue statistiche.
+function colorWithAlpha(c, a) {
+  if (c && c.startsWith('rgb(')) return c.replace('rgb(', 'rgba(').replace(')', `,${a})`);
+  return `rgba(247,181,56,${a})`;
+}
+async function shareShowResult(id) {
+  const s = library[id];
+  if (!s) return;
+  showToast('Preparo l\'immagine…');
+  try {
+    const W = 1080, H = 1350;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0b0b0d'; ctx.fillRect(0, 0, W, H);
+
+    // alone del colore del poster dietro la locandina
+    const accent = (s.image && await posterAccent(thumbImg(s.image, 'w92'))) || 'rgb(247,181,56)';
+    const glow = ctx.createRadialGradient(W/2, 430, 60, W/2, 430, 640);
+    glow.addColorStop(0, colorWithAlpha(accent, 0.4)); glow.addColorStop(1, colorWithAlpha(accent, 0));
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+    // poster arrotondato al centro
+    const pw = 440, ph = 660, px = (W - pw) / 2, py = 120, r = 28;
+    const posterImg = s.image ? await loadImageSafe(thumbImg(s.image, 'w500')) : null;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(px + r, py); ctx.arcTo(px + pw, py, px + pw, py + ph, r); ctx.arcTo(px + pw, py + ph, px, py + ph, r);
+    ctx.arcTo(px, py + ph, px, py, r); ctx.arcTo(px, py, px + pw, py, r); ctx.closePath(); ctx.clip();
+    if (posterImg) ctx.drawImage(posterImg, px, py, pw, ph);
+    else { ctx.fillStyle = '#26262a'; ctx.fillRect(px, py, pw, ph); }
+    ctx.restore();
+
+    // testi
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#F7B538';
+    ctx.font = '800 34px -apple-system, "Segoe UI", sans-serif';
+    ctx.fillText('🏆 SERIE COMPLETATA', W/2, py + ph + 84);
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 58px -apple-system, "Segoe UI", sans-serif';
+    let name = s.name || '';
+    while (name.length > 2 && ctx.measureText(name).width > W - 120) name = name.slice(0, -2);
+    ctx.fillText(name === (s.name||'') ? name : name + '…', W/2, py + ph + 158);
+
+    // statistiche: episodi · ore · giorni impiegati
+    const eps = Object.keys(s.watched || {}).length;
+    const hours = Math.round(eps * (s.runtime || 42) / 60);
+    const times = Object.values(s.watched || {}).filter(v => typeof v === 'number');
+    let days = 1;
+    if (times.length > 1) {
+      let mn = Infinity, mx = -Infinity;
+      times.forEach(t => { if (t < mn) mn = t; if (t > mx) mx = t; });
+      days = Math.max(1, Math.round((mx - mn) / 86400000) + 1);
+    }
+    const stats = [[eps, 'EPISODI'], [hours, 'ORE'], [days, days === 1 ? 'GIORNO' : 'GIORNI']];
+    const statY = py + ph + 280;
+    const colW = (W - 128) / 3;
+    stats.forEach(([val, lab], i) => {
+      const cx = 64 + colW * i + colW / 2;
+      ctx.fillStyle = '#fff'; ctx.font = '800 64px -apple-system, sans-serif';
+      ctx.fillText(String(val), cx, statY);
+      ctx.font = '700 22px -apple-system, sans-serif'; ctx.globalAlpha = 0.5;
+      ctx.fillText(lab, cx, statY + 40); ctx.globalAlpha = 1;
+    });
+
+    // logo in basso
+    ctx.font = '800 30px -apple-system, sans-serif';
+    const its = 'its', tracker = 'tracker';
+    const itsW = ctx.measureText(its).width, allW = itsW + ctx.measureText(tracker).width;
+    ctx.textAlign = 'left';
+    let lx = (W - allW) / 2;
+    ctx.fillStyle = '#F7B538'; ctx.fillText(its, lx, H - 70); lx += itsW;
+    ctx.fillStyle = '#fff'; ctx.fillText(tracker, lx, H - 70);
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if (!blob) { showToast('Errore nella creazione dell\'immagine'); return; }
+    const file = new File([blob], 'itstracker-completata.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: `Ho completato ${s.name} su itstracker 🏆` });
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'itstracker-completata.png'; a.click();
+      showToast('Immagine salvata');
+    }
+  } catch(e) { showToast('Errore nella creazione dell\'immagine'); }
 }
 
 const USER_LEVELS = [
@@ -2429,6 +2565,15 @@ function getUserLevel(hours) {
   for (const l of USER_LEVELS) { if (hours >= l.min) level = l; else break; }
   return level;
 }
+// Colore del livello: progressione grigio → verde → blu → viola → rosa → rosso → oro…
+const LEVEL_COLORS = ['#8E8E93','#30D158','#26C6DA','#0A84FF','#5E5CE6','#7D7AFF','#BF5AF2','#DA70D6','#FF2D92','#FF375F','#FF453A','#FF6961','#FF9F0A','#FFB340','#FFD60A','#F7B538','#E5C07B','#D4AF37','#C0C0C0','#B9F2FF','#FFFFFF'];
+function levelColor(hours) {
+  let idx = 0;
+  USER_LEVELS.forEach((l, i) => { if (hours >= l.min) idx = i; });
+  return LEVEL_COLORS[Math.min(idx, LEVEL_COLORS.length - 1)];
+}
+// Anello colorato in base al livello, da applicare agli avatar.
+function levelRing(hours, w) { return `box-shadow:0 0 0 ${w||2.5}px ${levelColor(hours)}`; }
 function renderLevelBadge(hours) {
   const level = getUserLevel(hours);
   return `<span class="level-badge" title="${level.min}+ ore guardate">${level.label}</span>`;
@@ -2894,7 +3039,8 @@ function renderHeatmap() {
     const isToday = d.getTime() === today.getTime();
     let lvl = 0;
     if (cnt >= 8) lvl = 4; else if (cnt >= 5) lvl = 3; else if (cnt >= 3) lvl = 2; else if (cnt >= 1) lvl = 1;
-    cells += `<div class="hm-cell hm-l${lvl}${isFuture?' hm-future':''}${isToday?' hm-today':''}" title="${day} ${MONTHS[month]}: ${cnt} ${cnt===1?'titolo':'titoli'}">${day}</div>`;
+    const click = (!isFuture && cnt > 0) ? ` onclick="showHeatmapDay(${d.getTime()}, '${day} ${MONTHS[month]}')" style="cursor:pointer"` : '';
+    cells += `<div class="hm-cell hm-l${lvl}${isFuture?' hm-future':''}${isToday?' hm-today':''}" title="${day} ${MONTHS[month]}: ${cnt} ${cnt===1?'titolo':'titoli'}"${click}>${day}</div>`;
   }
 
   const isCurrentMonth = heatmapMonthOffset === 0;
@@ -2907,6 +3053,7 @@ function renderHeatmap() {
     </div>
     <div class="hm-dow">${DOW.map(l => `<span>${l}</span>`).join('')}</div>
     <div class="hm-calgrid">${cells}</div>
+    <div id="hmDetail"></div>
     <div class="hm-legend">
       <span class="hm-leg-item"><i></i>0</span>
       <span class="hm-leg-item"><i class="hm-l1"></i>1-2</span>
@@ -2914,6 +3061,29 @@ function renderHeatmap() {
       <span class="hm-leg-item"><i class="hm-l3"></i>5-7</span>
       <span class="hm-leg-item"><i class="hm-l4"></i>8+</span>
     </div>`;
+}
+
+// Tap su un giorno della heatmap: mostra cosa hai guardato quel giorno.
+function showHeatmapDay(ts, label) {
+  const box = document.getElementById('hmDetail');
+  if (!box) return;
+  const items = {}; // nome → conteggio ep, oppure 'film'
+  Object.values(library).forEach(s => {
+    Object.values(s.watched||{}).forEach(v => {
+      if (typeof v !== 'number') return;
+      const d = new Date(v); d.setHours(0,0,0,0);
+      if (d.getTime() === ts) items[s.name || 'Serie'] = (items[s.name || 'Serie'] || 0) + 1;
+    });
+  });
+  Object.values(filmLibrary).forEach(f => {
+    if (!f.watched || typeof f.watchedAt !== 'number') return;
+    const d = new Date(f.watchedAt); d.setHours(0,0,0,0);
+    if (d.getTime() === ts) items['🍿 ' + (f.title || 'Film')] = 'film';
+  });
+  const keys = Object.keys(items);
+  box.innerHTML = keys.length
+    ? `<div class="hm-detail"><b>${label}</b> · ${keys.map(k => items[k] === 'film' ? escapeHtml(k) : `${escapeHtml(k)} <b>×${items[k]}</b>`).join(' · ')}</div>`
+    : '';
 }
 
 // ---------- classifica amici (ore viste questo mese) ----------
@@ -2933,7 +3103,7 @@ function leaderboardRowsHtml(rows, shown, kind) {
   let html = rows.slice(0, shown).map((r,i) => `
     <div class="lb-row${r.me?' me':''}" onclick="openPerson('${r.uid}')">
       <div class="lb-rank">${medals[i] || (i+1)}</div>
-      <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" src="${r.photo}" alt="">`:`<div class="lb-avatar"></div>`}</div>
+      <div class="avatar-wrap">${r.photo?`<img class="lb-avatar" style="${levelRing(r.lvlHours||r.hours||0, 2)}" src="${r.photo}" alt="">`:`<div class="lb-avatar" style="${levelRing(r.lvlHours||r.hours||0, 2)}"></div>`}</div>
       <div class="lb-name">${onlineDot(r.lastActive)}${escapeHtml(r.name)}</div>
       <div class="lb-hours">${r.hours} h</div>
     </div>`).join('');
@@ -2969,8 +3139,8 @@ async function renderLeaderboard() {
   const myPhoto = getAvatarUrl();
   const myMonthHours = hoursInMonth(new Date().getFullYear(), new Date().getMonth());
   const myTotalHours = computeWrapped().hours;
-  const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myTotalHours, me: true }];
-  const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myMonthHours, me: true }];
+  const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myTotalHours, lvlHours: myTotalHours, me: true }];
+  const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myMonthHours, lvlHours: myTotalHours, me: true }];
   try {
     // Carico per ID documento (= uid): più affidabile di where('uid','in',...).
     const docs = await Promise.all(followingList.slice(0, 30).map(u => fbDb.collection('publicProfiles').doc(u).get()));
@@ -2978,8 +3148,8 @@ async function renderLeaderboard() {
       const p = d.data();
       const name = p.nickname || p.displayName || 'Utente';
       const photo = p.photoURL || '';
-      totalRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: p.totalHours || 0 });
-      monthRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: (p.monthKey === mk ? (p.monthHours||0) : 0) });
+      totalRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: p.totalHours || 0, lvlHours: p.totalHours || 0 });
+      monthRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: (p.monthKey === mk ? (p.monthHours||0) : 0), lvlHours: p.totalHours || 0 });
     });
   } catch(e) {}
   totalRows.sort((a,b) => b.hours - a.hours);
@@ -3140,7 +3310,21 @@ function getAchievements(w) {
     if (id.startsWith('st')) return 'giorni';
     return 'serie';
   };
-  return defs.map(a => ({ ...a, emoji: emojiFor(a.id), category: categoryFor(a.id) }));
+  // Valore corrente e obiettivo per la barra di progresso (id = prefisso + soglia).
+  const metricFor = id => {
+    if (id.startsWith('ep'))  return w.episodesWatched;
+    if (id.startsWith('sc'))  return completedShows;
+    if (id.startsWith('lib')) return w.totalShows;
+    if (id.startsWith('fl'))  return filmLibCount;
+    if (id.startsWith('f'))   return w.filmsWatched;
+    if (id.startsWith('h'))   return w.hours;
+    if (id.startsWith('st'))  return w.streak;
+    if (id.startsWith('g'))   return w.distinctGenres;
+    if (id.startsWith('bs'))  return topWatched;
+    return 0;
+  };
+  const targetFor = id => parseInt(id.replace(/^[a-z]+/, ''), 10) || 1;
+  return defs.map(a => ({ ...a, emoji: emojiFor(a.id), category: categoryFor(a.id), value: metricFor(a.id), target: targetFor(a.id) }));
 }
 
 const ACH_CATEGORIES = [
@@ -3159,14 +3343,20 @@ function setAchievementTab(cat) {
 
 function achievementGridHtml(defs) {
   const filtered = defs.filter(a => a.category === achievementTab).slice().sort((a, b) => (b.unlocked - a.unlocked));
-  return filtered.map(a => `
+  return filtered.map(a => {
+    const prog = (!a.unlocked && a.target > 1)
+      ? `<div class="ach-prog"><i style="width:${Math.min(100, Math.round((a.value||0)/a.target*100))}%"></i></div><div class="ach-prog-txt">${a.value||0}/${a.target}</div>`
+      : '';
+    return `
     <div class="ach ${a.unlocked?'unlocked':''}">
       <div class="ach-icon">
         <span class="ach-emoji">${a.emoji}</span>
         ${!a.unlocked?`<span class="ach-lock">🔒</span>`:''}
       </div>
       <div class="ach-label">${a.label}</div>
-    </div>`).join('');
+      ${prog}
+    </div>`;
+  }).join('');
 }
 
 function renderAchievements(w) {
@@ -3312,6 +3502,72 @@ function showCompareResult(friend) {
   document.getElementById('confirmBg').classList.add('open');
 }
 
+// Tutti gli eventi di visione con timestamp (episodi + film), per le statistiche.
+function watchEventsAll() {
+  const ev = [];
+  Object.values(library).forEach(s => { const rt = s.runtime || 42; Object.values(s.watched||{}).forEach(v => { if (typeof v === 'number') ev.push({ t: v, mins: rt, ep: true }); }); });
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt === 'number') ev.push({ t: f.watchedAt, mins: f.runtime || 110, ep: false }); });
+  return ev;
+}
+
+// Card "La tua settimana": barre per giorno (lun-dom) + ore vs settimana scorsa.
+function renderWeekCard() {
+  const ev = watchEventsAll();
+  const now = new Date();
+  const todayIdx = (now.getDay() + 6) % 7; // 0 = lunedì
+  const monday = new Date(now); monday.setHours(0,0,0,0); monday.setDate(monday.getDate() - todayIdx);
+  const prevMonday = new Date(monday); prevMonday.setDate(prevMonday.getDate() - 7);
+  const days = Array(7).fill(0);
+  let curMins = 0, prevMins = 0;
+  ev.forEach(e => {
+    if (e.t >= monday.getTime()) { const idx = Math.floor((e.t - monday.getTime()) / 86400000); if (idx >= 0 && idx < 7) { days[idx] += e.mins; curMins += e.mins; } }
+    else if (e.t >= prevMonday.getTime()) prevMins += e.mins;
+  });
+  const max = Math.max.apply(null, days.concat(1));
+  const DOW = ['L','M','M','G','V','S','D'];
+  const bars = days.map((m, i) => `<div class="wk-col"><div class="wk-bar${i===todayIdx?' today':''}" style="height:${Math.max(4, Math.round(m/max*100))}%" title="${Math.round(m/60*10)/10} h"></div><span class="wk-lbl${i===todayIdx?' today':''}">${DOW[i]}</span></div>`).join('');
+  const fmt = mins => { const h = Math.floor(mins/60), m = mins%60; return h ? `${h}h ${m}m` : `${m}m`; };
+  let delta = '';
+  if (prevMins > 0) {
+    const d = Math.round((curMins - prevMins) / prevMins * 100);
+    delta = `<span class="skpi ${d >= 0 ? 'tier-g' : 'tier-r'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)}% vs scorsa</span>`;
+  }
+  return `<div class="wrap-card glass" style="padding:16px; margin-bottom:16px">
+    <div class="lb-title">La tua settimana</div>
+    <div class="week-bars">${bars}</div>
+    <div class="sheet-kpis" style="margin:12px 0 0">
+      <span class="skpi skpi-b">⏱ <b>${fmt(curMins)}</b> questa settimana</span>
+      ${delta}
+    </div>
+  </div>`;
+}
+
+// Card "Il tuo ritmo": media ep/giorno attivo, mese top, giorno preferito.
+function renderRhythmCard() {
+  const ev = watchEventsAll().filter(e => e.ep);
+  if (!ev.length) return '';
+  const daySet = new Set(); const dowTally = Array(7).fill(0); const monthTally = {};
+  ev.forEach(e => {
+    const d = new Date(e.t);
+    const k = new Date(d); k.setHours(0,0,0,0); daySet.add(k.getTime());
+    dowTally[(d.getDay()+6)%7]++;
+    monthTally[d.getMonth()] = (monthTally[d.getMonth()]||0) + 1;
+  });
+  const avg = (ev.length / Math.max(daySet.size, 1)).toFixed(1).replace('.', ',');
+  const DOWFULL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
+  const bestDow = DOWFULL[dowTally.indexOf(Math.max.apply(null, dowTally))];
+  let bestM = 0, bestC = -1;
+  Object.entries(monthTally).forEach(([m, c]) => { if (c > bestC) { bestC = c; bestM = Number(m); } });
+  return `<div class="wrap-card glass" style="padding:16px; margin-bottom:16px">
+    <div class="lb-title">Il tuo ritmo</div>
+    <div class="sheet-kpis" style="margin:0">
+      <span class="skpi skpi-b">📺 <b>${avg}</b> ep/giorno attivo</span>
+      <span class="skpi tier-o">🗓 mese top: <b>${WRAP_MONTHS[bestM].toLowerCase()}</b></span>
+      <span class="skpi skpi-v">❤️ <b>${bestDow}</b></span>
+    </div>
+  </div>`;
+}
+
 function renderProfile() {
   renderProfileAuth();
   const statsRow = document.getElementById('profileStatsRow');
@@ -3331,7 +3587,7 @@ function renderProfile() {
     return;
   }
 
-  let html = '';
+  let html = renderWeekCard() + renderRhythmCard();
   if (currentUser) {
     html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
       <button class="seasontab${profilePeopleTab==='feed'?' active':''}" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
@@ -3795,9 +4051,11 @@ function renderCardTv(key, s) {
   const done = total > 0 && watched >= total;
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
-  const sub = next
-    ? `<b>S${next.season} E${next.number}</b> · ${pct}%`
-    : (done ? 'Completata' : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : ''));
+  const chips = [
+    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (done ? `<span class="chip chip-done">Completata</span>` : null),
+    s.rating ? `<span class="chip chip-star">★ ${s.rating}</span>` : null,
+    s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
+  ].filter(Boolean).join('');
   const corner = showAiringToday(s)
     ? `<span class="live-badge live-corner">In onda</span>`
     : (hasNewEp(s) ? `<span class="new-ep-badge live-corner">Nuovo ep</span>` : '');
@@ -3806,7 +4064,7 @@ function renderCardTv(key, s) {
     poster: s.image ? thumbImg(s.image,'w342') : '',
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
-    sub,
+    chips,
     progPct: total ? pct : null,
     corner,
     xBtn: removeBtnTv(id),
@@ -4082,8 +4340,12 @@ function renderCardFilm(key, f) {
     poster: f.image ? thumbImg(f.image,'w342') : '',
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
-    sub: [f.watched ? `<b style="color:#30D158">Visto</b>` : null, f.year||'—', f.rating ? `★ ${f.rating}` : null].filter(Boolean).join(' · '),
-    progPct: f.watched ? 100 : null,
+    chips: [
+      f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
+      f.year ? `<span class="chip">${f.year}</span>` : null,
+      f.genre ? genreChip(f.genre) : null,
+      f.rating ? `<span class="chip chip-star">★ ${f.rating}</span>` : null
+    ].filter(Boolean).join(''),
     xBtn: removeBtnFilm(id),
     check: filmCheckBtn(id)
   });
@@ -4098,7 +4360,7 @@ function renderListFilm(key, f) {
       <div class="li-chips">${[
         f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
         f.year ? `<span class="chip">${f.year}</span>` : null,
-        f.genre ? `<span class="chip">${escapeHtml(f.genre)}</span>` : null,
+        f.genre ? genreChip(f.genre) : null,
         f.rating ? `<span class="chip chip-star">★ ${f.rating}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
@@ -4374,12 +4636,12 @@ async function fetchFriendFeedItems() {
 
 // Sezione persone nel profilo: feed di chi segui + amici suggeriti, divisi in due tab.
 let profilePeopleTab = 'feed';
-let profileFeedShown = 3;
+let profileFeedShown = 5;
 let profileFeedItemsCache = [];
 
 function setProfilePeopleTab(tab) {
   profilePeopleTab = tab;
-  profileFeedShown = 3;
+  profileFeedShown = 5;
   document.querySelectorAll('#profilePeopleTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
   loadProfilePeople();
 }
@@ -4437,13 +4699,13 @@ function renderProfileFeedBody() {
   const grouped = groupFeedItems(profileFeedItemsCache);
   const shown = grouped.slice(0, profileFeedShown);
   let html = shown.map(feedItemHtml).join('');
-  if (grouped.length > profileFeedShown || profileFeedShown > 3) {
+  if (grouped.length > profileFeedShown || profileFeedShown > 5) {
     html += `<div style="display:flex; gap:8px; margin-top:10px">`;
     if (grouped.length > profileFeedShown) {
-      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=3; renderProfileFeedBody()">Mostra altro</button>`;
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=5; renderProfileFeedBody()">Mostra altro</button>`;
     }
-    if (profileFeedShown > 3) {
-      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown=3; renderProfileFeedBody()">Mostra meno</button>`;
+    if (profileFeedShown > 5) {
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown=5; renderProfileFeedBody()">Mostra meno</button>`;
     }
     html += `</div>`;
   }
@@ -4499,7 +4761,7 @@ function renderPersonSheet(p) {
     </div>
     <div class="profile-inner">
       <div class="profile-top">
-        <div class="avatar-wrap">${p.photoURL ? `<img class="profile-avatar cover-lift" src="${p.photoURL}" alt="">` : `<div class="profile-avatar cover-lift"></div>`}</div>
+        <div class="avatar-wrap">${p.photoURL ? `<img class="profile-avatar cover-lift" style="${levelRing(p.totalHours||0, 3)}" src="${p.photoURL}" alt="">` : `<div class="profile-avatar cover-lift" style="${levelRing(p.totalHours||0, 3)}"></div>`}</div>
         <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-4px">
           <div class="profile-name">${onlineDot(p.lastActive)}${nameEsc}${mutualHtml}</div>
           <div class="profile-level-line">Livello: ${getUserLevel(p.totalHours||0).label}</div>
@@ -5072,8 +5334,9 @@ function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row
 // dx per la libreria), footer solido sotto con titolo (max 2 righe), info e
 // barra di avanzamento blu. Ricerca: azioni compatte sotto il footer.
 function gridCard(o) {
+  const tier = o.progPct != null ? pctTier(o.progPct) : '';
   const bar = (o.progPct != null)
-    ? `<div class="gc-bar"><i class="${animateProgressBars?'':'no-anim'} ${pctTier(o.progPct)}" style="--pct:${o.progPct}%"></i></div>` : '';
+    ? `<div class="li-progrow gc-progrow"><div class="gc-bar"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${o.progPct}%"></i></div><span class="li-pct ${tier}">${o.progPct}%</span></div>` : '';
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
@@ -5083,7 +5346,7 @@ function gridCard(o) {
     </div>
     <div class="gc-foot" onclick="${o.onclick}">
       <div class="gc-title">${escapeHtml(o.title||'')}</div>
-      ${o.sub ? `<div class="gc-sub">${o.sub}</div>` : ''}
+      ${o.chips ? `<div class="li-chips gc-chips">${o.chips}</div>` : (o.sub ? `<div class="gc-sub">${o.sub}</div>` : '')}
       ${bar}
     </div>
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
@@ -5144,8 +5407,9 @@ async function quickAdd(id) {
   try {
     const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await res.json();
-    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null };
+    library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), totalEpisodes: show.number_of_episodes || 0, nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
+    refreshShowTotals(id).then(ch => { if (ch) withoutBarAnim(renderLibrary); }); // conteggio preciso (solo episodi usciti)
     renderTvResultsFromCache();
     if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
   } catch(e) { showToast('Errore, riprova'); }
@@ -5300,7 +5564,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <h2>${escapeHtml(show.name)}</h2>
       <div class="metarow">
         <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
-        ${genres.map(g=>`<span class="pill">${escapeHtml(g)}</span>`).join('')}
+        ${genres.map(g=>genrePill(g)).join('')}
         ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
@@ -5822,7 +6086,7 @@ async function markNext(id) {
 
 async function quickAddSilent(id) {
   if (!hasTmdbKey()) return;
-  try { const r=await fetch(tmdbUrl(`/tv/${id}`, {})); const s=await r.json(); library[id]={id:s.id,name:s.name,image:tmdbImg(s.poster_path,'original'),watched:{},genres:showGenres(s),runtime:showRuntime(s)}; saveLibrary(); } catch(e){}
+  try { const r=await fetch(tmdbUrl(`/tv/${id}`, {})); const s=await r.json(); library[id]={id:s.id,name:s.name,image:tmdbImg(s.poster_path,'original'),watched:{},genres:showGenres(s),runtime:showRuntime(s),totalEpisodes:s.number_of_episodes||0,totalSeasons:(s.seasons||[]).filter(se=>se.season_number>0).length||(s.number_of_seasons||0)}; saveLibrary(); } catch(e){}
 }
 
 async function addFromSheet(id) { await quickAdd(id); openShow(id); }
@@ -6321,7 +6585,7 @@ async function renderFilmSheet(f, inLib) {
       <h2>${escapeHtml(f.title)}</h2>
       <div class="metarow">
         <span class="pill">${f.year||'—'}</span>
-        ${f.genre?`<span class="pill">${escapeHtml(f.genre)}</span>`:''}
+        ${(f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : [])).map(g=>genrePill(g)).join('')}
         ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
