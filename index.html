@@ -185,49 +185,28 @@
     background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     color: #FFD60A; display: flex; align-items: center; gap: 2px; width: fit-content;
   }
-  /* rating in alto a sx, stagioni totali in basso a sx sul poster */
-  .gc-top-left { position: absolute; top: 6px; left: 6px; z-index: 3; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
-  .gc-bottom-left { position: absolute; bottom: 6px; left: 6px; z-index: 3; }
+  /* 4 badge agli angoli del poster: rating/%/stagione/episodio (libreria) o
+     rating/stato/genere/anno (film) o rating/stagioni+episodi (ricerca). */
+  .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right { position: absolute; z-index: 3; }
+  .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .gc-top-right { top: 6px; right: 6px; }
+  .gc-bottom-left { bottom: 6px; left: 6px; }
+  .gc-bottom-right { bottom: 6px; right: 6px; }
   .gc-bottom-left .grating { color: #C77DFF; }
-  /* × rimuovi: rosso acceso con la X bianca, in alto a destra sul poster */
-  .gc-x { position: absolute; top: 6px; right: 6px; z-index: 5; }
-  .gc-x .act-btn {
-    width: 26px; height: 26px; background: #FF3B30; color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-  .gc-x .act-btn svg { width: 12px; height: 12px; }
-  /* spunta avanti-episodio: stessa dimensione della × */
-  .gc-check { position: absolute; right: 7px; bottom: 7px; z-index: 5; }
-  .gc-check .ep-check { width: 26px; height: 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-  .gc-check .ep-check svg { width: 12px; height: 12px; }
-  .gc-check .ep-check.empty { background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.65); }
-  /* footer solido sotto il poster: titolo fino a 2 righe, info, barra blu */
+  .gc-bottom-right .grating { color: rgba(255,255,255,0.85); }
+  .gc-top-right .grating { color: #0A84FF; }
+  /* fasce colore per la percentuale in alto a destra */
+  .gc-top-right .grating.tier-r { color: #FF453A; } .gc-top-right .grating.tier-o { color: #FF9F0A; }
+  .gc-top-right .grating.tier-y { color: #FFD60A; } .gc-top-right .grating.tier-g { color: #30D158; }
+  /* footer solido sotto il poster: titolo fino a 2 righe + azioni centrate */
   .gc-foot { padding: 7px 9px 9px; cursor: pointer; }
   .gc-title {
     font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--fg);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; min-height: 2.6em;
   }
-  .gc-sub { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gc-sub b { color: #0A84FF; font-weight: 800; }
-  /* chip in griglia: stesse info della lista, formato mini */
-  .gc-chips { margin-top: 4px; flex-wrap: wrap; }
-  .gc-chips .chip { font-size: 8.5px; padding: 2px 6px; }
-  .gc-progrow { margin-top: 6px; }
-  .gc-progrow .gc-bar { flex: 1; margin-top: 0; }
-  .gc-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; }
-  .gc-bar i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: #0A84FF; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
-  .gc-bar i.no-anim { animation: none; }
-  /* fasce di avanzamento: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde.
-     Il selettore include .list-item per vincere sulla regola base della lista. */
-  .gc-bar i.tier-r, .list-item .li-prog i.tier-r { background: #FF453A; }
-  .gc-bar i.tier-o, .list-item .li-prog i.tier-o { background: #FF9F0A; }
-  .gc-bar i.tier-y, .list-item .li-prog i.tier-y { background: #FFD60A; }
-  .gc-bar i.tier-g, .list-item .li-prog i.tier-g { background: #30D158; }
-  .li-pct.tier-r { color: #FF453A; } .li-pct.tier-o { color: #FF9F0A; }
-  .li-pct.tier-y { color: #FFD60A; } .li-pct.tier-g { color: #30D158; }
-  .wall-bar.tier-r::after { background: #FF453A; } .wall-bar.tier-o::after { background: #FF9F0A; }
-  .wall-bar.tier-y::after { background: #FFD60A; } .wall-bar.tier-g::after { background: #30D158; }
+  .gc-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 7px; cursor: default; }
+  .gc-actions .ep-check, .gc-actions .act-btn { width: 30px; height: 30px; }
   /* azioni ricerca compatte sotto il footer */
   .gc-bottom { padding: 0 8px 8px; }
   .gc-bottom .row-actions { width: 100%; }
@@ -244,8 +223,15 @@
   .wall-card { border-radius: 18px; }
   .wall-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.25); z-index: 2; }
   .wall-bar::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); background: #0A84FF; }
+  /* fasce colore: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde */
+  .li-pct.tier-r { color: #FF453A; } .li-pct.tier-o { color: #FF9F0A; }
+  .li-pct.tier-y { color: #FFD60A; } .li-pct.tier-g { color: #30D158; }
+  .list-item .li-prog i.tier-r { background: #FF453A; } .list-item .li-prog i.tier-o { background: #FF9F0A; }
+  .list-item .li-prog i.tier-y { background: #FFD60A; } .list-item .li-prog i.tier-g { background: #30D158; }
+  .wall-bar.tier-r::after { background: #FF453A; } .wall-bar.tier-o::after { background: #FF9F0A; }
+  .wall-bar.tier-y::after { background: #FFD60A; } .wall-bar.tier-g::after { background: #30D158; }
   /* chip di ordinamento libreria */
-  .sort-chips { padding: 0 0 12px; }
+  .sort-chips { padding: 0 0 12px; margin-top: -6px; }
   .sort-chip { padding: 5px 12px; font-size: 11.5px; }
   .card {
     border-radius: 20px; overflow: hidden; position: relative; cursor: pointer;
@@ -287,10 +273,16 @@
   }
   .list-item .noimg-s { display: flex; align-items: center; justify-content: center; }
   .list-item .li-info { flex: 1; min-width: 0; }
-  .list-item .li-name { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-item .li-name {
+    font-size: 13.5px; font-weight: 700; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere;
+  }
+  .chip-episodes { background: rgba(10,132,255,0.14); color: #0A84FF; font-weight: 800; }
+  .chip-date { background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.65); font-weight: 700; }
   .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* chip informative compatte (prossimo ep, rating, stagioni, stato) */
-  .li-chips { display: flex; align-items: center; gap: 5px; margin-top: 4px; overflow: hidden; }
+  .li-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
   .chip {
     font-size: 10px; font-weight: 700; padding: 2.5px 8px; border-radius: 12px; flex-shrink: 0;
     background: rgba(var(--overlay-rgb),0.07); color: rgba(var(--overlay-rgb),0.6); white-space: nowrap;
@@ -1136,7 +1128,7 @@
   /* ===== resume carousel ===== */
   .resume-rail {
     display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 8px;
-    padding: 8px 8px 20px; scrollbar-width: none; touch-action: pan-x;
+    padding: 8px 8px 8px; scrollbar-width: none; touch-action: pan-x;
   }
   .resume-rail::-webkit-scrollbar { display: none; }
   .resume-card {
@@ -2155,6 +2147,8 @@ function showToast(msg) {
   showToast._t = setTimeout(() => t.classList.remove('show'), 1900);
 }
 function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+// Il rating è sempre a un decimale (8 -> 8.0), cosi' i badge hanno tutti la stessa larghezza.
+function fmtRating(r) { return (r == null) ? '' : Number(r).toFixed(1); }
 function formatVotes(n) {
   if (!n) return '';
   if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
@@ -2195,6 +2189,7 @@ function normalizeFilmLibrary() {
     if (!filmLibrary[k]) { delete filmLibrary[k]; return; }
     if (filmLibrary[k].id == null || isNaN(Number(filmLibrary[k].id))) filmLibrary[k].id = Number(k);
     if (typeof filmLibrary[k].watched !== 'boolean') filmLibrary[k].watched = false;
+    if (!filmLibrary[k].addedAt) filmLibrary[k].addedAt = filmLibrary[k].watchedAt || Date.now();
   });
 }
 
@@ -3211,6 +3206,21 @@ function getAchievements(w) {
     { id:'ep3000',label: '3000 episodi visti',     unlocked: w.episodesWatched >= 3000 },
     { id:'ep4000',label: '4000 episodi visti',     unlocked: w.episodesWatched >= 4000 },
     { id:'ep5000',label: '5000 episodi visti',     unlocked: w.episodesWatched >= 5000 },
+    { id:'ep6000',label: '6000 episodi visti',     unlocked: w.episodesWatched >= 6000 },
+    { id:'ep7000',label: '7000 episodi visti',     unlocked: w.episodesWatched >= 7000 },
+    { id:'ep8000',label: '8000 episodi visti',     unlocked: w.episodesWatched >= 8000 },
+    { id:'ep9000',label: '9000 episodi visti',     unlocked: w.episodesWatched >= 9000 },
+    { id:'ep10000',label: '10000 episodi visti',   unlocked: w.episodesWatched >= 10000 },
+    { id:'ep12500',label: '12500 episodi visti',   unlocked: w.episodesWatched >= 12500 },
+    { id:'ep15000',label: '15000 episodi visti',   unlocked: w.episodesWatched >= 15000 },
+    { id:'ep17500',label: '17500 episodi visti',   unlocked: w.episodesWatched >= 17500 },
+    { id:'ep20000',label: '20000 episodi visti',   unlocked: w.episodesWatched >= 20000 },
+    { id:'ep25000',label: '25000 episodi visti',   unlocked: w.episodesWatched >= 25000 },
+    { id:'ep30000',label: '30000 episodi visti',   unlocked: w.episodesWatched >= 30000 },
+    { id:'ep40000',label: '40000 episodi visti',   unlocked: w.episodesWatched >= 40000 },
+    { id:'ep50000',label: '50000 episodi visti',   unlocked: w.episodesWatched >= 50000 },
+    { id:'ep75000',label: '75000 episodi visti',   unlocked: w.episodesWatched >= 75000 },
+    { id:'ep100000',label: '100000 episodi visti', unlocked: w.episodesWatched >= 100000 },
     // serie completate
     { id:'sc1',   label: 'Prima serie completata', unlocked: completedShows >= 1 },
     { id:'sc2',   label: '2 serie completate',     unlocked: completedShows >= 2 },
@@ -3225,6 +3235,17 @@ function getAchievements(w) {
     { id:'sc60',  label: '60 serie completate',    unlocked: completedShows >= 60 },
     { id:'sc75',  label: '75 serie completate',    unlocked: completedShows >= 75 },
     { id:'sc100', label: '100 serie completate',   unlocked: completedShows >= 100 },
+    { id:'sc110', label: '110 serie completate',   unlocked: completedShows >= 110 },
+    { id:'sc125', label: '125 serie completate',   unlocked: completedShows >= 125 },
+    { id:'sc150', label: '150 serie completate',   unlocked: completedShows >= 150 },
+    { id:'sc175', label: '175 serie completate',   unlocked: completedShows >= 175 },
+    { id:'sc200', label: '200 serie completate',   unlocked: completedShows >= 200 },
+    { id:'sc250', label: '250 serie completate',   unlocked: completedShows >= 250 },
+    { id:'sc300', label: '300 serie completate',   unlocked: completedShows >= 300 },
+    { id:'sc400', label: '400 serie completate',   unlocked: completedShows >= 400 },
+    { id:'sc500', label: '500 serie completate',   unlocked: completedShows >= 500 },
+    { id:'sc750', label: '750 serie completate',   unlocked: completedShows >= 750 },
+    { id:'sc1000',label: '1000 serie completate',  unlocked: completedShows >= 1000 },
     // libreria serie
     { id:'lib3',  label: '3 serie in libreria',    unlocked: w.totalShows >= 3 },
     { id:'lib5',  label: '5 serie in libreria',    unlocked: w.totalShows >= 5 },
@@ -3237,6 +3258,18 @@ function getAchievements(w) {
     { id:'lib100',label: '100 serie in libreria',  unlocked: w.totalShows >= 100 },
     { id:'lib150',label: '150 serie in libreria',  unlocked: w.totalShows >= 150 },
     { id:'lib200',label: '200 serie in libreria',  unlocked: w.totalShows >= 200 },
+    { id:'lib225',label: '225 serie in libreria',  unlocked: w.totalShows >= 225 },
+    { id:'lib250',label: '250 serie in libreria',  unlocked: w.totalShows >= 250 },
+    { id:'lib300',label: '300 serie in libreria',  unlocked: w.totalShows >= 300 },
+    { id:'lib350',label: '350 serie in libreria',  unlocked: w.totalShows >= 350 },
+    { id:'lib400',label: '400 serie in libreria',  unlocked: w.totalShows >= 400 },
+    { id:'lib500',label: '500 serie in libreria',  unlocked: w.totalShows >= 500 },
+    { id:'lib600',label: '600 serie in libreria',  unlocked: w.totalShows >= 600 },
+    { id:'lib750',label: '750 serie in libreria',  unlocked: w.totalShows >= 750 },
+    { id:'lib1000',label: '1000 serie in libreria', unlocked: w.totalShows >= 1000 },
+    { id:'lib1500',label: '1500 serie in libreria', unlocked: w.totalShows >= 1500 },
+    { id:'lib2000',label: '2000 serie in libreria', unlocked: w.totalShows >= 2000 },
+    { id:'lib3000',label: '3000 serie in libreria', unlocked: w.totalShows >= 3000 },
     // film visti
     { id:'f1',    label: 'Primo film visto',       unlocked: w.filmsWatched >= 1 },
     { id:'f2',    label: '2 film visti',           unlocked: w.filmsWatched >= 2 },
@@ -3249,6 +3282,18 @@ function getAchievements(w) {
     { id:'f100',  label: '100 film visti',         unlocked: w.filmsWatched >= 100 },
     { id:'f150',  label: '150 film visti',         unlocked: w.filmsWatched >= 150 },
     { id:'f200',  label: '200 film visti',         unlocked: w.filmsWatched >= 200 },
+    { id:'f225',  label: '225 film visti',         unlocked: w.filmsWatched >= 225 },
+    { id:'f250',  label: '250 film visti',         unlocked: w.filmsWatched >= 250 },
+    { id:'f300',  label: '300 film visti',         unlocked: w.filmsWatched >= 300 },
+    { id:'f350',  label: '350 film visti',         unlocked: w.filmsWatched >= 350 },
+    { id:'f400',  label: '400 film visti',         unlocked: w.filmsWatched >= 400 },
+    { id:'f500',  label: '500 film visti',         unlocked: w.filmsWatched >= 500 },
+    { id:'f600',  label: '600 film visti',         unlocked: w.filmsWatched >= 600 },
+    { id:'f750',  label: '750 film visti',         unlocked: w.filmsWatched >= 750 },
+    { id:'f1000', label: '1000 film visti',        unlocked: w.filmsWatched >= 1000 },
+    { id:'f1500', label: '1500 film visti',        unlocked: w.filmsWatched >= 1500 },
+    { id:'f2000', label: '2000 film visti',        unlocked: w.filmsWatched >= 2000 },
+    { id:'f3000', label: '3000 film visti',        unlocked: w.filmsWatched >= 3000 },
     // film in libreria
     { id:'fl5',   label: '5 film in libreria',     unlocked: filmLibCount >= 5 },
     { id:'fl10',  label: '10 film in libreria',    unlocked: filmLibCount >= 10 },
@@ -3256,6 +3301,13 @@ function getAchievements(w) {
     { id:'fl50',  label: '50 film in libreria',    unlocked: filmLibCount >= 50 },
     { id:'fl75',  label: '75 film in libreria',    unlocked: filmLibCount >= 75 },
     { id:'fl100', label: '100 film in libreria',   unlocked: filmLibCount >= 100 },
+    { id:'fl150', label: '150 film in libreria',   unlocked: filmLibCount >= 150 },
+    { id:'fl200', label: '200 film in libreria',   unlocked: filmLibCount >= 200 },
+    { id:'fl300', label: '300 film in libreria',   unlocked: filmLibCount >= 300 },
+    { id:'fl500', label: '500 film in libreria',   unlocked: filmLibCount >= 500 },
+    { id:'fl750', label: '750 film in libreria',   unlocked: filmLibCount >= 750 },
+    { id:'fl1000',label: '1000 film in libreria',  unlocked: filmLibCount >= 1000 },
+    { id:'fl1500',label: '1500 film in libreria',  unlocked: filmLibCount >= 1500 },
     // ore guardate
     { id:'h5',    label: '5 ore guardate',         unlocked: w.hours >= 5 },
     { id:'h10',   label: '10 ore guardate',        unlocked: w.hours >= 10 },
@@ -3273,6 +3325,19 @@ function getAchievements(w) {
     { id:'h4000', label: '4000 ore guardate',      unlocked: w.hours >= 4000 },
     { id:'h5000', label: '5000 ore guardate',      unlocked: w.hours >= 5000 },
     { id:'h6000', label: '6000 ore guardate',      unlocked: w.hours >= 6000 },
+    { id:'h7000', label: '7000 ore guardate',      unlocked: w.hours >= 7000 },
+    { id:'h8000', label: '8000 ore guardate',      unlocked: w.hours >= 8000 },
+    { id:'h9000', label: '9000 ore guardate',      unlocked: w.hours >= 9000 },
+    { id:'h10000',label: '10000 ore guardate',     unlocked: w.hours >= 10000 },
+    { id:'h12500',label: '12500 ore guardate',     unlocked: w.hours >= 12500 },
+    { id:'h15000',label: '15000 ore guardate',     unlocked: w.hours >= 15000 },
+    { id:'h17500',label: '17500 ore guardate',     unlocked: w.hours >= 17500 },
+    { id:'h20000',label: '20000 ore guardate',     unlocked: w.hours >= 20000 },
+    { id:'h25000',label: '25000 ore guardate',     unlocked: w.hours >= 25000 },
+    { id:'h30000',label: '30000 ore guardate',     unlocked: w.hours >= 30000 },
+    { id:'h40000',label: '40000 ore guardate',     unlocked: w.hours >= 40000 },
+    { id:'h50000',label: '50000 ore guardate',     unlocked: w.hours >= 50000 },
+    { id:'h75000',label: '75000 ore guardate',     unlocked: w.hours >= 75000 },
     // streak
     { id:'st3',   label: '3 giorni di fila',       unlocked: w.streak >= 3 },
     { id:'st5',   label: '5 giorni di fila',       unlocked: w.streak >= 5 },
@@ -3287,6 +3352,17 @@ function getAchievements(w) {
     { id:'st180', label: '180 giorni di fila',     unlocked: w.streak >= 180 },
     { id:'st365', label: '365 giorni di fila',     unlocked: w.streak >= 365 },
     { id:'st500', label: '500 giorni di fila',     unlocked: w.streak >= 500 },
+    { id:'st600', label: '600 giorni di fila',     unlocked: w.streak >= 600 },
+    { id:'st700', label: '700 giorni di fila',     unlocked: w.streak >= 700 },
+    { id:'st800', label: '800 giorni di fila',     unlocked: w.streak >= 800 },
+    { id:'st900', label: '900 giorni di fila',     unlocked: w.streak >= 900 },
+    { id:'st1000',label: '1000 giorni di fila',    unlocked: w.streak >= 1000 },
+    { id:'st1250',label: '1250 giorni di fila',    unlocked: w.streak >= 1250 },
+    { id:'st1500',label: '1500 giorni di fila',    unlocked: w.streak >= 1500 },
+    { id:'st1750',label: '1750 giorni di fila',    unlocked: w.streak >= 1750 },
+    { id:'st2000',label: '2000 giorni di fila',    unlocked: w.streak >= 2000 },
+    { id:'st2500',label: '2500 giorni di fila',    unlocked: w.streak >= 2500 },
+    { id:'st3000',label: '3000 giorni di fila',    unlocked: w.streak >= 3000 },
     // generi
     { id:'g3',    label: '3 generi diversi',       unlocked: w.distinctGenres >= 3 },
     { id:'g4',    label: '4 generi diversi',       unlocked: w.distinctGenres >= 4 },
@@ -3297,13 +3373,26 @@ function getAchievements(w) {
     { id:'g10',   label: '10 generi diversi',      unlocked: w.distinctGenres >= 10 },
     { id:'g12',   label: '12 generi diversi',      unlocked: w.distinctGenres >= 12 },
     { id:'g15',   label: '15 generi diversi',      unlocked: w.distinctGenres >= 15 },
+    { id:'g16',   label: '16 generi diversi',      unlocked: w.distinctGenres >= 16 },
+    { id:'g17',   label: '17 generi diversi',      unlocked: w.distinctGenres >= 17 },
+    { id:'g18',   label: '18 generi diversi',      unlocked: w.distinctGenres >= 18 },
+    { id:'g19',   label: '19 generi diversi',      unlocked: w.distinctGenres >= 19 },
+    { id:'g20',   label: '20 generi diversi',      unlocked: w.distinctGenres >= 20 },
     // serie preferita
     { id:'bs25',  label: '25 episodi di una serie', unlocked: topWatched >= 25 },
     { id:'bs50',  label: '50 episodi di una serie', unlocked: topWatched >= 50 },
     { id:'bs100', label: '100 episodi di una serie', unlocked: topWatched >= 100 },
     { id:'bs200', label: '200 episodi di una serie', unlocked: topWatched >= 200 },
     { id:'bs300', label: '300 episodi di una serie', unlocked: topWatched >= 300 },
-    { id:'bs500', label: '500 episodi di una serie', unlocked: topWatched >= 500 }
+    { id:'bs500', label: '500 episodi di una serie', unlocked: topWatched >= 500 },
+    { id:'bs600', label: '600 episodi di una serie', unlocked: topWatched >= 600 },
+    { id:'bs750', label: '750 episodi di una serie', unlocked: topWatched >= 750 },
+    { id:'bs1000',label: '1000 episodi di una serie', unlocked: topWatched >= 1000 },
+    { id:'bs1250',label: '1250 episodi di una serie', unlocked: topWatched >= 1250 },
+    { id:'bs1500',label: '1500 episodi di una serie', unlocked: topWatched >= 1500 },
+    { id:'bs2000',label: '2000 episodi di una serie', unlocked: topWatched >= 2000 },
+    { id:'bs3000',label: '3000 episodi di una serie', unlocked: topWatched >= 3000 },
+    { id:'bs5000',label: '5000 episodi di una serie', unlocked: topWatched >= 5000 }
   ];
   const emojiFor = id => {
     if (id.startsWith('ep'))  return '📺';
@@ -3684,6 +3773,8 @@ function sortFilmItems(items) {
   if (filmSort === 'az') items.sort((a,b) => (a[1].title||'').localeCompare(b[1].title||''));
   else if (filmSort === 'rating') items.sort((a,b) => (b[1].rating||0) - (a[1].rating||0));
   else if (filmSort === 'year') items.sort((a,b) => (b[1].year||0) - (a[1].year||0));
+  else if (filmSort === 'recent') items.sort((a,b) => (b[1].addedAt||0) - (a[1].addedAt||0));
+  else if (filmSort === 'modified') items.sort((a,b) => Math.max(b[1].addedAt||0, b[1].watchedAt||0) - Math.max(a[1].addedAt||0, a[1].watchedAt||0));
 }
 function sortChipsHtml(current, opts, fn) {
   return `<div class="seasontabs sort-chips">${opts.map(o =>
@@ -4016,7 +4107,7 @@ async function renderUpcoming(container) {
       return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
         ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg">${escapeHtml(u.name)}</div>`}
         <div class="up-ep-badge">S${u.season} E${u.number}</div>
-        <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)}</span><span class="ud-days-mini">${daysLabel}</span></div>
+        <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</span><span class="ud-days-mini">${daysLabel}</span></div>
       </div>`;
     }
     return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
@@ -4025,7 +4116,7 @@ async function renderUpcoming(container) {
         <div class="up-name">${escapeHtml(u.name)}</div>
         <div class="up-ep">S${u.season}E${u.number} · ${escapeHtml(u.epname || ('Episodio ' + u.number))}</div>
       </div>
-      <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()]}</div><div class="ud-days">${daysLabel}</div></div>
+      <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
   }).join('');
   container.innerHTML = viewMode === 'grid'
@@ -4042,25 +4133,23 @@ function renderCardTv(key, s) {
   const done = total > 0 && watched >= total;
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
-  const chips = [
-    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (done ? `<span class="chip chip-done">Completata</span>` : null)
-  ].filter(Boolean).join('');
   const corner = showAiringToday(s)
     ? `<span class="live-badge">In onda</span>`
     : (hasNewEp(s) ? `<span class="new-ep-badge">Nuovo ep</span>` : '');
-  const topLeft = (corner ? corner : '') + (s.rating ? `<span class="grating">★ ${s.rating}</span>` : '');
-  const bottomLeft = s.totalSeasons ? `<span class="grating">${s.totalSeasons} St.</span>` : '';
+  const topLeft = corner + (s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '');
+  const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
+  const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
+  const bottomRight = next ? `<span class="grating" style="color:#5AC8FA">S${next.season} E${next.number}</span>` : (done ? `<span class="grating" style="color:#30D158">Completata</span>` : '');
   return gridCard({
     onclick: `openShow(${id}, this)`,
     poster: s.image ? thumbImg(s.image,'w342') : '',
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
-    chips,
     topLeft,
+    topRight,
     bottomLeft,
-    progPct: total ? pct : null,
-    xBtn: removeBtnTv(id),
-    check: epCheckBtn(id)
+    bottomRight,
+    actions: epCheckBtn(id) + removeBtnTv(id)
   });
 }
 
@@ -4080,7 +4169,7 @@ function renderListTv(key, s) {
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
   const tier = pctTier(pct);
   const chips = [
-    s.rating ? `<span class="chip chip-star">★ ${s.rating}</span>` : null,
+    s.rating ? `<span class="chip chip-star">★ ${fmtRating(s.rating)}</span>` : null,
     s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null,
     next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
     hasNewEp(s) ? `<span class="chip chip-new">Nuovo ep</span>` : null
@@ -4168,9 +4257,9 @@ function initSheetSwipe() {
   sheet.addEventListener('touchstart', e => {
     if (!document.getElementById('sheetBg').classList.contains('open')) return;
     // Non attivare lo swipe tra serie se il tocco parte da una riga che scorre
-    // già in orizzontale (tab delle stagioni, provider): altrimenti i due
+    // già in orizzontale (tab delle stagioni, provider, cast): altrimenti i due
     // gesti si confondono.
-    if (e.target.closest('.seasontabs, .watch-providers')) { sheetSwipeState = null; return; }
+    if (e.target.closest('.seasontabs, .watch-providers, .cast-row')) { sheetSwipeState = null; return; }
     const t = e.touches[0];
     sheetSwipeState = { startX: t.clientX, startY: t.clientY, dx: 0, dragging: false };
   }, { passive: true });
@@ -4310,7 +4399,7 @@ function renderFilmLibrary() {
   sortFilmItems(items);
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
   const sortBar = items.length > 1 ? sortChipsHtml(filmSort, [
-    { v: 'recent', l: 'Aggiunti' }, { v: 'az', l: 'A–Z' }, { v: 'rating', l: '★' }, { v: 'year', l: 'Anno' }
+    { v: 'recent', l: 'Aggiunti' }, { v: 'modified', l: 'Recenti' }, { v: 'az', l: 'A–Z' }, { v: 'rating', l: '★' }, { v: 'year', l: 'Anno' }
   ], 'setFilmSort') : '';
   container.innerHTML = `<div class="section">
     ${sortBar}
@@ -4332,14 +4421,11 @@ function renderCardFilm(key, f) {
     poster: f.image ? thumbImg(f.image,'w342') : '',
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
-    chips: [
-      f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
-      f.year ? `<span class="chip">${f.year}</span>` : null,
-      f.genre ? genreChip(f.genre) : null
-    ].filter(Boolean).join(''),
-    topLeft: f.rating ? `<span class="grating">★ ${f.rating}</span>` : '',
-    xBtn: removeBtnFilm(id),
-    check: filmCheckBtn(id)
+    topLeft: f.rating ? `<span class="grating">★ ${fmtRating(f.rating)}</span>` : '',
+    topRight: `<span class="grating" style="${f.watched?'color:#30D158':'color:#0A84FF'}">${f.watched?'Visto':'Da vedere'}</span>`,
+    bottomLeft: f.genre ? `<span class="grating">${escapeHtml(f.genre)}</span>` : '',
+    bottomRight: f.year ? `<span class="grating">${f.year}</span>` : '',
+    actions: filmCheckBtn(id) + removeBtnFilm(id)
   });
 }
 
@@ -4353,7 +4439,7 @@ function renderListFilm(key, f) {
         f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
         f.year ? `<span class="chip">${f.year}</span>` : null,
         f.genre ? genreChip(f.genre) : null,
-        f.rating ? `<span class="chip chip-star">★ ${f.rating}</span>` : null
+        f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
@@ -4600,7 +4686,7 @@ function feedItemHtml(a) {
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
   // per un gruppo di episodi l'orario è quello dell'ultimo (il più recente).
   return `<div class="feed-item" onclick="${onclick}">
-    <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" src="${a.photo}" alt="">` : `<div class="fi-avatar"></div>`}</div>
+    <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" data-level-uid="${a.uid}" src="${a.photo}" alt="">` : `<div class="fi-avatar" data-level-uid="${a.uid}"></div>`}</div>
     <div class="fi-body">
       <div class="fi-text"><span class="online-dot pending" data-presence-uid="${a.uid}"></span><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
       <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
@@ -4703,7 +4789,8 @@ function renderProfileFeedBody() {
   }
   body.innerHTML = html;
   applyPresenceDots(body);
-  fetchPresence(shown.map(a => a.uid)).then(() => applyPresenceDots(body));
+  applyLevelRings(body);
+  fetchPresence(shown.map(a => a.uid)).then(() => { applyPresenceDots(body); applyLevelRings(body); });
 }
 
 // ---------- scheda persona ----------
@@ -5175,17 +5262,17 @@ function renderTvResultsFromCache() {
       const inLib = !!library[s.id];
       const poster = tmdbImg(s.poster_path, 'w185');
       const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
-      const meta = [
-        rating ? `★ ${rating}` : null,
-        s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
-        s.totalEpisodes ? `${s.totalEpisodes} ep` : null,
-        !rating && !s.totalSeasons ? (s.first_air_date?s.first_air_date.slice(0,4):'—') : null
-      ].filter(Boolean).join(' · ');
+      const badges = [
+        `<span class="chip chip-date">${s.first_air_date?s.first_air_date.slice(0,4):'—'}</span>`,
+        rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null,
+        s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} St.</span>` : null,
+        s.totalEpisodes ? `<span class="chip chip-episodes">${s.totalEpisodes} Ep</span>` : null
+      ].filter(Boolean).join('');
       return `<div class="list-item" onclick="openShow(${s.id}, this)">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
         <div class="li-info">
           <div class="li-name">${escapeHtml(s.name)}</div>
-          <div class="li-meta">${meta}</div>
+          <div class="li-chips">${badges}</div>
         </div>
         ${searchActionsTv(s.id)}
       </div>`;
@@ -5196,17 +5283,16 @@ function renderTvResultsFromCache() {
   c.innerHTML = chips + `<div class="grid">${enriched.map(s => {
     const poster = tmdbImg(s.poster_path, 'w342');
     const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
-    const votes = formatVotes(s.vote_count);
     const meta = [
       s.totalSeasons ? `${s.totalSeasons} St.` : null,
-      s.totalEpisodes ? `${s.totalEpisodes} ep` : null
+      s.totalEpisodes ? `${s.totalEpisodes} Ep` : null
     ].filter(Boolean).join(' · ') || (s.first_air_date?s.first_air_date.slice(0,4):'—');
     return gridCard({
       onclick: `openShow(${s.id}, this)`,
       poster,
       title: s.name,
-      sub: meta,
-      corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
+      topLeft: rating ? `<span class="grating">★ ${fmtRating(rating)}</span>` : '',
+      bottomLeft: `<span class="grating">${meta}</span>`,
       bottomActions: searchActionsTv(s.id, false),
       addMode: !library[s.id]
     });
@@ -5264,11 +5350,15 @@ function renderFilmResultsFromCache() {
       const inLib = !!filmLibrary[f.id];
       const poster = tmdbImg(f.poster_path, 'w185');
       const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
+      const badges = [
+        `<span class="chip chip-date">${f.release_date?f.release_date.slice(0,4):'—'}</span>`,
+        rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null
+      ].filter(Boolean).join('');
       return `<div class="list-item" onclick="openFilm(${f.id}, this)">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
         <div class="li-info">
           <div class="li-name">${escapeHtml(f.title)}</div>
-          <div class="li-meta">${rating?`★ ${rating} · `:''}${f.release_date?f.release_date.slice(0,4):'—'}</div>
+          <div class="li-chips">${badges}</div>
         </div>
         ${searchActionsFilm(f.id)}
       </div>`;
@@ -5279,13 +5369,12 @@ function renderFilmResultsFromCache() {
   c.innerHTML = chips + `<div class="grid">${ranked.map(f => {
     const poster = tmdbImg(f.poster_path, 'w342');
     const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
-    const votes = formatVotes(f.vote_count);
     return gridCard({
       onclick: `openFilm(${f.id}, this)`,
       poster,
       title: f.title,
-      sub: f.release_date?f.release_date.slice(0,4):'—',
-      corner: rating ? `<div class="grating">★ ${rating}${votes?` · ${votes}`:''}</div>` : '',
+      topLeft: rating ? `<span class="grating">★ ${fmtRating(rating)}</span>` : '',
+      bottomLeft: `<span class="grating">${f.release_date?f.release_date.slice(0,4):'—'}</span>`,
       bottomActions: searchActionsFilm(f.id, false),
       addMode: !filmLibrary[f.id]
     });
@@ -5327,25 +5416,21 @@ function filmCheckBtn(id) {
 function searchActionsTv(id, full) { return library[id] ? `<div class="row-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : `<div class="row-actions">${addWideTv(id, full)}</div>`; }
 function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id, full)}</div>`; }
 
-// Card di griglia: poster pulito sopra (con × in alto a dx e spunta in basso a
-// dx per la libreria), footer solido sotto con titolo (max 2 righe), info e
-// barra di avanzamento blu. Ricerca: azioni compatte sotto il footer.
+// Card di griglia: poster pulito con 4 badge agli angoli (topLeft/topRight/
+// bottomLeft/bottomRight), footer solido sotto con titolo (max 2 righe) e una
+// riga di azioni centrata (spunta+rimuovi per la libreria, Aggiungi per la ricerca).
 function gridCard(o) {
-  const tier = o.progPct != null ? pctTier(o.progPct) : '';
-  const bar = (o.progPct != null)
-    ? `<div class="li-progrow gc-progrow"><div class="gc-bar"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${o.progPct}%"></i></div><span class="li-pct ${tier}">${o.progPct}%</span></div>` : '';
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
-      ${(o.topLeft || o.corner) ? `<div class="gc-top-left">${o.topLeft || o.corner}</div>` : ''}
+      ${o.topLeft ? `<div class="gc-top-left">${o.topLeft}</div>` : ''}
+      ${o.topRight ? `<div class="gc-top-right">${o.topRight}</div>` : ''}
       ${o.bottomLeft ? `<div class="gc-bottom-left">${o.bottomLeft}</div>` : ''}
-      ${o.xBtn ? `<div class="gc-x">${o.xBtn}</div>` : ''}
-      ${o.check ? `<div class="gc-check">${o.check}</div>` : ''}
+      ${o.bottomRight ? `<div class="gc-bottom-right">${o.bottomRight}</div>` : ''}
     </div>
-    <div class="gc-foot" onclick="${o.onclick}">
-      <div class="gc-title">${escapeHtml(o.title||'')}</div>
-      ${o.chips ? `<div class="li-chips gc-chips">${o.chips}</div>` : (o.sub ? `<div class="gc-sub">${o.sub}</div>` : '')}
-      ${bar}
+    <div class="gc-foot">
+      <div class="gc-title" onclick="${o.onclick}">${escapeHtml(o.title||'')}</div>
+      ${o.actions ? `<div class="gc-actions">${o.actions}</div>` : ''}
     </div>
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
   </div>`;
@@ -5424,7 +5509,7 @@ async function quickAddFilm(id) {
   try {
     const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
     const f = await res.json();
-    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false };
+    filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false, addedAt: Date.now() };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
     renderFilmResultsFromCache();
     if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
@@ -5566,7 +5651,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="metarow">
         <span class="pill">${show.first_air_date?show.first_air_date.slice(0,4):'—'}${show.status?' · '+translateStatus(show.status):''}</span>
         ${genres.map(g=>genrePill(g)).join('')}
-        ${rating?`<span class="pill">★ ${rating}${votes?` · ${votes}`:''}</span>`:''}
+        ${rating?`<span class="pill">★ ${fmtRating(rating)}${votes?` · ${votes}`:''}</span>`:''}
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <button class="summary-more" id="showSummaryMore" onclick="toggleSummaryClamp('showSummary')">Mostra altro</button>
@@ -5633,9 +5718,8 @@ function renderTimeLeft(show, episodes, watchedCount) {
   const remaining = Math.max(0, aired - watchedCount);
   if (remaining <= 0 || !runtime) return '';
   const mins = remaining * runtime;
-  const h = Math.floor(mins / 60), m = mins % 60;
-  const label = h > 0 ? `${h} ore${m ? ' ' + m + ' min' : ''}` : `${m} min`;
-  return `<span class="skpi skpi-v">⏱ <b>${label}</b> per finirla</span>`;
+  const h = Math.max(1, Math.round(mins / 60));
+  return `<span class="skpi skpi-v"><b>${h} ${h===1?'ora':'ore'}</b> per finirla</span>`;
 }
 
 // Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
@@ -6590,11 +6674,11 @@ async function renderFilmSheet(f, inLib) {
       <div class="metarow">
         <span class="pill">${f.year||'—'}</span>
         ${(f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : [])).map(g=>genrePill(g)).join('')}
-        ${f.rating?`<span class="pill">★ ${f.rating}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
+        ${f.rating?`<span class="pill">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
       </div>
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
-      ${f.runtime?`<div class="time-left">⏱️ Durata ~${Math.floor(f.runtime/60)?Math.floor(f.runtime/60)+' h ':''}${f.runtime%60} min</div>`:''}
+      ${f.runtime?`<div class="time-left">Durata ~${Math.max(1, Math.round(f.runtime/60))} ${Math.max(1, Math.round(f.runtime/60))===1?'ora':'ore'}</div>`:''}
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
       ${!inLib
@@ -6875,6 +6959,7 @@ function formatLastSeen(lastActive) {
 // Recupera lastActive per una lista di uid (usato dove non abbiamo già il
 // documento pubblico intero: commenti, chat, feed attività).
 const presenceCache = {};
+const hoursCache = {};
 const presenceFetchedAt = {};
 const PRESENCE_TTL_MS = 45 * 1000; // ricontrolla non più spesso del ritmo dell'heartbeat
 async function fetchPresence(uids) {
@@ -6883,13 +6968,25 @@ async function fetchPresence(uids) {
   if (missing.length && fbDb) {
     try {
       const docs = await Promise.all(missing.map(u => fbDb.collection('publicProfiles').doc(u).get()));
-      docs.forEach((d, i) => { presenceCache[missing[i]] = (d.exists && d.data().lastActive) || null; presenceFetchedAt[missing[i]] = now; });
+      docs.forEach((d, i) => {
+        presenceCache[missing[i]] = (d.exists && d.data().lastActive) || null;
+        hoursCache[missing[i]] = (d.exists && d.data().totalHours) || 0;
+        presenceFetchedAt[missing[i]] = now;
+      });
       // Riapplica su TUTTA la pagina: se nel frattempo un re-render ha ricreato
       // gli elementi, i pallini vengono comunque aggiornati (niente "vanno refreshati").
       applyPresenceDots(document);
+      applyLevelRings(document);
     } catch(e) {}
   }
   return presenceCache;
+}
+// Applica l'anello colorato del livello agli elementi con data-level-uid="...".
+function applyLevelRings(container) {
+  (container || document).querySelectorAll('[data-level-uid]').forEach(el => {
+    const uid = el.getAttribute('data-level-uid');
+    if (uid in hoursCache) el.style.cssText += ';' + levelRing(hoursCache[uid], 2);
+  });
 }
 // Applica il pallino a posteriori sugli elementi già renderizzati con
 // data-presence-uid="...", una volta note le presenze.
