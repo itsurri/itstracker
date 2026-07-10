@@ -314,13 +314,13 @@
   #tvCount-davedere { background: #8E8E93; }
   #filmCount-visti { background: #30D158; }
   #filmCount-davedere { background: #0A84FF; }
-  /* la barra corre per tutta la larghezza disponibile (come il titolo), la
-     % è staccata sotto, ben leggibile ma con lo stesso font di tutta l'app. */
-  .li-progrow { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-top: 6px; }
-  .li-progrow .li-prog { width: 100%; margin-top: 0; }
+  /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
+     fisso alla percentuale, che non va mai a capo. */
+  .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
+  .li-progrow .li-prog { flex: 1; min-width: 0; margin-top: 0; }
   .li-pct {
     font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums;
-    color: rgba(var(--overlay-rgb),0.6);
+    color: rgba(var(--overlay-rgb),0.6); flex-shrink: 0; white-space: nowrap;
   }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
