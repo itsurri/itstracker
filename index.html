@@ -189,6 +189,12 @@
   .gc-top { position: absolute; top: 6px; left: 6px; right: 6px; z-index: 3; }
   .gc-top .lib-actions { width: 100%; justify-content: space-between; }
   .gc-top .ep-check, .gc-top .act-btn { width: 32px; height: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.55); }
+  /* anello di avanzamento attorno alla spunta nella griglia libreria */
+  .ep-ring { position: relative; display: inline-flex; width: 32px; height: 32px; flex-shrink: 0; }
+  .ep-ring .ep-check { position: relative; z-index: 1; }
+  .ep-ring-svg { position: absolute; inset: -4px; width: 40px; height: 40px; pointer-events: none; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.55)); }
+  .ep-ring-svg .epr-track { stroke: rgba(255,255,255,0.35); }
+  .ep-ring-svg .epr-fill { stroke: #F7B538; transition: stroke-dashoffset 0.55s cubic-bezier(.4,0,.2,1); }
   /* titolo/info sovrapposti in basso al poster */
   .gc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 18px 9px 8px; }
   .gc-title { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
@@ -347,7 +353,7 @@
   .cinema-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 6px; line-height: 1.15; }
   .cinema-date { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 22px; }
   .cinema-synopsis { font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.85); max-width: 40em; }
-  .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; }
+  .sheetbody { padding: 0 20px 10px; margin-top: -46px; position: relative; z-index: 1; }
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
@@ -359,7 +365,21 @@
   .stat { flex: 1; border-radius: 20px; padding: 12px; text-align: center; }
   .stat .v { font-size: 20px; font-weight: 700; }
   .stat .l { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  #profileStatsRow { gap: 8px; }
   #profileStatsRow .l { text-transform: uppercase; letter-spacing: 0.03em; }
+  /* KPI colorate: ogni statistica ha il suo colore e uno sfondo tinto */
+  #profileStatsRow .kpi { padding: 13px 6px 11px; border-radius: 18px; border: 0.5px solid rgba(var(--overlay-rgb),0.08); position: relative; overflow: hidden; }
+  #profileStatsRow .kpi .v { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  #profileStatsRow .kpi .l { margin-top: 3px; font-weight: 700; font-size: 10px; color: rgba(var(--overlay-rgb),0.45); }
+  #profileStatsRow .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; opacity: 0.9; }
+  #profileStatsRow .kpi-b { background: rgba(10,132,255,0.10); }
+  #profileStatsRow .kpi-b .v { color: #0A84FF; } #profileStatsRow .kpi-b::before { background: #0A84FF; }
+  #profileStatsRow .kpi-g { background: rgba(48,209,88,0.10); }
+  #profileStatsRow .kpi-g .v { color: #30D158; } #profileStatsRow .kpi-g::before { background: #30D158; }
+  #profileStatsRow .kpi-p { background: rgba(94,92,230,0.12); }
+  #profileStatsRow .kpi-p .v { color: #7D7AFF; } #profileStatsRow .kpi-p::before { background: #5E5CE6; }
+  #profileStatsRow .kpi-o { background: rgba(247,181,56,0.12); }
+  #profileStatsRow .kpi-o .v { color: #F7B538; } #profileStatsRow .kpi-o::before { background: #F7B538; }
   .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
   .mini-stats b { color: var(--fg); font-weight: 700; }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
@@ -958,7 +978,18 @@
   /* ===== ambient color from poster ===== */
   .card { transition: box-shadow 0.5s ease; }
   .card.glow { box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 10px 28px -8px var(--accent, transparent); }
-  .hero .glow-wash { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 0%, var(--accent, transparent) 0%, transparent 60%); opacity: 0.55; mix-blend-mode: screen; pointer-events: none; }
+  .hero .glow-wash { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 0%, var(--accent, transparent) 0%, transparent 62%); opacity: 0.72; mix-blend-mode: screen; pointer-events: none; }
+
+  /* ===== accento dinamico dal poster: colore che "bagna" tutta la scheda ===== */
+  .sheet-tint {
+    position: absolute; left: 0; right: 0; top: 190px; height: 460px; z-index: 0; pointer-events: none;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent, transparent) 34%, transparent) 0%,
+      color-mix(in srgb, var(--accent, transparent) 12%, transparent) 34%,
+      transparent 80%);
+    opacity: 0; transition: opacity 0.55s ease;
+  }
+  .sheet-tint.show { opacity: 1; }
 
   /* ===== resume carousel ===== */
   .resume-rail {
@@ -970,7 +1001,9 @@
     position: relative; flex: 0 0 94%; max-width: 440px; scroll-snap-align: start;
     aspect-ratio: 16/9; border-radius: 24px; overflow: hidden; cursor: pointer;
     background: rgba(var(--overlay-rgb),0.08); box-shadow: var(--shadow-card);
+    transition: box-shadow 0.5s ease;
   }
+  .resume-card.glow { box-shadow: var(--shadow-card), 0 14px 40px -10px var(--accent, transparent); }
   .resume-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .resume-card .rc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.86) 100%); }
   .resume-card .rc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px; display: flex; align-items: flex-end; gap: 12px; }
@@ -3109,10 +3142,10 @@ function renderProfile() {
   const w = computeWrapped();
 
   statsRow.innerHTML = `
-    <div class="stat"><div class="v" data-count="${w.totalShows}">0</div><div class="l">serie</div></div>
-    <div class="stat"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi</div></div>
-    <div class="stat"><div class="v" data-count="${w.filmsWatched}">0</div><div class="l">film</div></div>
-    <div class="stat"><div class="v" data-count="${w.hours}">0</div><div class="l">ore</div></div>
+    <div class="stat kpi kpi-b"><div class="v" data-count="${w.totalShows}">0</div><div class="l">serie</div></div>
+    <div class="stat kpi kpi-g"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi</div></div>
+    <div class="stat kpi kpi-p"><div class="v" data-count="${w.filmsWatched}">0</div><div class="l">film</div></div>
+    <div class="stat kpi kpi-o"><div class="v" data-count="${w.hours}">0</div><div class="l">ore</div></div>
   `;
   statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
 
@@ -3194,6 +3227,17 @@ function renderLibrary() {
     }
   </div>`;
   applyCardGlows(container);
+  applyResumeGlow(container);
+}
+
+// Alone colorato dietro le card "Riprendi", preso dal backdrop della serie.
+function applyResumeGlow(container) {
+  (container || document).querySelectorAll('.resume-card[data-poster]:not(.glow-done)').forEach(el => {
+    el.classList.add('glow-done');
+    const url = el.getAttribute('data-poster');
+    if (!url) return;
+    posterAccent(url).then(col => { if (col) { el.style.setProperty('--accent', col); el.classList.add('glow'); } });
+  });
 }
 
 function renderGenreChips(genres, active, handlerName) {
@@ -3240,6 +3284,7 @@ function genreNamesFromIds(results, map) {
 }
 
 const RING_C = 2 * Math.PI * 19; // r=19
+const RING_SM_C = 2 * Math.PI * 17; // r=17 (anello spunta in griglia)
 
 function renderResumeRail(items) {
   const cards = items
@@ -3254,14 +3299,16 @@ function renderResumeRail(items) {
     const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
     const off = RING_C * (1 - pct/100);
     const bg = s.backdrop || s.image;
-    return `<div class="resume-card" onclick="openShow(${id})">
+    const mins = s.runtime ? `${s.runtime} min` : '';
+    const epMeta = [`S${n.season}E${n.number}`, mins, n.name ? escapeHtml(n.name) : ''].filter(Boolean).join(' · ');
+    return `<div class="resume-card" onclick="openShow(${id})" data-poster="${bg ? thumbImg(bg,'w92') : ''}">
       ${bg ? `<img src="${thumbImg(bg,'w500')}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="rc-shade"></div>
       <div class="rc-body">
         <div class="rc-info">
           <div class="rc-label">Riprendi</div>
           <div class="rc-name">${escapeHtml(s.name || '')}</div>
-          <div class="rc-ep">S${n.season}E${n.number}${n.name ? ' · ' + escapeHtml(n.name) : ''}</div>
+          <div class="rc-ep">${epMeta}</div>
         </div>
         <button class="rc-ring" onclick="event.stopPropagation();markNext(${id})" title="Segna come visto">
           <svg width="46" height="46" viewBox="0 0 46 46">
@@ -3530,9 +3577,9 @@ function renderCardTv(key, s) {
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
     sub,
-    prog: total ? `<div class="gc-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div>` : '',
+    prog: '',
     corner: showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : '',
-    topActions: libActionsTv(id)
+    topActions: libActionsTvGrid(id)
   });
 }
 
@@ -4767,6 +4814,21 @@ function filmCheckBtn(id) {
 }
 // LIBRERIA (lista+griglia): spunta + ×.
 function libActionsTv(id) { return `<div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>`; }
+// Come libActionsTv ma con un anello di avanzamento attorno alla spunta (griglia libreria).
+function libActionsTvGrid(id) {
+  const s = library[id];
+  const total = (s && s.totalEpisodes) || 0;
+  if (!total) return libActionsTv(id);
+  const pct = Math.min(100, Math.round(Object.keys(s.watched||{}).length / total * 100));
+  const off = (RING_SM_C * (1 - pct/100)).toFixed(1);
+  const ring = `<span class="ep-ring">
+    <svg class="ep-ring-svg" viewBox="0 0 40 40">
+      <circle class="epr-track" cx="20" cy="20" r="17" fill="none" stroke-width="3.5"/>
+      <circle class="epr-fill" cx="20" cy="20" r="17" fill="none" stroke-width="3.5" stroke-linecap="round"
+        stroke-dasharray="${RING_SM_C.toFixed(1)}" stroke-dashoffset="${off}" transform="rotate(-90 20 20)"/>
+    </svg>${epCheckBtn(id)}</span>`;
+  return `<div class="lib-actions">${ring}${removeBtnTv(id)}</div>`;
+}
 function libActionsFilm(id) { return `<div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>`; }
 // RICERCA/PROFILO (lista+griglia): non in libreria → "Aggiungi in libreria";
 // in libreria → [Visto/Da Vedere][×]. Larghezza fissa così le barre coincidono.
@@ -4975,12 +5037,14 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const votes = formatVotes(show.vote_count);
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
+  sheet.style.removeProperty('--accent');
   sheet.innerHTML = `
     <div class="hero">
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
     </div>
+    <div class="sheet-tint" id="sheetTint"></div>
     <div class="sheetbody">
       <h2>${escapeHtml(show.name)}</h2>
       <div class="metarow">
@@ -5002,7 +5066,12 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>`;
 
   renderEpisodeList(show.id, episodes, currentSeason);
-  if (poster) posterAccent(poster).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (poster) posterAccent(poster).then(col => {
+    if (!col) return;
+    const g = document.getElementById('heroGlow'); if (g) g.style.setProperty('--accent', col);
+    sheet.style.setProperty('--accent', col);
+    const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
+  });
   loadWatchProviders('tv', show.id);
   initSummaryClamp('showSummary');
 }
@@ -5917,12 +5986,14 @@ async function openFilm(id) {
 async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
   const rawDesc = f.description||'';
+  sheet.style.removeProperty('--accent');
   sheet.innerHTML = `
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
       <div class="fade"></div>
     </div>
+    <div class="sheet-tint" id="sheetTint"></div>
     <div class="sheetbody">
       <h2>${escapeHtml(f.title)}</h2>
       <div class="metarow">
@@ -5939,7 +6010,12 @@ async function renderFilmSheet(f, inLib) {
         : `<div class="btnrow"><button class="${f.watched?'removebtn':'addlibbtn'}" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
            <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
     </div>`;
-  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => { const g = document.getElementById('heroGlow'); if (g && col) g.style.setProperty('--accent', col); });
+  if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => {
+    if (!col) return;
+    const g = document.getElementById('heroGlow'); if (g) g.style.setProperty('--accent', col);
+    sheet.style.setProperty('--accent', col);
+    const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
+  });
   loadWatchProviders('movie', f.id);
   initSummaryClamp('filmSummary');
 }
