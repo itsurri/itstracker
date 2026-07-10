@@ -369,12 +369,16 @@
   /* stima tempo rimanente */
   .time-left { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-tv, #0A84FF); background: rgba(10,132,255,0.12); padding: 6px 12px; border-radius: 14px; margin-bottom: 16px; }
   /* trailer */
-  .trailer-btn {
-    display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 18px;
-    background: rgba(255,69,58,0.14); color: #FF453A; font-size: 13px; font-weight: 700;
-    text-decoration: none; margin-bottom: 14px;
+  /* bottone play trailer, centrato sulla copertina della scheda */
+  .hero-play {
+    position: absolute; top: 50%; left: 50%; z-index: 4; transform: translate(-50%,-50%);
+    width: 60px; height: 60px; border-radius: 50%; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(255,255,255,0.5); color: #fff; text-decoration: none;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.4);
   }
-  .trailer-btn:active { transform: scale(0.96); }
+  .hero-play svg { margin-left: 3px; }
+  .hero-play:active { transform: translate(-50%,-50%) scale(0.92); }
   /* cast */
   .cast-row { display: flex; gap: 12px; overflow-x: auto; padding: 2px 0 6px; margin-bottom: 10px; scrollbar-width: none; touch-action: pan-x; }
   .cast-row::-webkit-scrollbar { display: none; }
@@ -1114,13 +1118,16 @@
   .hero .glow-wash { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 0%, var(--accent, transparent) 0%, transparent 62%); opacity: 0.72; mix-blend-mode: screen; pointer-events: none; }
 
   /* ===== accento dinamico dal poster: colore che "bagna" tutta la scheda ===== */
+  /* Il gradiente parte da trasparente (non da un colore pieno) così non c'è un
+     bordo netto dove il tint incontra la foto della copertina. */
   .sheet-tint {
     position: absolute; left: 0; right: 0; top: 150px; height: 780px; z-index: 0; pointer-events: none;
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--accent, transparent) 34%, transparent) 0%,
-      color-mix(in srgb, var(--accent, transparent) 20%, transparent) 22%,
-      color-mix(in srgb, var(--accent, transparent) 9%, transparent) 48%,
-      color-mix(in srgb, var(--accent, transparent) 3%, transparent) 72%,
+      transparent 0%,
+      color-mix(in srgb, var(--accent, transparent) 34%, transparent) 12%,
+      color-mix(in srgb, var(--accent, transparent) 20%, transparent) 30%,
+      color-mix(in srgb, var(--accent, transparent) 9%, transparent) 55%,
+      color-mix(in srgb, var(--accent, transparent) 3%, transparent) 78%,
       transparent 100%);
     opacity: 0; transition: opacity 0.55s ease;
   }
@@ -5548,6 +5555,9 @@ async function renderSheet(show, episodes, seasons, inLib) {
     <div class="hero">
       ${poster?`<img src="${poster}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
+      <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </a>
       <div class="fade"></div>
     </div>
     <div class="sheet-tint" id="sheetTint"></div>
@@ -5566,7 +5576,6 @@ async function renderSheet(show, episodes, seasons, inLib) {
         <span class="skpi ${pctTier(total?Math.round(watchedCount/total*100):0)}" id="statPChip"><b id="statP">${total?Math.round(watchedCount/total*100):0}%</b></span>
         ${renderTimeLeft(show, episodes, watchedCount)}
       </div>
-      <div id="trailerRow"></div>
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">Aggiungi alla libreria</button>`:''}
@@ -5651,9 +5660,10 @@ async function loadWatchProviders(type, id) {
 function hasTmdbKeySilent() { return !!getTmdbKey(); }
 
 // Trailer YouTube (TMDb videos): prova prima in italiano, poi in inglese.
+// Il bottone play compare centrato sulla copertina (solo se un trailer esiste).
 async function loadTrailer(type, id) {
-  const box = document.getElementById('trailerRow');
-  if (!box || !hasTmdbKeySilent()) return;
+  const btn = document.getElementById('heroPlayBtn');
+  if (!btn || !hasTmdbKeySilent()) return;
   try {
     let vids = [];
     const r = await fetch(tmdbUrl(`/${type}/${id}/videos`, {}));
@@ -5665,10 +5675,10 @@ async function loadTrailer(type, id) {
     const t = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
            || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
            || vids.find(v => v.site === 'YouTube');
-    if (!t) { box.innerHTML = ''; return; }
-    box.innerHTML = `<a class="trailer-btn" href="https://www.youtube.com/watch?v=${t.key}" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Guarda il trailer</a>`;
-  } catch(e) { box.innerHTML = ''; }
+    if (!t) return;
+    btn.href = `https://www.youtube.com/watch?v=${t.key}`;
+    btn.style.display = 'flex';
+  } catch(e) {}
 }
 
 // Cast con foto (riga scorrevole). Per le serie usa aggregate_credits.
@@ -6569,6 +6579,9 @@ async function renderFilmSheet(f, inLib) {
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
       <div class="glow-wash" id="heroGlow"></div>
+      <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </a>
       <div class="fade"></div>
     </div>
     <div class="sheet-tint" id="sheetTint"></div>
@@ -6582,7 +6595,6 @@ async function renderFilmSheet(f, inLib) {
       <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
       ${f.runtime?`<div class="time-left">⏱️ Durata ~${Math.floor(f.runtime/60)?Math.floor(f.runtime/60)+' h ':''}${f.runtime%60} min</div>`:''}
-      <div id="trailerRow"></div>
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
       ${!inLib
