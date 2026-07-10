@@ -145,7 +145,7 @@
 
   /* --- azioni rapide --- */
   .act-btn { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; display: flex; align-items: center; justify-content: center; }
-  .act-remove { background: #FF453A; color: #fff; }
+  .act-remove { background: rgba(255,69,58,0.18); color: #FF6961; }
   /* spunta episodio: vuoto (da vedere) · blu (in corso) · verde (in pari) */
   .ep-check {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; position: relative;
@@ -187,12 +187,20 @@
     background: rgba(0,0,0,0.65); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     color: #FFD60A; display: flex; align-items: center; gap: 2px;
   }
-  /* azioni libreria in alto sul poster */
-  .gc-top { position: absolute; top: 6px; left: 6px; right: 6px; z-index: 3; }
-  .gc-top .lib-actions { width: 100%; justify-content: space-between; }
-  .gc-top .ep-check, .gc-top .act-btn { width: 32px; height: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.55); }
+  /* × rimuovi: piccola e vetrosa in alto a destra sul poster */
+  .gc-x { position: absolute; top: 6px; right: 6px; z-index: 5; }
+  .gc-x .act-btn {
+    width: 26px; height: 26px; background: rgba(0,0,0,0.45); color: #fff;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .gc-x .act-btn svg { width: 12px; height: 12px; }
+  /* spunta avanti-episodio in basso a destra sul poster */
+  .gc-check { position: absolute; right: 7px; bottom: 7px; z-index: 5; }
+  .gc-check .ep-check { width: 34px; height: 34px; box-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+  .gc-check .ep-check.empty { background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.65); }
   /* barra di avanzamento lungo il bordo della copertina: parte dall'alto al
-     centro e gira in senso orario. Usata in griglia e (versione piccola) in lista. */
+     centro e gira in senso orario. Verde quando completata. */
   .cover-ring {
     position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit;
     padding: 3px;
@@ -200,13 +208,13 @@
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  .li-cover { position: relative; display: block; width: 42px; height: 58px; flex-shrink: 0; }
-  .li-cover img, .li-cover .noimg-s { width: 100%; height: 100%; }
-  .cover-ring-sm { padding: 2.5px; border-radius: 8px; background: conic-gradient(from 0deg, #FFC93C calc(var(--cp,0) * 1%), rgba(var(--overlay-rgb),0.18) 0); }
+  .cover-ring.done { background: conic-gradient(from 0deg, #30D158 calc(var(--cp,0) * 1%), rgba(255,255,255,0.16) 0); }
   /* titolo/info sovrapposti in basso al poster */
-  .gc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 18px 9px 8px; }
+  .gc-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 18px 9px 9px; }
+  .gcard-check .gc-info { padding-right: 46px; }
   .gc-title { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
   .gc-sub { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+  .gc-sub b { color: #fff; font-weight: 800; }
   .gc-prog { margin-top: 5px; height: 3px; background: rgba(255,255,255,0.28); border-radius: 2px; overflow: hidden; }
   .gc-prog i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .gc-prog i.no-anim { animation: none; }
@@ -247,10 +255,10 @@
   .card .badge-txt { position: relative; z-index: 1; }
   .list-item .li-prog i.no-anim, .card .badge-fill.no-anim, .person-item .pi-prog i.no-anim { animation: none; }
 
-  /* LIST */
+  /* LIST (compatta) */
   .list-item {
-    display: flex; gap: 12px; align-items: center; position: relative;
-    padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer;
+    display: flex; gap: 10px; align-items: center; position: relative;
+    padding: 8px 10px; margin-bottom: 6px; border-radius: 18px; cursor: pointer;
     background: var(--sheet-bg);
     border: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
@@ -261,10 +269,16 @@
   }
   .list-item .noimg-s { display: flex; align-items: center; justify-content: center; }
   .list-item .li-info { flex: 1; min-width: 0; }
-  .list-item .li-name { font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
-  .list-item .li-meta { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
-  .list-item .li-prog { margin-top: 6px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
+  .list-item .li-name { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li-nextep { color: #0A84FF; font-weight: 800; }
+  .li-done { color: #30D158; font-weight: 800; }
+  .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
+  .li-progrow .li-prog { flex: 1; margin-top: 0; }
+  .li-pct { font-size: 10px; font-weight: 800; color: rgba(var(--overlay-rgb),0.55); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
+  .list-item .lib-actions .ep-check, .list-item .lib-actions .act-btn { width: 30px; height: 30px; }
   @keyframes barGrow { from { transform: scaleX(0); } }
 
   /* sheet */
@@ -3632,8 +3646,9 @@ function renderCardTv(key, s) {
   const watched = Object.keys(s.watched || {}).length;
   const total = s.totalEpisodes || 0;
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
+  const done = total > 0 && watched >= total;
   const sub = watched > 0
-    ? (s.next ? `S${s.next.season} E${s.next.number}` : `${watched}${total?'/'+total:''}`)
+    ? (s.next ? `<b>S${s.next.season} E${s.next.number}</b> · ${pct}%` : (done ? 'Completata' : `${watched}${total?'/'+total:''}`))
     : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
   return gridCard({
     onclick: `openShow(${id}, this)`,
@@ -3641,10 +3656,11 @@ function renderCardTv(key, s) {
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
     sub,
-    prog: '',
     coverProg: total ? pct : null,
+    coverDone: done,
     corner: showAiringToday(s) ? `<span class="live-badge live-corner">In onda</span>` : '',
-    topActions: libActionsTv(id)
+    xBtn: removeBtnTv(id),
+    check: epCheckBtn(id)
   });
 }
 
@@ -3659,24 +3675,20 @@ function renderListTv(key, s) {
   const watched = Object.keys(s.watched || {}).length;
   const total = s.totalEpisodes || 0;
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
-  const cat = categorizeShow(s);
-  const isDone = cat === 'inpari';
+  const isDone = total > 0 && watched >= total;
   return `<div class="list-item" onclick="openShow(${id}, this)">
-    <span class="li-cover" style="--cp:${pct}">
-      ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
-      ${total ? `<span class="cover-ring cover-ring-sm"></span>` : ''}
-    </span>
+    ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-meta">${[
+        s.next ? `<span class="li-nextep">S${s.next.season} E${s.next.number}</span>` : (isDone ? `<span class="li-done">Completata</span>` : null),
         s.rating ? `★ ${s.rating}` : null,
-        s.totalSeasons ? `${s.totalSeasons} Stagioni` : null,
-        watched > 0
-          ? (s.next ? `S${s.next.season} E${s.next.number}` : `Episodio ${watched}${total?'/'+total:''}`)
-          : (total ? `${total} Episodi` : null)
+        s.totalSeasons ? `${s.totalSeasons} St.` : null,
+        watched === 0 && total ? `${total} ep` : null
       ].filter(Boolean).join(' · ')}</div>
+      ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'}" style="--pct:${pct}%"></i></div><span class="li-pct">${pct}%</span></div>` : ''}
     </div>
-    ${libActionsTv(id)}
+    <div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
 }
 
@@ -3908,8 +3920,11 @@ function renderCardFilm(key, f) {
     poster: f.image ? thumbImg(f.image,'w342') : '',
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
-    sub: `${f.year||'—'}${f.watched?' · Visto':''}`,
-    topActions: libActionsFilm(id)
+    sub: [f.year||'—', f.rating ? `★ ${f.rating}` : null].filter(Boolean).join(' · '),
+    coverProg: f.watched ? 100 : null,
+    coverDone: !!f.watched,
+    xBtn: removeBtnFilm(id),
+    check: filmCheckBtn(id)
   });
 }
 
@@ -3919,9 +3934,14 @@ function renderListFilm(key, f) {
     ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
-      <div class="li-meta">${f.year||'—'}${f.genre?' · '+escapeHtml(f.genre):''}</div>
+      <div class="li-meta">${[
+        f.watched ? `<span class="li-done">Visto</span>` : null,
+        f.year||'—',
+        f.genre ? escapeHtml(f.genre) : null,
+        f.rating ? `★ ${f.rating}` : null
+      ].filter(Boolean).join(' · ')}</div>
     </div>
-    ${libActionsFilm(id)}
+    <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
   </div>`;
 }
 
@@ -4880,30 +4900,28 @@ function filmCheckBtn(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
   return `<button class="ep-check ${done?'done':'empty'}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_V}</button>`;
 }
-// LIBRERIA (lista+griglia): spunta + ×.
-function libActionsTv(id) { return `<div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>`; }
-function libActionsFilm(id) { return `<div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>`; }
 // RICERCA/PROFILO (lista+griglia): non in libreria → "Aggiungi in libreria";
 // in libreria → [Visto/Da Vedere][×]. Larghezza fissa così le barre coincidono.
 function searchActionsTv(id, full) { return library[id] ? `<div class="row-actions">${watchPillTv(id)}${removeBtnTv(id)}</div>` : `<div class="row-actions">${addWideTv(id, full)}</div>`; }
 function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row-actions">${watchPillFilm(id)}${removeBtnFilm(id)}</div>` : `<div class="row-actions">${addWideFilm(id, full)}</div>`; }
 
-// Card di griglia: poster con TUTTO sovrapposto (titolo/info in basso, azioni
-// eventualmente in alto). Le azioni possono stare in alto sul poster (libreria)
-// o sotto in modo compatto (ricerca).
+// Card di griglia: poster con tutto sovrapposto. Libreria: × in alto a destra,
+// spunta avanti-episodio in basso a destra, barra di avanzamento lungo il bordo.
+// Ricerca: azioni compatte sotto il poster (bottomActions).
 function gridCard(o) {
   const cover = (o.coverProg != null)
-    ? `<div class="cover-ring" style="--cp:${o.coverProg}"></div>` : '';
-  return `<div class="gcard${o.addMode?' gcard-add':''}">
+    ? `<div class="cover-ring${o.coverDone?' done':''}" style="--cp:${o.coverProg}"></div>` : '';
+  return `<div class="gcard${o.addMode?' gcard-add':''}${o.check?' gcard-check':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
       ${o.corner||''}
-      ${o.topActions ? `<div class="gc-top">${o.topActions}</div>` : ''}
+      ${o.xBtn ? `<div class="gc-x">${o.xBtn}</div>` : ''}
       <div class="gc-info" onclick="${o.onclick}">
         <div class="gc-title">${escapeHtml(o.title||'')}</div>
         ${o.sub ? `<div class="gc-sub">${o.sub}</div>` : ''}
         ${o.prog||''}
       </div>
+      ${o.check ? `<div class="gc-check">${o.check}</div>` : ''}
     </div>
     ${cover}
     ${o.bottomActions ? `<div class="gc-bottom">${o.bottomActions}</div>` : ''}
