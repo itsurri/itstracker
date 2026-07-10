@@ -3773,8 +3773,7 @@ function sortFilmItems(items) {
   if (filmSort === 'az') items.sort((a,b) => (a[1].title||'').localeCompare(b[1].title||''));
   else if (filmSort === 'rating') items.sort((a,b) => (b[1].rating||0) - (a[1].rating||0));
   else if (filmSort === 'year') items.sort((a,b) => (b[1].year||0) - (a[1].year||0));
-  else if (filmSort === 'recent') items.sort((a,b) => (b[1].addedAt||0) - (a[1].addedAt||0));
-  else if (filmSort === 'modified') items.sort((a,b) => Math.max(b[1].addedAt||0, b[1].watchedAt||0) - Math.max(a[1].addedAt||0, a[1].watchedAt||0));
+  else if (filmSort === 'recent') items.sort((a,b) => Math.max(b[1].addedAt||0, b[1].watchedAt||0) - Math.max(a[1].addedAt||0, a[1].watchedAt||0));
 }
 function sortChipsHtml(current, opts, fn) {
   return `<div class="seasontabs sort-chips">${opts.map(o =>
@@ -4399,7 +4398,7 @@ function renderFilmLibrary() {
   sortFilmItems(items);
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
   const sortBar = items.length > 1 ? sortChipsHtml(filmSort, [
-    { v: 'recent', l: 'Aggiunti' }, { v: 'modified', l: 'Recenti' }, { v: 'az', l: 'A–Z' }, { v: 'rating', l: '★' }, { v: 'year', l: 'Anno' }
+    { v: 'recent', l: 'Recenti' }, { v: 'az', l: 'A–Z' }, { v: 'rating', l: '★' }, { v: 'year', l: 'Anno' }
   ], 'setFilmSort') : '';
   container.innerHTML = `<div class="section">
     ${sortBar}
@@ -4422,9 +4421,8 @@ function renderCardFilm(key, f) {
     dataPoster: f.image ? thumbImg(f.image,'w92') : '',
     title: f.title,
     topLeft: f.rating ? `<span class="grating">★ ${fmtRating(f.rating)}</span>` : '',
-    topRight: `<span class="grating" style="${f.watched?'color:#30D158':'color:#0A84FF'}">${f.watched?'Visto':'Da vedere'}</span>`,
+    topRight: f.year ? `<span class="grating">${f.year}</span>` : '',
     bottomLeft: f.genre ? `<span class="grating">${escapeHtml(f.genre)}</span>` : '',
-    bottomRight: f.year ? `<span class="grating">${f.year}</span>` : '',
     actions: filmCheckBtn(id) + removeBtnFilm(id)
   });
 }
@@ -4436,10 +4434,9 @@ function renderListFilm(key, f) {
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
       <div class="li-chips">${[
-        f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
-        f.year ? `<span class="chip">${f.year}</span>` : null,
+        f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null,
         f.genre ? genreChip(f.genre) : null,
-        f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null
+        f.year ? `<span class="chip">${f.year}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
@@ -5263,7 +5260,6 @@ function renderTvResultsFromCache() {
       const poster = tmdbImg(s.poster_path, 'w185');
       const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
       const badges = [
-        `<span class="chip chip-date">${s.first_air_date?s.first_air_date.slice(0,4):'—'}</span>`,
         rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null,
         s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} St.</span>` : null,
         s.totalEpisodes ? `<span class="chip chip-episodes">${s.totalEpisodes} Ep</span>` : null
@@ -5350,9 +5346,11 @@ function renderFilmResultsFromCache() {
       const inLib = !!filmLibrary[f.id];
       const poster = tmdbImg(f.poster_path, 'w185');
       const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
+      const genreName = (f.genre_ids && f.genre_ids.length && filmGenreMap) ? filmGenreMap[f.genre_ids[0]] : null;
       const badges = [
-        `<span class="chip chip-date">${f.release_date?f.release_date.slice(0,4):'—'}</span>`,
-        rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null
+        rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null,
+        genreName ? genreChip(genreName) : null,
+        `<span class="chip chip-date">${f.release_date?f.release_date.slice(0,4):'—'}</span>`
       ].filter(Boolean).join('');
       return `<div class="list-item" onclick="openFilm(${f.id}, this)">
         ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
@@ -5656,8 +5654,8 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <button class="summary-more" id="showSummaryMore" onclick="toggleSummaryClamp('showSummary')">Mostra altro</button>
       <div class="sheet-kpis">
-        <span class="skpi skpi-g"><b id="statW">${watchedCount}</b> visti</span>
         <span class="skpi skpi-b"><b>${total}</b> episodi</span>
+        <span class="skpi skpi-g"><b id="statW">${watchedCount}</b> visti</span>
         <span class="skpi ${pctTier(total?Math.round(watchedCount/total*100):0)}" id="statPChip"><b id="statP">${total?Math.round(watchedCount/total*100):0}%</b></span>
         ${renderTimeLeft(show, episodes, watchedCount)}
       </div>
@@ -6925,7 +6923,19 @@ function startPresenceHeartbeat() {
   presenceInterval = setInterval(pingPresence, 60000);
 }
 function stopPresenceHeartbeat() { clearInterval(presenceInterval); presenceInterval = null; }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) pingPresence(); });
+let lastHiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { lastHiddenAt = Date.now(); return; }
+  pingPresence();
+  // Dopo un po' in background i browser mobili spengono silenziosamente la
+  // connessione realtime di Firestore: senza un nudge esplicito, la prima
+  // query al rientro (es. lista amici nel profilo) resta appesa per parecchi
+  // secondi finché l'SDK non si accorge da solo che è caduta.
+  if (lastHiddenAt && Date.now() - lastHiddenAt > 20000 && fbDb) {
+    fbDb.disableNetwork().then(() => fbDb.enableNetwork()).catch(() => {});
+    if (currentTab === 'profile' && currentUser) loadProfilePeople();
+  }
+});
 const ONLINE_WINDOW_MS = 3 * 60 * 1000;
 const RECENT_WINDOW_MS = 60 * 60 * 1000;
 function isOnline(lastActive) { return typeof lastActive === 'number' && (Date.now() - lastActive) < ONLINE_WINDOW_MS; }
