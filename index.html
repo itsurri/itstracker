@@ -199,13 +199,25 @@
   .gc-check .ep-check.empty { background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-color: rgba(255,255,255,0.65); }
   /* footer solido sotto il poster: titolo fino a 2 righe, info, barra blu */
   .gc-foot { padding: 7px 9px 9px; cursor: pointer; }
-  .gc-title { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--fg); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em; }
+  .gc-title {
+    font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--fg);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; min-height: 2.6em;
+  }
   .gc-sub { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.55); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gc-sub b { color: #0A84FF; font-weight: 800; }
   .gc-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; }
   .gc-bar i { display: block; height: 100%; border-radius: 2px; width: var(--pct,0); transform-origin: left; background: #0A84FF; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .gc-bar i.no-anim { animation: none; }
-  .gc-bar i.done { background: #30D158; }
+  /* fasce di avanzamento: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde */
+  .gc-bar i.tier-r, .li-prog i.tier-r { background: #FF453A; }
+  .gc-bar i.tier-o, .li-prog i.tier-o { background: #FF9F0A; }
+  .gc-bar i.tier-y, .li-prog i.tier-y { background: #FFD60A; }
+  .gc-bar i.tier-g, .li-prog i.tier-g { background: #30D158; }
+  .li-pct.tier-r { color: #FF453A; } .li-pct.tier-o { color: #FF9F0A; }
+  .li-pct.tier-y { color: #FFD60A; } .li-pct.tier-g { color: #30D158; }
+  .wall-bar.tier-r::after { background: #FF453A; } .wall-bar.tier-o::after { background: #FF9F0A; }
+  .wall-bar.tier-y::after { background: #FFD60A; } .wall-bar.tier-g::after { background: #30D158; }
   /* azioni ricerca compatte sotto il footer */
   .gc-bottom { padding: 0 8px 8px; }
   .gc-bottom .row-actions { width: 100%; }
@@ -222,7 +234,6 @@
   .wall-card { border-radius: 18px; }
   .wall-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.25); z-index: 2; }
   .wall-bar::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); background: #0A84FF; }
-  .wall-bar.done::after { background: #30D158; }
   /* chip di ordinamento libreria */
   .sort-chips { padding: 0 0 12px; }
   .sort-chip { padding: 5px 12px; font-size: 11.5px; }
@@ -277,12 +288,30 @@
   .chip-next { background: rgba(10,132,255,0.14); color: #0A84FF; font-weight: 800; }
   .chip-done { background: rgba(48,209,88,0.14); color: #30D158; font-weight: 800; }
   .chip-new  { background: rgba(255,159,10,0.16); color: #FF9F0A; font-weight: 800; }
+  .chip-star { background: rgba(255,214,10,0.16); color: #FFD60A; font-weight: 800; }
+  .chip-seasons { background: rgba(48,209,88,0.13); color: #30D158; font-weight: 800; }
+  /* KPI della scheda serie: visti, totali, % (a fasce), tempo rimanente */
+  .sheet-kpis { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .skpi {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600;
+    padding: 6px 11px; border-radius: 14px; background: rgba(var(--overlay-rgb),0.07); color: rgba(var(--overlay-rgb),0.6);
+  }
+  .skpi b { font-weight: 800; }
+  .skpi-g { background: rgba(48,209,88,0.13); color: #30D158; }
+  .skpi-b { background: rgba(10,132,255,0.13); color: #0A84FF; }
+  .skpi-v { background: rgba(94,92,230,0.16); color: #7D7AFF; }
+  .skpi.tier-r { background: rgba(255,69,58,0.13); color: #FF453A; }
+  .skpi.tier-o { background: rgba(255,159,10,0.15); color: #FF9F0A; }
+  .skpi.tier-y { background: rgba(255,214,10,0.15); color: #FFD60A; }
+  .skpi.tier-g { background: rgba(48,209,88,0.13); color: #30D158; }
+  /* contatori sulle tab categoria */
+  .tab-count { background: rgba(var(--overlay-rgb),0.14); color: inherit; }
+  .seasontab.active .tab-count { background: rgba(0,0,0,0.18); }
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
   .li-progrow .li-prog { flex: 1; margin-top: 0; }
   .li-pct { font-size: 10px; font-weight: 800; color: rgba(var(--overlay-rgb),0.55); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
-  .list-item .li-prog i.done { background: #30D158; }
   .list-item .lib-actions .ep-check, .list-item .lib-actions .act-btn { width: 30px; height: 30px; }
   @keyframes barGrow { from { transform: scaleX(0); } }
 
@@ -427,8 +456,6 @@
   .kpi-p .v { color: #7D7AFF; } .kpi-p::before { background: #5E5CE6; }
   .kpi-o { background: rgba(247,181,56,0.12); }
   .kpi-o .v { color: #F7B538; } .kpi-o::before { background: #F7B538; }
-  .mini-stats { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-bottom: 16px; }
-  .mini-stats b { color: var(--fg); font-weight: 700; }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
   .profile-cover {
     aspect-ratio: 16/9; background-size: cover; background-position: center; position: relative;
@@ -1414,9 +1441,9 @@
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
     <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua</button>
-      <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari</button>
-      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista</button>
+      <button class="seasontab active" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-badge tab-count" id="tvCount-continua"></span></button>
+      <button class="seasontab" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-badge tab-count" id="tvCount-inpari"></span></button>
+      <button class="seasontab" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-badge tab-count" id="tvCount-davedere"></span></button>
       <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
     </div>
     <div id="tvContent"></div>
@@ -1430,8 +1457,8 @@
   <!-- FILM -->
   <div class="view" id="view-film">
     <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti</button>
-      <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere</button>
+      <button class="seasontab active" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-badge tab-count" id="filmCount-visti"></span></button>
+      <button class="seasontab" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-badge tab-count" id="filmCount-davedere"></span></button>
     </div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
@@ -2187,6 +2214,9 @@ function applyCardGlows(container) {
 function hasNewEp(s) {
   return !!(s && s.newEpAt && (Date.now() - s.newEpAt) < 7*86400000 && categorizeShow(s) !== 'inpari');
 }
+
+// Fascia colore per l'avanzamento: 0-33 rosso, 34-66 arancio, 67-89 giallo, 90-100 verde.
+function pctTier(pct) { return pct >= 90 ? 'tier-g' : pct >= 67 ? 'tier-y' : pct >= 34 ? 'tier-o' : 'tier-r'; }
 
 // ---------- categorize show ----------
 function categorizeShow(s) {
@@ -3348,6 +3378,7 @@ let animateProgressBars = true;
 function withoutBarAnim(fn) { animateProgressBars = false; try { fn(); } finally { animateProgressBars = true; } }
 
 function renderLibrary() {
+  updateCategoryCounts();
   const container = document.getElementById('tvContent');
   const emptyEl = document.getElementById('libraryEmpty');
   const entries = Object.entries(library);
@@ -3383,6 +3414,17 @@ function renderLibrary() {
   applyCardGlows(container);
 }
 
+// Contatori sulle tab categoria (serie e film).
+function updateCategoryCounts() {
+  const counts = { continua: 0, inpari: 0, davedere: 0 };
+  Object.values(library).forEach(s => { const c = categorizeShow(s); if (c in counts) counts[c]++; });
+  ['continua','inpari','davedere'].forEach(c => { const el = document.getElementById('tvCount-' + c); if (el) el.textContent = counts[c]; });
+  let visti = 0, dav = 0;
+  Object.values(filmLibrary).forEach(f => { if (f.watched) visti++; else dav++; });
+  const v = document.getElementById('filmCount-visti'); if (v) v.textContent = visti;
+  const d = document.getElementById('filmCount-davedere'); if (d) d.textContent = dav;
+}
+
 // ---------- ordinamento libreria ----------
 function tvPctOf(s) { const t = s.totalEpisodes || 0; return t ? Object.keys(s.watched||{}).length / t : 0; }
 function sortTvItems(items) {
@@ -3412,14 +3454,14 @@ function wallCardTv(key, s) {
   const done = total > 0 && watched >= total;
   return `<div class="card wall-card" data-poster="${s.image ? thumbImg(s.image,'w92') : ''}" onclick="openShow(${id}, this)">
     ${s.image ? `<img src="${thumbImg(s.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(s.name||'?')}</div>`}
-    ${total ? `<div class="wall-bar${done?' done':''}" style="--pct:${pct}%"></div>` : ''}
+    ${total ? `<div class="wall-bar ${pctTier(pct)}" style="--pct:${pct}%"></div>` : ''}
   </div>`;
 }
 function wallCardFilm(key, f) {
   const id = validId(f, key);
   return `<div class="card wall-card" data-poster="${f.image ? thumbImg(f.image,'w92') : ''}" onclick="openFilm(${id}, this)">
     ${f.image ? `<img src="${thumbImg(f.image,'w342')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(f.title||'?')}</div>`}
-    ${f.watched ? `<div class="wall-bar done" style="--pct:100%"></div>` : ''}
+    ${f.watched ? `<div class="wall-bar tier-g" style="--pct:100%"></div>` : ''}
   </div>`;
 }
 
@@ -3734,7 +3776,7 @@ async function renderUpcoming(container) {
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
-        <div class="up-ep">S${u.season}E${u.number}${u.epname ? ' · ' + escapeHtml(u.epname) : ''}</div>
+        <div class="up-ep">S${u.season}E${u.number} · ${escapeHtml(u.epname || ('Episodio ' + u.number))}</div>
       </div>
       <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()]}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
@@ -3751,9 +3793,11 @@ function renderCardTv(key, s) {
   const total = s.totalEpisodes || 0;
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const done = total > 0 && watched >= total;
-  const sub = watched > 0
-    ? (s.next ? `<b>S${s.next.season} E${s.next.number}</b> · ${pct}%` : (done ? 'Completata' : `${watched}${total?'/'+total:''}`))
-    : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : '');
+  // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
+  const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
+  const sub = next
+    ? `<b>S${next.season} E${next.number}</b> · ${pct}%`
+    : (done ? 'Completata' : (total ? `${s.totalSeasons?s.totalSeasons+' St. · ':''}${total} ep` : ''));
   const corner = showAiringToday(s)
     ? `<span class="live-badge live-corner">In onda</span>`
     : (hasNewEp(s) ? `<span class="new-ep-badge live-corner">Nuovo ep</span>` : '');
@@ -3764,7 +3808,6 @@ function renderCardTv(key, s) {
     title: s.name,
     sub,
     progPct: total ? pct : null,
-    progDone: done,
     corner,
     xBtn: removeBtnTv(id),
     check: epCheckBtn(id)
@@ -3783,19 +3826,21 @@ function renderListTv(key, s) {
   const total = s.totalEpisodes || 0;
   const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const isDone = total > 0 && watched >= total;
+  // Anche le serie mai iniziate mostrano il prossimo episodio (S1 E1): stessa struttura per tutte.
+  const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
+  const tier = pctTier(pct);
   const chips = [
-    s.next ? `<span class="chip chip-next">S${s.next.season} E${s.next.number}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
+    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
     hasNewEp(s) ? `<span class="chip chip-new">Nuovo ep</span>` : null,
-    s.rating ? `<span class="chip">★ ${s.rating}</span>` : null,
-    s.totalSeasons ? `<span class="chip">${s.totalSeasons} St.</span>` : null,
-    watched === 0 && total ? `<span class="chip">${total} ep</span>` : null
+    s.rating ? `<span class="chip chip-star">★ ${s.rating}</span>` : null,
+    s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
   ].filter(Boolean).join('');
   return `<div class="list-item" onclick="openShow(${id}, this)">
     ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
-      ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'}${isDone?' done':''}" style="--pct:${pct}%"></i></div><span class="li-pct">${pct}%</span></div>` : ''}
+      ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div><span class="li-pct ${tier}">${pct}%</span></div>` : ''}
     </div>
     <div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
@@ -4004,6 +4049,7 @@ function setFilmCategory(cat) {
 }
 
 function renderFilmLibrary() {
+  updateCategoryCounts();
   const container = document.getElementById('filmContent');
   const emptyEl = document.getElementById('filmEmpty');
   const entries = Object.entries(filmLibrary);
@@ -4038,7 +4084,6 @@ function renderCardFilm(key, f) {
     title: f.title,
     sub: [f.watched ? `<b style="color:#30D158">Visto</b>` : null, f.year||'—', f.rating ? `★ ${f.rating}` : null].filter(Boolean).join(' · '),
     progPct: f.watched ? 100 : null,
-    progDone: !!f.watched,
     xBtn: removeBtnFilm(id),
     check: filmCheckBtn(id)
   });
@@ -4054,7 +4099,7 @@ function renderListFilm(key, f) {
         f.watched ? `<span class="chip chip-done">Visto</span>` : `<span class="chip chip-next">Da vedere</span>`,
         f.year ? `<span class="chip">${f.year}</span>` : null,
         f.genre ? `<span class="chip">${escapeHtml(f.genre)}</span>` : null,
-        f.rating ? `<span class="chip">★ ${f.rating}</span>` : null
+        f.rating ? `<span class="chip chip-star">★ ${f.rating}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
@@ -5028,7 +5073,7 @@ function searchActionsFilm(id, full) { return filmLibrary[id] ? `<div class="row
 // barra di avanzamento blu. Ricerca: azioni compatte sotto il footer.
 function gridCard(o) {
   const bar = (o.progPct != null)
-    ? `<div class="gc-bar"><i class="${animateProgressBars?'':'no-anim'}${o.progDone?' done':''}" style="--pct:${o.progPct}%"></i></div>` : '';
+    ? `<div class="gc-bar"><i class="${animateProgressBars?'':'no-anim'} ${pctTier(o.progPct)}" style="--pct:${o.progPct}%"></i></div>` : '';
   return `<div class="gcard${o.addMode?' gcard-add':''}">
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
@@ -5194,7 +5239,7 @@ async function openShow(id, originEl) {
   sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
-  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheetBg.classList.add('open'); });
+  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheet.scrollTop = 0; sheetBg.classList.add('open'); });
 
   if (!hasTmdbKey()) { closeSheet(); return; }
 
@@ -5260,7 +5305,12 @@ async function renderSheet(show, episodes, seasons, inLib) {
       </div>
       <div class="summary" id="showSummary">${rawSummary?escapeHtml(rawSummary):'<span style="color:rgba(var(--overlay-rgb),.35);font-style:italic">Nessuna descrizione disponibile.</span>'}</div>
       <button class="summary-more" id="showSummaryMore" onclick="toggleSummaryClamp('showSummary')">Mostra altro</button>
-      <div class="mini-stats"><b id="statW">${watchedCount}</b> visti · <b>${total}</b> totali · <b id="statP">${total?Math.round(watchedCount/total*100):0}%</b> completato${renderTimeLeft(show, episodes, watchedCount)}</div>
+      <div class="sheet-kpis">
+        <span class="skpi skpi-g"><b id="statW">${watchedCount}</b> visti</span>
+        <span class="skpi skpi-b"><b>${total}</b> episodi</span>
+        <span class="skpi ${pctTier(total?Math.round(watchedCount/total*100):0)}" id="statPChip"><b id="statP">${total?Math.round(watchedCount/total*100):0}%</b></span>
+        ${renderTimeLeft(show, episodes, watchedCount)}
+      </div>
       <div id="trailerRow"></div>
       <div class="watch-providers" id="watchProviders"></div>
       <div id="castSec"></div>
@@ -5284,6 +5334,30 @@ async function renderSheet(show, episodes, seasons, inLib) {
   loadTrailer('tv', show.id);
   loadCast('tv', show.id);
   initSummaryClamp('showSummary');
+  scrollToCurrentEpisode(show.id, episodes);
+}
+
+// Apre la scheda già "dove sei": scorre fino al primo episodio non visto della
+// stagione selezionata (solo se hai già iniziato a guardare la serie).
+function scrollToCurrentEpisode(showId, episodes) {
+  const watched = (library[showId] && library[showId].watched) || {};
+  if (!Object.keys(watched).length) return; // mai iniziata: resta in cima
+  const filtered = episodes.filter(e => e.season === currentSeason).sort((a,b) => a.number - b.number);
+  const idx = filtered.findIndex(e => !watched[`${e.season}x${e.number}`]);
+  if (idx <= 0) return; // primo episodio o stagione già completata: niente scroll
+  // La lista episodi è paginata: assicurati che l'episodio target sia renderizzato.
+  if (idx >= episodePageState.shown) {
+    episodePageState.shown = Math.min(filtered.length, (Math.floor(idx / EPISODE_PAGE) + 1) * EPISODE_PAGE);
+    renderEpisodeList(showId, episodes, currentSeason);
+  }
+  const ep = filtered[idx];
+  setTimeout(() => {
+    const el = document.getElementById(`ep-${ep.season}x${ep.number}`);
+    const sheet = document.getElementById('sheet');
+    if (!el || !sheet) return;
+    const top = el.getBoundingClientRect().top - sheet.getBoundingClientRect().top + sheet.scrollTop - 110;
+    if (top > 0) sheet.scrollTo({ top, behavior: 'smooth' });
+  }, 350);
 }
 
 // Stima del tempo che manca per finire una serie: episodi rimanenti (usciti) × durata media.
@@ -5297,7 +5371,7 @@ function renderTimeLeft(show, episodes, watchedCount) {
   const mins = remaining * runtime;
   const h = Math.floor(mins / 60), m = mins % 60;
   const label = h > 0 ? `${h} ore${m ? ' ' + m + ' min' : ''}` : `${m} min`;
-  return ` · <b>${label}</b> per finirla`;
+  return `<span class="skpi skpi-v">⏱ <b>${label}</b> per finirla</span>`;
 }
 
 // Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
@@ -5596,6 +5670,7 @@ function applyToggleEpisode(showId, season, number) {
   const tot = episodesCache[showId] ? episodesCache[showId].length : 0;
   const sw = document.getElementById('statW'); if(sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if(sp) sp.textContent = (tot?Math.round(wc/tot*100):0)+'%';
+  const spc = document.getElementById('statPChip'); if (spc) spc.className = 'skpi ' + pctTier(tot?Math.round(wc/tot*100):0);
   updateMarkAllBtn(showId);
 
   // Se la serie è appena diventata "in pari", verifica che non siano già usciti nuovi episodi.
@@ -5673,6 +5748,7 @@ function toggleMarkAll(showId) {
   const wc = Object.keys(w).length;
   const sw = document.getElementById('statW'); if (sw) sw.textContent = wc;
   const sp = document.getElementById('statP'); if (sp) sp.textContent = (eps.length?Math.round(wc/eps.length*100):0)+'%';
+  const spc = document.getElementById('statPChip'); if (spc) spc.className = 'skpi ' + pctTier(eps.length?Math.round(wc/eps.length*100):0);
   updateMarkAllBtn(showId);
   if (!wasAll && categorizeShow(show) === 'inpari') {
     celebrateShowComplete(show);
@@ -6216,7 +6292,7 @@ async function openFilm(id, originEl) {
   sheetNavIndex = sheetNavIds.indexOf(id);
   const sheetBg = document.getElementById('sheetBg');
   const sheet = document.getElementById('sheet');
-  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheetBg.classList.add('open'); });
+  vtOpenSheet(originEl, (src) => { sheet.innerHTML = sheetSkeleton(src); sheet.scrollTop = 0; sheetBg.classList.add('open'); });
 
   let f = filmLibrary[id];
   if (!f) {
