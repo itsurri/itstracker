@@ -146,28 +146,32 @@
   /* --- azioni rapide --- */
   .act-btn { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; display: flex; align-items: center; justify-content: center; }
   .act-remove { background: #FF453A; color: #fff; }
-  /* spunta verde con V (serie: prossimo episodio · film: visto/da vedere) */
+  /* spunta episodio: vuoto (da vedere) · blu (in corso) · verde (in pari) */
   .ep-check {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; position: relative;
-    display: flex; align-items: center; justify-content: center; background: #30D158; color: #fff;
+    display: flex; align-items: center; justify-content: center; color: #fff;
   }
-  .ep-check.off { background: transparent; border: 1.5px solid rgba(var(--overlay-rgb),0.35); }
-  .ep-check.off svg { display: none; }
+  .ep-check.done { background: #30D158; }
+  .ep-check.prog { background: #0A84FF; }
+  .ep-check.empty { background: transparent; border: 1.5px solid rgba(var(--overlay-rgb),0.4); }
+  .ep-check.empty svg { display: none; }
   /* pillola stato (ricerca/profilo): blu = da vedere, verde = visto */
   .watch-pill {
-    min-width: 92px; padding: 8px 12px; border-radius: 14px; border: none; flex-shrink: 0;
-    font-size: 12.5px; font-weight: 700; font-family: inherit; text-align: center; background: #0A84FF; color: #fff;
+    min-width: 92px; height: 34px; padding: 0 12px; border-radius: 14px; border: none; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700; font-family: inherit; background: #0A84FF; color: #fff;
   }
   .watch-pill.done { background: #30D158; }
-  /* bottone "Aggiungi": stesso stile di watch-pill (stessa altezza e raggio) */
+  /* bottone "Aggiungi": meno alto e bordi più arrotondati rispetto ai cerchi × */
   .add-wide {
-    min-width: 92px; padding: 8px 12px; border-radius: 14px; border: none; font-family: inherit;
-    font-size: 12.5px; font-weight: 700; line-height: 1.15; text-align: center; background: #F7B538; color: #1a1508;
+    min-width: 92px; height: 30px; padding: 0 12px; border-radius: 15px; border: none; font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; line-height: 1.1; text-align: center; background: #F7B538; color: #1a1508;
   }
   .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   /* larghezza fissa: le barre finiscono tutte allo stesso punto e "Aggiungi"
      risulta grande esattamente quanto [Visto/Da Vedere][×]. */
-  .row-actions { display: flex; align-items: stretch; gap: 6px; flex-shrink: 0; width: 132px; }
+  .row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; width: 132px; }
   .row-actions .add-wide, .row-actions .watch-pill { flex: 1; min-width: 0; }
 
   /* --- card griglia: poster con titolo/info e azioni sovrapposti --- */
@@ -195,9 +199,9 @@
   /* azioni ricerca compatte sotto il poster */
   .gc-bottom { padding: 6px 8px 8px; }
   .gc-bottom .row-actions { width: 100%; }
-  .gc-bottom .watch-pill { flex: 1; min-width: 0; padding: 7px 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gc-bottom .add-wide { min-width: 0; padding: 7px 4px; font-size: 11px; }
-  .gc-bottom .ep-check, .gc-bottom .act-btn { width: 32px; height: 32px; }
+  .gc-bottom .watch-pill { flex: 1; min-width: 0; height: 32px; padding: 0 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gc-bottom .add-wide { min-width: 0; width: 100%; height: 32px; padding: 0 4px; font-size: 11px; }
+  .gc-bottom .act-btn { width: 32px; height: 32px; }
   .gcard.gcard-add .add-wide { background: #F7B538; color: #1a1508; font-weight: 800; }
   .searchcard-skel { border-radius: 16px; aspect-ratio: 2/3; }
 
@@ -1655,10 +1659,15 @@ function scheduleCloudSync() {
     // serie/film rimossi localmente restano nel documento remoto e "resuscitano"
     // al prossimo sync da cloud.
     const payload = { library, filmLibrary, tmdbKey: getTmdbKey(), updatedAt: Date.now() };
+    lastLocalUpdatedAt = payload.updatedAt;
     ref.update(payload).catch(() => ref.set(payload, { merge: true }).catch(()=>{}));
     syncPublicProfile();
   }, 800);
 }
+// Timestamp dell'ultima scrittura locale: quando l'eco da Firestore torna con lo
+// stesso updatedAt sappiamo che è la nostra stessa scrittura, già applicata in
+// locale, e NON ri-renderizziamo (evita il "doppio refresh" segnando episodi).
+let lastLocalUpdatedAt = 0;
 
 // Copia un sottoinsieme non sensibile del profilo in una collection leggibile da tutti,
 // così altri utenti possono trovarti e vedere cosa hai visto senza accedere ai tuoi dati privati.
@@ -1810,8 +1819,11 @@ if (fbAuth) {
       const ref = fbDb.collection('users').doc(user.uid);
       unsubscribeCloud = ref.onSnapshot((snap) => {
         if (snap.exists) {
-          applyingRemoteData = true;
           const data = snap.data();
+          // Eco della nostra stessa scrittura: già tutto applicato in locale,
+          // non ri-renderizzare (altrimenti flash/doppio refresh).
+          if (data.updatedAt && data.updatedAt === lastLocalUpdatedAt) return;
+          applyingRemoteData = true;
           library = data.library || {};
           filmLibrary = data.filmLibrary || {};
           normalizeLibrary(); normalizeFilmLibrary();
@@ -4725,7 +4737,7 @@ function renderFilmResultsFromCache() {
 
 // ---------- azioni rapide su liste/griglie (aggiungi · visto/da vedere · rimuovi) ----------
 const ICO_X = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
 // Bottone "Aggiungi": testo lungo ("in libreria") nella griglia dove c'è spazio,
 // corto ("Aggiungi") nelle liste dove deve stare quanto [Visto/Da Vedere][×].
 function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'Aggiungi in libreria':'Aggiungi'}</button>`; }
@@ -4741,12 +4753,17 @@ function watchPillFilm(id) {
 }
 function removeBtnTv(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('tv',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
 function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('film',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
-// Spunta verde con V. Serie: segna il prossimo episodio (con animazione).
-function epCheckBtn(id) { return `<button class="ep-check" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_V}</button>`; }
+// Spunta episodio. Colore per stato: vuoto (da vedere), blu (in corso), verde
+// (in pari). Segna il prossimo episodio, con animazione.
+function epCheckBtn(id) {
+  const cat = library[id] ? categorizeShow(library[id]) : 'davedere';
+  const cls = cat === 'inpari' ? 'done' : (cat === 'continua' ? 'prog' : 'empty');
+  return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_V}</button>`;
+}
 // Spunta film: verde con V quando visto, vuota quando no; toggle.
 function filmCheckBtn(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
-  return `<button class="ep-check${done?'':' off'}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_V}</button>`;
+  return `<button class="ep-check ${done?'done':'empty'}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_V}</button>`;
 }
 // LIBRERIA (lista+griglia): spunta + ×.
 function libActionsTv(id) { return `<div class="lib-actions">${epCheckBtn(id)}${removeBtnTv(id)}</div>`; }
