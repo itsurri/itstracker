@@ -22,7 +22,7 @@
   @supports (font: -apple-system-body) { :root { --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display"; } }
   :root {
     color-scheme: light dark;
-    --accent: #F7B538; --accent-ink: #000;
+    --accent: #F7B538; --accent-ink: #000; --accent-rgb: 247,181,56;
     --bg: #000; --fg: #fff; --overlay-rgb: 255,255,255;
     --sheet-bg: #0b0b0d; --panel-bg: #1c1c1e;
     --topbar-bg: rgba(10,10,14,0.55);
@@ -200,7 +200,9 @@
   .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right, .gc-bottom-center, .gc-top-center { position: absolute; z-index: 3; }
   .gc-top-center { top: 8px; left: 50%; transform: translateX(-50%); }
   .airing-dot { display: block; width: 9px; height: 9px; border-radius: 50%; background: #FF3B30;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.5); animation: livePulse 1.1s infinite; }
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.95), 0 1px 4px rgba(0,0,0,0.55); animation: livePulse 1.1s infinite; }
+  @keyframes diceRoll { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+  .icon-btn.dice-roll svg { animation: diceRoll 0.5s cubic-bezier(.34,1.56,.64,1); }
   .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
   .gc-top-right { top: 6px; right: 6px; }
   .gc-bottom-left { bottom: 6px; left: 6px; }
@@ -224,8 +226,10 @@
   .gc-bottom .watch-pill { flex: 1; min-width: 0; height: 32px; padding: 0 2px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gc-bottom .add-wide { min-width: 0; width: 100%; height: 32px; padding: 0 4px; font-size: 11px; }
   .gc-bottom .act-btn { width: 32px; height: 32px; }
-  .gcard.gcard-add .add-wide { background: #F7B538; color: #1a1508; font-weight: 800; }
+  .gcard.gcard-add .add-wide { background: var(--accent); color: var(--accent-ink); font-weight: 800; }
   .searchcard-skel { border-radius: 16px; aspect-ratio: 2/3; }
+  .up-skel-list { display: flex; flex-direction: column; gap: 8px; }
+  .up-skel-row { height: 78px; border-radius: 20px; }
 
   /* GRID */
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; perspective: 800px; }
@@ -485,8 +489,8 @@
   .kpi-g .v { color: #30D158; } .kpi-g::before { background: #30D158; }
   .kpi-p { background: rgba(94,92,230,0.12); }
   .kpi-p .v { color: #7D7AFF; } .kpi-p::before { background: #5E5CE6; }
-  .kpi-o { background: rgba(247,181,56,0.12); }
-  .kpi-o .v { color: #F7B538; } .kpi-o::before { background: #F7B538; }
+  .kpi-o { background: rgba(var(--accent-rgb),0.12); }
+  .kpi-o .v { color: var(--accent); } .kpi-o::before { background: var(--accent); }
   .profile-divider { height: 0.5px; background: rgba(var(--overlay-rgb),0.1); margin: 20px 0; }
   .profile-cover {
     aspect-ratio: 16/9; background-size: cover; background-position: center; position: relative;
@@ -585,7 +589,7 @@
   .ach.unlocked .ach-label { color: var(--fg); font-weight: 700; }
   /* progresso verso il prossimo trofeo */
   .ach-prog { width: 100%; height: 3px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); margin-top: 5px; overflow: hidden; }
-  .ach-prog i { display: block; height: 100%; border-radius: 2px; background: #F7B538; }
+  .ach-prog i { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
   .ach-prog-txt { font-size: 9px; color: rgba(var(--overlay-rgb),0.45); margin-top: 2px; font-variant-numeric: tabular-nums; }
   .removebtn, .markallbtn.danger {
     border-color: #ff8a80; background: #3a0f0f; color: #ff8a80;
@@ -781,7 +785,7 @@
   /* onda di conferma che si riempie da sinistra quando inizi a seguire */
   .follow-btn.just-followed::before {
     content: ''; position: absolute; inset: 0; z-index: 0; transform-origin: left;
-    background: linear-gradient(90deg,#F7B538,#FFD166);
+    background: var(--accent);
     animation: followFill 0.5s cubic-bezier(.4,0,.2,1) forwards;
   }
   @keyframes followFill {
@@ -807,7 +811,7 @@
   .person-item .pi-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .person-item .pi-meta { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
   .person-item .pi-prog { margin-top: 5px; height: 3px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; }
-  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg,#F7B538,#FFD166); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
+  .person-item .pi-prog i { display: block; height: 100%; border-radius: 2px; background: var(--accent); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
 
   /* chat */
   .chat-sheet { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; background: var(--sheet-bg); }
@@ -838,7 +842,7 @@
     max-width: 75%; padding: 10px 15px; margin-bottom: 2px; border-radius: 20px; font-size: 14.5px;
     line-height: 1.42; word-break: break-word; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
   }
-  .chat-bubble.mine { align-self: flex-end; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.3); }
+  .chat-bubble.mine { align-self: flex-end; background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 8px rgba(var(--accent-rgb),0.3); }
   .chat-bubble.theirs { align-self: flex-start; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); border: 0.5px solid rgba(var(--overlay-rgb),0.06); }
   .chat-bubble.mine.grouped-top { border-top-right-radius: 7px; }
   .chat-bubble.mine.grouped-bottom { border-bottom-right-radius: 7px; }
@@ -862,7 +866,7 @@
     color: var(--fg); font-family: inherit; font-size: 14px; line-height: 1.4;
   }
   .chat-inputrow .commentReplySendBtn {
-    width: 42px; height: 42px; background: #F7B538; color: #1a1508; box-shadow: 0 2px 8px rgba(247,181,56,0.4);
+    width: 42px; height: 42px; background: var(--accent); color: var(--accent-ink); box-shadow: 0 2px 8px rgba(var(--accent-rgb),0.4);
     flex-shrink: 0;
   }
   /* Durante lo slide di apertura/chiusura disattiviamo temporaneamente i blur:
@@ -1064,7 +1068,7 @@
   .celebrate-poster { width: 116px; aspect-ratio: 2/3; object-fit: cover; border-radius: 16px; margin: 0 auto 6px; display: block; box-shadow: 0 12px 34px rgba(0,0,0,0.45); }
   .celebrate-trophy { font-size: 30px; margin-top: -30px; margin-bottom: 8px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); animation: trophyPop 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s both; }
   @keyframes trophyPop { from { transform: scale(0) rotate(-25deg); } to { transform: scale(1) rotate(0); } }
-  .celebrate-eyebrow { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #F7B538; margin-bottom: 5px; }
+  .celebrate-eyebrow { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 5px; }
   .celebrate-name { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
   .celebrate-sub { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); margin-top: 6px; }
   .celebrate-share {
@@ -1258,9 +1262,9 @@
   .week-bars { display: flex; gap: 8px; height: 80px; align-items: flex-end; padding-top: 4px; }
   .wk-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
   .wk-bar { width: 100%; max-width: 26px; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg,#0A84FF,#5E5CE6); min-height: 4px; }
-  .wk-bar.today { background: linear-gradient(180deg,#F7B538,#FF9F0A); }
+  .wk-bar.today { background: var(--accent); }
   .wk-lbl { font-size: 10px; font-weight: 700; color: rgba(var(--overlay-rgb),0.45); }
-  .wk-lbl.today { color: #F7B538; }
+  .wk-lbl.today { color: var(--accent); }
 
   /* ===== wrapped profile ===== */
   .wrap-hero { text-align: center; padding: 26px 20px 22px; margin-bottom: 16px; }
@@ -1481,6 +1485,16 @@
       <div class="topbar-logo" role="img" aria-label="itstracker"></div>
     </div>
     <div class="topbar-right" id="topbarRight">
+      <button class="icon-btn" id="btnDice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="4"/>
+          <circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>
+          <circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+          <circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/>
+          <circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
       <button class="icon-btn" id="btnSettings" title="Impostazioni" onclick="switchTab('settings')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -1610,29 +1624,6 @@
   <!-- IMPOSTAZIONI -->
   <div class="view" id="view-settings">
     <div class="section" style="padding-top:14px">
-      <h2 class="settings-h2">Sostieni itstracker</h2>
-      <a class="glass settings-group satispay-row" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener" style="display:block; text-decoration:none; color:inherit">
-        <div class="settingsrow" style="align-items:center; gap:12px">
-          <img src="satispay-logo.png" alt="Satispay" width="34" height="34" style="display:block; border-radius:9px; flex:none">
-          <div class="st" style="flex:1"><div class="sn">Offrimi un caffè</div><div class="sd">Sostieni lo sviluppo dell'app su Satispay</div></div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.4; flex:none"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-      </a>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">Account</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
-          <div style="display:flex; gap:8px">
-            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
-              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
-            <button class="filebtn" onclick="saveNickname()">Salva</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:16px">
       <h2 class="settings-h2">Aspetto</h2>
       <div class="glass settings-group">
         <div class="settingsrow">
@@ -1661,11 +1652,15 @@
       </div>
     </div>
     <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">TMDb</h2>
+      <h2 class="settings-h2">Account</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">API Key</div><div class="sd">L'app usa una chiave TMDb condivisa integrata: non serve configurare nulla.</div></div>
-          <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
+          <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
+          <div style="display:flex; gap:8px">
+            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
+              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
+            <button class="filebtn" onclick="saveNickname()">Salva</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1680,6 +1675,25 @@
             <button class="redbtn" style="flex:1" onclick="askReset('all')">Reset</button>
           </div>
           <input type="file" id="jsonAllInput" accept="application/json" />
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:16px">
+      <h2 class="settings-h2">Sostieni itstracker</h2>
+      <a class="glass settings-group satispay-row" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener" style="display:block; text-decoration:none; color:inherit">
+        <div class="settingsrow" style="align-items:center; gap:12px">
+          <img src="satispay-logo.png" alt="Satispay" width="34" height="34" style="display:block; border-radius:9px; flex:none">
+          <div class="st" style="flex:1"><div class="sn">Offrimi un caffè</div><div class="sd">Sostieni lo sviluppo dell'app su Satispay</div></div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.4; flex:none"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </a>
+    </div>
+    <div class="section" style="margin-top:16px">
+      <h2 class="settings-h2">TMDb</h2>
+      <div class="glass settings-group">
+        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
+          <div class="st"><div class="sn">API Key</div><div class="sd">L'app usa una chiave TMDb condivisa integrata: non serve configurare nulla.</div></div>
+          <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
         </div>
       </div>
     </div>
@@ -2456,6 +2470,28 @@ function switchTab(tab) {
   }
 }
 window.addEventListener('resize', () => moveTabIndicator(document.querySelector('.tabbtn.active')));
+
+// "Cosa guardo stasera?": pesca a caso qualcosa da guardare e apre la scheda.
+// Sui Film pesca tra i "Da vedere" (o tutti); sulle Serie tra "Continua" (poi
+// "In Lista", poi qualsiasi). Segue la tab attualmente attiva.
+function whatToWatch(btn) {
+  if (btn) { btn.classList.remove('dice-roll'); void btn.offsetWidth; btn.classList.add('dice-roll'); }
+  if (typeof haptic === 'function') haptic();
+  if (currentTab === 'film') {
+    const keys = Object.keys(filmLibrary || {});
+    if (!keys.length) { showToast('Aggiungi qualche film prima 🍿'); return; }
+    const todo = keys.filter(k => !filmLibrary[k].watched);
+    const pool = todo.length ? todo : keys;
+    openFilm(Number(pool[Math.floor(Math.random()*pool.length)]));
+    return;
+  }
+  const keys = Object.keys(library || {});
+  if (!keys.length) { showToast('Aggiungi qualche serie prima 🍿'); return; }
+  const cont = keys.filter(k => categorizeShow(library[k]) === 'continua');
+  const todo = keys.filter(k => categorizeShow(library[k]) === 'davedere');
+  const pool = cont.length ? cont : (todo.length ? todo : keys);
+  openShow(Number(pool[Math.floor(Math.random()*pool.length)]));
+}
 
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
 // Ogni genere ha il suo colore fisso, ovunque nell'app.
@@ -4157,7 +4193,7 @@ async function markAllNotificationsRead() {
 
 async function renderUpcoming(container) {
   if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = `<div class="section"><div class="cat-empty">Aggiungi la tua API key TMDb in Impostazioni.</div></div>`; return; }
-  if (!upcomingCache) container.innerHTML = `<div class="section"><div class="spinner"></div></div>`;
+  if (!upcomingCache) container.innerHTML = `<div class="section" style="padding-top:14px">${viewMode === 'grid' ? searchSkeletonGrid(6) : `<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(5)}</div>`}</div>`;
   await ensureUpcomingCache();
   const upcoming90 = upcomingWithin90Days();
 
@@ -4173,12 +4209,13 @@ async function renderUpcoming(container) {
     const d = new Date(u.date + 'T00:00:00');
     const daysLeft = Math.round((d - today) / 86400000);
     const soon = daysLeft <= 7;
-    const daysLabel = daysLeft <= 0 ? 'Oggi' : ('-' + daysLeft);
+    const daysLabel = daysLeft <= 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : (daysLeft + ' giorni');
+    const daysMini = daysLeft <= 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : ('-' + daysLeft);
     if (viewMode === 'grid') {
       return `<div class="card up-grid-card ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
         ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg">${escapeHtml(u.name)}</div>`}
         <div class="up-ep-badge">S${u.season} E${u.number}</div>
-        <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</span><span class="ud-days-mini">${daysLabel}</span></div>
+        <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</span><span class="ud-days-mini">${daysMini}</span></div>
       </div>`;
     }
     return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
@@ -7057,9 +7094,14 @@ function accentInk(hex) {
   const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
   return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.6 ? '#000' : '#fff';
 }
+function accentRgb(hex) {
+  const h = hex.replace('#',''); if (h.length < 6) return '247,181,56';
+  return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);
+}
 function applyAccent(c) {
   document.documentElement.style.setProperty('--accent', c);
   document.documentElement.style.setProperty('--accent-ink', accentInk(c));
+  document.documentElement.style.setProperty('--accent-rgb', accentRgb(c));
 }
 function setAccent(c) {
   applyAccent(c);
