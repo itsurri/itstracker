@@ -692,6 +692,11 @@
     display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em;
     padding: 2px 7px; border-radius: 20px; background: #0A84FF; color: #fff; text-transform: uppercase;
   }
+  /* segnale discreto "c'è un nuovo episodio" nella lista: un pallino accanto al nome */
+  .new-ep-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #FF9F0A; margin-right: 6px; vertical-align: middle; flex: none;
+  }
   .commentReplyForm { display: none; align-items: center; gap: 6px; margin-top: 6px; }
   .commentReplyForm.open { display: flex; }
   .commentReplyForm textarea {
@@ -930,35 +935,41 @@
   }
 
   /* tab bar */
-  .tabbar {
+  .tabbar-wrap {
     position: fixed; bottom: 30px; left: 14px; right: 14px; z-index: 50;
     max-width: 452px; margin: 0 auto;
-    display: flex; padding: 10px 6px;
+    display: flex; gap: 10px; align-items: stretch;
+  }
+  .tabbar {
+    display: flex; padding: 8px 6px;
     background: rgba(var(--overlay-rgb),0.08);
     -webkit-backdrop-filter: blur(38px) saturate(220%); backdrop-filter: blur(38px) saturate(220%);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 34px;
+    border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 30px;
     box-shadow: var(--shadow-tabbar), inset 0 1px 0 rgba(var(--overlay-rgb),0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
     overflow: hidden;
   }
+  .pill-main { flex: 1; }
+  .pill-search { flex: 0 0 auto; padding: 8px; }
   .tabbar::before {
     content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 22%, rgba(255,255,255,0) 45%);
   }
-  .tab-indicator {
-    position: absolute; top: 10px; bottom: 10px; left: 6px;
-    border-radius: 22px; background: rgba(var(--overlay-rgb),0.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.15);
-    transition: transform 0.4s cubic-bezier(.34,1.4,.4,1);
-    will-change: transform, width;
-  }
   .tabbtn {
-    position: relative; z-index: 1; flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1; flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     background: none; border: none; color: rgba(var(--overlay-rgb),0.45); font-family: inherit;
-    padding: 12px 0; border-radius: 22px; transition: color 0.2s;
+    padding: 8px 0 7px; border-radius: 22px; transition: color 0.2s;
     transform: translateZ(0);
   }
+  .pill-search .tabbtn { flex: 0 0 auto; padding: 8px 15px 7px; }
+  .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
   .tabbtn.active { color: #F7B538; }
-  .tabbtn svg { width: 26px; height: 26px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
+  .tabbtn.active::before {
+    content: ''; position: absolute; inset: 4px 4px; z-index: -1;
+    border-radius: 20px; background: rgba(var(--overlay-rgb),0.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.15);
+  }
+  .tabbtn svg { width: 25px; height: 25px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
   .tabbtn.bounce svg { animation: tabBounce 0.4s cubic-bezier(.34,1.56,.64,1); }
   @keyframes tabBounce {
     0% { transform: scale(1); }
@@ -1300,7 +1311,7 @@
     display: flex; align-items: center; justify-content: center;
     animation: splashOut 0.4s ease 2s forwards;
   }
-  body.splash-active .tabbar { visibility: hidden; }
+  body.splash-active .tabbar-wrap { visibility: hidden; }
   #splashLogo { height: 48px; width: auto; display: block; margin: 0 auto; animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
   .splash-by { text-align: center; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--fg); animation: splashIn 0.5s cubic-bezier(.34,1.56,.64,1); }
   @keyframes splashIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
@@ -1387,7 +1398,7 @@
   @media (min-width: 900px) {
     #app { max-width: 1100px; }
     .grid { grid-template-columns: repeat(5, 1fr); gap: 14px; }
-    .tabbar { max-width: 520px; }
+    .tabbar-wrap { max-width: 520px; }
     /* le schede (serie/film/persona/chat) diventano una card centrata invece
        di un foglio a tutto schermo dal basso */
     .sheetbg { display: flex; align-items: center; justify-content: center; padding: 40px; }
@@ -1430,9 +1441,12 @@
       <img class="topbar-logo" src="logo-header.png" alt="its tracker.">
     </div>
     <div class="topbar-right" id="topbarRight">
-      <a class="icon-btn" id="btnSatispay" title="Offrimi un caffé su Satispay" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">
-        <img src="satispay-logo.png" alt="Satispay" width="28" height="28" style="display:block">
-      </a>
+      <button class="icon-btn" id="btnSettings" title="Impostazioni" onclick="switchTab('settings')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
       <button class="icon-btn" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)" style="position:relative">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
         <span class="notif-badge" id="chatListBadge"></span>
@@ -1638,34 +1652,35 @@
 </div>
 
 <!-- TAB BAR -->
-<div class="tabbar">
-  <div class="tab-indicator" id="tabIndicator"></div>
-  <button class="tabbtn active" data-tab="tv" title="Serie TV">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/>
-      <path d="M8 3.5l4 4 4-4"/>
-    </svg>
-  </button>
-  <button class="tabbtn" data-tab="film" title="Film">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
-      <path d="m6.2 5.3 3.1 3.9"/>
-      <path d="m12.4 3.4 3.1 4"/>
-      <path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/>
-    </svg>
-  </button>
-  <button class="tabbtn" data-tab="search" title="Cerca">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>
-  </button>
-  <button class="tabbtn" data-tab="profile" title="Profilo">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
-  </button>
-  <button class="tabbtn" data-tab="settings" title="Impostazioni">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  </button>
+<div class="tabbar-wrap">
+  <div class="tabbar pill-main">
+    <button class="tabbtn" data-tab="profile" title="Profilo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
+      <span class="tab-label">Profilo</span>
+    </button>
+    <button class="tabbtn active" data-tab="tv" title="Serie TV">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/>
+        <path d="M8 3.5l4 4 4-4"/>
+      </svg>
+      <span class="tab-label">Serie</span>
+    </button>
+    <button class="tabbtn" data-tab="film" title="Film">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
+        <path d="m6.2 5.3 3.1 3.9"/>
+        <path d="m12.4 3.4 3.1 4"/>
+        <path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/>
+      </svg>
+      <span class="tab-label">Film</span>
+    </button>
+  </div>
+  <div class="tabbar pill-search">
+    <button class="tabbtn" data-tab="search" title="Cerca">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>
+      <span class="tab-label">Ricerca</span>
+    </button>
+  </div>
 </div>
 
 <div class="sheetbg" id="sheetBg">
@@ -4183,13 +4198,12 @@ function renderListTv(key, s) {
   const chips = [
     s.rating ? `<span class="chip chip-star">★ ${fmtRating(s.rating)}</span>` : null,
     s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null,
-    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null),
-    hasNewEp(s) ? `<span class="chip chip-new">Nuovo ep</span>` : null
+    next ? `<span class="chip chip-next">S${next.season} E${next.number}${total?'/'+total:''}</span>` : (isDone ? `<span class="chip chip-done">Completata</span>` : null)
   ].filter(Boolean).join('');
   return `<div class="list-item" onclick="openShow(${id}, this)">
     ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
     <div class="li-info">
-      <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
+      <div class="li-name">${hasNewEp(s) ? `<span class="new-ep-dot" title="Nuovo episodio"></span>` : ''}${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
       ${total ? `<div class="li-progrow"><div class="li-prog"><i class="${animateProgressBars?'':'no-anim'} ${tier}" style="--pct:${pct}%"></i></div><span class="li-pct ${tier}">${pct}%</span></div>` : ''}
     </div>
