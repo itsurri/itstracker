@@ -22,7 +22,7 @@
   @supports (font: -apple-system-body) { :root { --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display"; } }
   :root {
     color-scheme: light dark;
-    --accent: #F7B538;
+    --accent: #F7B538; --accent-ink: #000;
     --bg: #000; --fg: #fff; --overlay-rgb: 255,255,255;
     --sheet-bg: #0b0b0d; --panel-bg: #1c1c1e;
     --topbar-bg: rgba(10,10,14,0.55);
@@ -198,7 +198,10 @@
   }
   /* 4 badge agli angoli del poster: rating/%/stagione/episodio (libreria) o
      rating/stato/genere/anno (film) o rating/stagioni+episodi (ricerca). */
-  .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right, .gc-bottom-center { position: absolute; z-index: 3; }
+  .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right, .gc-bottom-center, .gc-top-center { position: absolute; z-index: 3; }
+  .gc-top-center { top: 8px; left: 50%; transform: translateX(-50%); }
+  .airing-dot { display: block; width: 9px; height: 9px; border-radius: 50%; background: #FF3B30;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.5); animation: livePulse 1.1s infinite; }
   .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
   .gc-top-right { top: 6px; right: 6px; }
   .gc-bottom-left { bottom: 6px; left: 6px; }
@@ -231,14 +234,11 @@
   .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .wall-card { border-radius: 18px; }
   .wall-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.25); z-index: 2; }
-  .wall-bar::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); background: #0A84FF; }
+  .wall-bar::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); background: var(--accent); }
   /* fasce colore: 0-33 rosso · 34-66 arancio · 67-89 giallo · 90-100 verde */
   .li-pct.tier-r { color: #FF453A; } .li-pct.tier-o { color: #FF9F0A; }
   .li-pct.tier-y { color: #FFD60A; } .li-pct.tier-g { color: #30D158; }
-  .list-item .li-prog i.tier-r { background: #FF453A; } .list-item .li-prog i.tier-o { background: #FF9F0A; }
-  .list-item .li-prog i.tier-y { background: #FFD60A; } .list-item .li-prog i.tier-g { background: #30D158; }
-  .wall-bar.tier-r::after { background: #FF453A; } .wall-bar.tier-o::after { background: #FF9F0A; }
-  .wall-bar.tier-y::after { background: #FFD60A; } .wall-bar.tier-g::after { background: #30D158; }
+  /* le barre di avanzamento usano il colore scelto (--accent); solo la % mantiene i colori per fascia */
   /* chip di ordinamento libreria */
   .sort-chips { padding: 0 0 12px; margin-top: -6px; }
   .sort-chip { padding: 5px 12px; font-size: 11.5px; }
@@ -263,7 +263,7 @@
   .card .badge-prog  { background: rgba(0,0,0,0.72); }
   .card .badge-fill {
     position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); z-index: 0; transform-origin: left;
-    background: linear-gradient(90deg,#F7B538,#FFD166); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1);
+    background: var(--accent); animation: barGrow 0.7s cubic-bezier(.4,0,.2,1);
   }
   .card .badge-txt { position: relative; z-index: 1; }
   .list-item .li-prog i.no-anim, .card .badge-fill.no-anim, .person-item .pi-prog i.no-anim { animation: none; }
@@ -322,11 +322,10 @@
     align-items: center; justify-content: center; line-height: 1;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
-  #tvCount-continua { background: #0A84FF; }
-  #tvCount-inpari { background: #30D158; }
-  #tvCount-davedere { background: #8E8E93; }
-  #filmCount-visti { background: #30D158; }
-  #filmCount-davedere { background: #0A84FF; }
+  /* badge conteggio delle sezioni: colore scelto, testo a contrasto (chiaro/scuro) */
+  #tvCount-continua, #tvCount-inpari, #tvCount-davedere,
+  #filmCount-visti, #filmCount-davedere,
+  #inarrivoBadge { background: var(--accent); color: var(--accent-ink); }
   /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
@@ -339,7 +338,7 @@
     width: 34px; text-align: right;
   }
   .list-item .li-prog { margin-top: 6px; height: 4px; background: rgba(var(--overlay-rgb),0.12); border-radius: 2px; overflow: hidden; }
-  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: #0A84FF; width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
+  .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: var(--accent); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .list-item .lib-actions .ep-check, .list-item .lib-actions .act-btn { width: 30px; height: 30px; }
   @keyframes barGrow { from { transform: scaleX(0); } }
 
@@ -4225,10 +4224,10 @@ function renderCardTv(key, s) {
   const done = total > 0 && watched >= total;
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
-  const corner = showAiringToday(s)
-    ? `<span class="live-badge">In onda</span>`
-    : (hasNewEp(s) ? `<span class="new-ep-badge">Nuovo ep</span>` : '');
+  const airing = showAiringToday(s);
+  const corner = (!airing && hasNewEp(s)) ? `<span class="new-ep-badge">Nuovo ep</span>` : '';
   const topLeft = corner + (s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '');
+  const topCenter = airing ? `<span class="airing-dot" title="In onda"></span>` : '';
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
   const bottomRight = next ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>` : (done ? `<span class="grating" style="color:#30D158">Completata</span>` : '');
@@ -4238,6 +4237,7 @@ function renderCardTv(key, s) {
     dataPoster: s.image ? thumbImg(s.image,'w92') : '',
     title: s.name,
     topLeft,
+    topCenter,
     topRight,
     bottomLeft,
     bottomRight,
@@ -5533,6 +5533,7 @@ function gridCard(o) {
     <div class="card" data-poster="${o.dataPoster||''}" onclick="${o.onclick}" title="${escapeHtml(o.title||'')}">
       ${o.poster ? `<img src="${o.poster}" alt="" loading="lazy" decoding="async">` : `<div class="noimg">${escapeHtml(o.title||'?')}</div>`}
       ${o.topLeft ? `<div class="gc-top-left">${o.topLeft}</div>` : ''}
+      ${o.topCenter ? `<div class="gc-top-center">${o.topCenter}</div>` : ''}
       ${o.topRight ? `<div class="gc-top-right">${o.topRight}</div>` : ''}
       ${o.bottomLeft ? `<div class="gc-bottom-left">${o.bottomLeft}</div>` : ''}
       ${o.bottomRight ? `<div class="gc-bottom-right">${o.bottomRight}</div>` : ''}
@@ -7059,7 +7060,17 @@ const ACCENT_COLORS = [
 function currentAccent() {
   try { return localStorage.getItem('itstracker_accent') || '#F7B538'; } catch(e) { return '#F7B538'; }
 }
-function applyAccent(c) { document.documentElement.style.setProperty('--accent', c); }
+// Nero o bianco a seconda di quanto è chiaro il colore scelto, così il testo
+// sui badge pieni resta leggibile (es. giallo -> testo nero, blu -> testo bianco).
+function accentInk(hex) {
+  const h = hex.replace('#',''); if (h.length < 6) return '#fff';
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.6 ? '#000' : '#fff';
+}
+function applyAccent(c) {
+  document.documentElement.style.setProperty('--accent', c);
+  document.documentElement.style.setProperty('--accent-ink', accentInk(c));
+}
 function setAccent(c) {
   applyAccent(c);
   try { localStorage.setItem('itstracker_accent', c); } catch(e) {}
