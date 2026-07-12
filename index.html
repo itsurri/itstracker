@@ -137,7 +137,7 @@
     background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
     color: rgba(var(--overlay-rgb),0.55); display: inline-flex; align-items: center; justify-content: center;
   }
-  .mode-btn.active-view { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .mode-btn.active-view { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
   /* sections */
   .section { padding: 18px 16px 0; }
@@ -624,16 +624,6 @@
   .ach-details[open] .ach-chevron { transform: rotate(180deg); }
   .ach-details .ach-grid-wrap { padding: 0 16px 16px; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 18px 8px; }
-  .ach-expand { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.6); flex-shrink: 0; }
-  /* trofei a tutto schermo */
-  .trophies-body { padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 40px); }
-  .trophies-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-  .trophies-title { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
-  .trophies-select { width: auto; min-width: 128px; flex-shrink: 0; }
-  .trophies-body .ach-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 24px 10px; }
-  .trophies-body .ach-emoji { font-size: 26px; }
-  .trophies-body .ach-icon { width: 56px; height: 56px; }
   .ach { display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; opacity: 0.45; transition: transform 0.15s ease; }
   .ach.unlocked { opacity: 1; }
   .ach-icon {
@@ -1806,12 +1796,6 @@
 <div class="sheetbg" id="personBg">
   <div class="sheet" id="personSheet"></div>
   <button class="closebtn plain" onclick="closePerson()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-  </button>
-</div>
-<div class="sheetbg" id="trophiesBg">
-  <div class="sheet" id="trophiesSheet"></div>
-  <button class="closebtn plain" onclick="closeTrophies()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
   </button>
 </div>
@@ -3735,32 +3719,9 @@ let achievementTab = 'serie';
 
 function setAchievementTab(cat) {
   achievementTab = cat;
-  const html = achievementGridHtml(getAchievements(computeWrapped()));
   const body = document.getElementById('achGridBody');
-  if (body) body.innerHTML = html;
-  const full = document.getElementById('trophiesGrid');
-  if (full) full.innerHTML = html;
-  // tieni allineati i due selettori (card e schermo intero)
-  document.querySelectorAll('.ach-cat-select').forEach(s => { if (s.value !== cat) s.value = cat; });
+  if (body) body.innerHTML = achievementGridHtml(getAchievements(computeWrapped()));
 }
-
-// Trofei a tutto schermo
-function openTrophies() {
-  const defs = getAchievements(computeWrapped());
-  const unlockedCount = defs.filter(a => a.unlocked).length;
-  const options = ACH_CATEGORIES.map(c => `<option value="${c.id}"${achievementTab===c.id?' selected':''}>${c.label}</option>`).join('');
-  document.getElementById('trophiesSheet').innerHTML = `
-    <div class="trophies-body">
-      <div class="trophies-head">
-        <div class="trophies-title">🏆 Trofei <span class="ach-summary-count">${unlockedCount}/${defs.length}</span></div>
-        <select class="ach-cat-select trophies-select" onchange="setAchievementTab(this.value)">${options}</select>
-      </div>
-      <div class="ach-grid" id="trophiesGrid">${achievementGridHtml(defs)}</div>
-    </div>`;
-  document.getElementById('trophiesBg').classList.add('open');
-  if (typeof haptic === 'function') haptic();
-}
-function closeTrophies() { document.getElementById('trophiesBg').classList.remove('open'); }
 
 function achievementGridHtml(defs) {
   const filtered = defs.filter(a => a.category === achievementTab).slice().sort((a, b) => (b.unlocked - a.unlocked));
@@ -3787,12 +3748,7 @@ function renderAchievements(w) {
   return `<details class="wrap-card glass ach-details">
     <summary>
       <span><span class="ach-summary-title">🏆 Trofei</span><span class="ach-summary-count">${unlockedCount}/${defs.length}</span></span>
-      <span style="display:flex; align-items:center; gap:12px">
-        <button class="ach-expand" onclick="event.preventDefault();event.stopPropagation();openTrophies()" title="Apri a tutto schermo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        </button>
-        <svg class="ach-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-      </span>
+      <svg class="ach-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </summary>
     <div style="padding:0 16px 12px">
       <select class="ach-cat-select" onclick="event.stopPropagation()" onchange="setAchievementTab(this.value)">${options}</select>
@@ -7724,7 +7680,7 @@ function dismissInstallBanner() {
 // Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
 // il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
 // di uscire dall'app. Le chiusure dalla UI (X/sfondo) consumano l'entry.
-const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','avatarMenuBg','coverPickerBg','wrappedBg','peopleListBg','trophiesBg','quizOverlay','notifPanel','chatListPanel','followPanel'];
+const OVERLAY_IDS = ['sheetBg','personBg','chatBg','confirmBg','avatarMenuBg','coverPickerBg','wrappedBg','peopleListBg','quizOverlay','notifPanel','chatListPanel','followPanel'];
 let backGuardArmed = false;
 let closingViaBack = false;
 function isOverlayOpen(id) { const el = document.getElementById(id); return !!el && el.classList.contains('open'); }
@@ -7735,7 +7691,6 @@ function armBackGuard() {
 // Chiude l'overlay più in alto (ordine di priorità = z-index/logica). true se ha chiuso.
 function closeTopOverlay() {
   if (isOverlayOpen('quizOverlay')) { closeQuiz(); return true; }
-  if (isOverlayOpen('trophiesBg')) { closeTrophies(); return true; }
   if (isOverlayOpen('wrappedBg')) { closeWrapped(); return true; }
   if (isOverlayOpen('coverPickerBg')) { closeCoverPicker(); return true; }
   if (isOverlayOpen('avatarMenuBg')) { closeAvatarMenu(); return true; }
