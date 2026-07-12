@@ -1123,7 +1123,7 @@
     padding: 9px 16px; border-radius: 16px; border: 0.5px solid rgba(255,69,58,0.4);
     background: rgba(255,69,58,0.12); color: #ff453a; font-size: 13px; font-weight: 600; font-family: inherit; flex-shrink: 0;
   }
-  #jsonFileInput, #jsonFilmFileInput { display: none; }
+  #jsonAllInput { display: none; }
 
   /* confirm dialog */
   .confirmbg {
@@ -1670,38 +1670,16 @@
       </div>
     </div>
     <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">Serie TV</h2>
+      <h2 class="settings-h2">Libreria</h2>
       <div class="glass settings-group">
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Importa libreria</div></div>
-          <button class="filebtn" onclick="document.getElementById('jsonFileInput').click()">Scegli file</button>
-          <input type="file" id="jsonFileInput" accept="application/json" />
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Esporta libreria</div></div>
-          <button class="filebtn" onclick="exportLibrary()">Esporta</button>
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Reset serie TV</div></div>
-          <button class="redbtn" onclick="askReset('tv')">Reset</button>
-        </div>
-      </div>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">Film</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Importa libreria</div></div>
-          <button class="filebtn" onclick="document.getElementById('jsonFilmFileInput').click()">Scegli file</button>
-          <input type="file" id="jsonFilmFileInput" accept="application/json" />
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Esporta libreria</div></div>
-          <button class="filebtn" onclick="exportFilmLibrary()">Esporta</button>
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Reset film</div></div>
-          <button class="redbtn" onclick="askReset('film')">Reset</button>
+        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:10px">
+          <div class="st"><div class="sn">Importa / Esporta / Reset</div><div class="sd">Serie TV e film insieme, in un unico file</div></div>
+          <div style="display:flex; gap:8px">
+            <button class="filebtn" style="flex:1" onclick="document.getElementById('jsonAllInput').click()">Importa</button>
+            <button class="filebtn" style="flex:1" onclick="exportAll()">Esporta</button>
+            <button class="redbtn" style="flex:1" onclick="askReset('all')">Reset</button>
+          </div>
+          <input type="file" id="jsonAllInput" accept="application/json" />
         </div>
       </div>
     </div>
@@ -2441,6 +2419,9 @@ function moveTabIndicator(btn) {
 // ordine visivo delle tab, per decidere il verso dello swipe al cambio
 const TAB_ORDER = { profile: 0, tv: 1, film: 2, search: 3, settings: 4 };
 function switchTab(tab) {
+  // Chiudi eventuali pannelli header aperti (notifiche/messaggi/follower), così
+  // toccando Impostazioni (o un'altra tab) non restano aperti a coprire la vista.
+  closeAllHeaderPanels();
   const prevTab = currentTab;
   currentTab = tab;
   let activeBtn = null;
@@ -6927,14 +6908,28 @@ function closeSheet() {
 document.getElementById('sheetBg').addEventListener('click', e => { if(e.target.id==='sheetBg') closeSheet(); });
 
 // ---------- import / export ----------
-document.getElementById('jsonFileInput').addEventListener('change', async e => {
+// Import unico: accetta il formato combinato { serie, film } oppure, per
+// retrocompatibilità, un vecchio export di una sola libreria (serie o film,
+// distinte dal campo "title" presente solo nei film).
+document.getElementById('jsonAllInput').addEventListener('change', async e => {
   const file = e.target.files[0]; if(!file) return;
   try {
     const parsed = JSON.parse(await file.text());
     if (typeof parsed!=='object'||parsed===null) throw new Error();
-    library = parsed; normalizeLibrary(); saveLibrary(); renderLibrary();
-    showToast('Importazione in corso…'); switchTab('tv');
-    await enrichImportedLibrary();
+    let doSerie = false, doFilm = false;
+    if (parsed.serie || parsed.film) {
+      if (parsed.serie && typeof parsed.serie==='object') { library = parsed.serie; normalizeLibrary(); saveLibrary(); doSerie = true; }
+      if (parsed.film && typeof parsed.film==='object') { filmLibrary = parsed.film; normalizeFilmLibrary(); saveFilmLibrary(); doFilm = true; }
+    } else {
+      const vals = Object.values(parsed);
+      const looksFilm = vals.length>0 && vals.every(v => v && v.title!==undefined);
+      if (looksFilm) { filmLibrary = parsed; normalizeFilmLibrary(); saveFilmLibrary(); doFilm = true; }
+      else { library = parsed; normalizeLibrary(); saveLibrary(); doSerie = true; }
+    }
+    renderLibrary(); renderFilmLibrary();
+    showToast('Importazione in corso…');
+    if (doSerie) await enrichImportedLibrary();
+    if (doFilm) await enrichImportedFilmLibrary();
   } catch(err) { showToast('File JSON non valido'); }
   e.target.value='';
 });
@@ -6968,18 +6963,6 @@ async function enrichImportedLibrary() {
   saveLibrary(); renderLibrary();
   if(updated) showToast(`${updated} serie aggiornate`);
 }
-
-document.getElementById('jsonFilmFileInput').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
-  try {
-    const parsed = JSON.parse(await file.text());
-    if (typeof parsed!=='object'||parsed===null) throw new Error();
-    filmLibrary = parsed; normalizeFilmLibrary(); saveFilmLibrary(); renderFilmLibrary();
-    showToast('Importazione film in corso…'); switchTab('film');
-    await enrichImportedFilmLibrary();
-  } catch(err) { showToast('File JSON non valido'); }
-  e.target.value='';
-});
 
 async function enrichImportedFilmLibrary() {
   if (!hasTmdbKey()) return;
@@ -7016,13 +6999,20 @@ function exportFilmLibrary() {
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='libreria-film.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
+// Esporta serie TV e film insieme in un unico file.
+function exportAll() {
+  const data = { serie: library, film: filmLibrary };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='libreria-itstracker.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
 
 // ---------- reset ----------
 let _resetTarget = null;
 function askReset(target) {
   _resetTarget = target;
-  const titles = { tv: 'Reset serie TV', film: 'Reset film' };
-  const msgs = { tv: 'Tutte le serie e i progressi verranno eliminati. Questa azione non può essere annullata.', film: 'Tutti i film salvati verranno eliminati. Questa azione non può essere annullata.' };
+  const titles = { tv: 'Reset serie TV', film: 'Reset film', all: 'Reset libreria' };
+  const msgs = { tv: 'Tutte le serie e i progressi verranno eliminati. Questa azione non può essere annullata.', film: 'Tutti i film salvati verranno eliminati. Questa azione non può essere annullata.', all: 'Tutte le serie TV e i film salvati (con i progressi) verranno eliminati. Questa azione non può essere annullata.' };
   document.getElementById('confirmTitle').textContent = titles[target];
   document.getElementById('confirmMsg').textContent = msgs[target];
   const okBtn = document.getElementById('confirmOk');
@@ -7032,8 +7022,9 @@ function askReset(target) {
 }
 function closeConfirm() { document.getElementById('confirmBg').classList.remove('open'); _resetTarget = null; }
 function doReset() {
-  if (_resetTarget === 'tv') { library = {}; saveLibrary(); renderLibrary(); showToast('Serie TV resettate'); }
-  if (_resetTarget === 'film') { filmLibrary = {}; saveFilmLibrary(); renderFilmLibrary(); showToast('Film resettati'); }
+  if (_resetTarget === 'tv' || _resetTarget === 'all') { library = {}; saveLibrary(); renderLibrary(); }
+  if (_resetTarget === 'film' || _resetTarget === 'all') { filmLibrary = {}; saveFilmLibrary(); renderFilmLibrary(); }
+  showToast(_resetTarget === 'all' ? 'Libreria resettata' : (_resetTarget === 'tv' ? 'Serie TV resettate' : 'Film resettati'));
   closeConfirm();
 }
 
