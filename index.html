@@ -941,7 +941,7 @@
     display: flex; gap: 10px; align-items: stretch;
   }
   .tabbar {
-    display: flex; padding: 8px 6px;
+    display: flex; padding: 5px;
     background: rgba(var(--overlay-rgb),0.08);
     -webkit-backdrop-filter: blur(38px) saturate(220%); backdrop-filter: blur(38px) saturate(220%);
     border: 0.5px solid rgba(var(--overlay-rgb),0.22); border-radius: 30px;
@@ -949,7 +949,7 @@
     overflow: hidden;
   }
   .pill-main { flex: 1; }
-  .pill-search { flex: 0 0 auto; padding: 8px; }
+  .pill-search { flex: 0 0 auto; padding: 5px; }
   .tabbar::before {
     content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 22%, rgba(255,255,255,0) 45%);
@@ -965,8 +965,8 @@
   .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
   .tabbtn.active { color: #F7B538; }
   .tabbtn.active::before {
-    content: ''; position: absolute; inset: 0 2px; z-index: -1;
-    border-radius: 22px; background: rgba(var(--overlay-rgb),0.14);
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    border-radius: 21px; background: rgba(var(--overlay-rgb),0.14);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.15);
   }
   .tabbtn svg { width: 25px; height: 25px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
