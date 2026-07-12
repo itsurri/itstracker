@@ -95,13 +95,12 @@
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   /* wordmark "itstracker": il PNG fa da maschera, i colori vengono da un gradiente
-     (accent per "its" fino al ~25%, colore testo per "tracker") cosi' "its" segue
-     il colore scelto e "tracker" segue il tema chiaro/scuro. */
+     ("its" fino al ~25% segue il tema chiaro/scuro, "tracker" prende il colore scelto). */
   .topbar-logo, #splashLogo {
     display: block; aspect-ratio: 1020 / 192; width: auto;
     -webkit-mask: url("logo-header.png") center / 100% 100% no-repeat;
     mask: url("logo-header.png") center / 100% 100% no-repeat;
-    background: linear-gradient(90deg, var(--accent) 0 25%, var(--fg) 25% 100%);
+    background: linear-gradient(90deg, var(--fg) 0 25%, var(--accent) 25% 100%);
   }
   .topbar-logo { height: 44px; }
   #splashLogo { height: 48px; margin: 0 auto; }
