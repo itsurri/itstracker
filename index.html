@@ -63,7 +63,7 @@
     background: var(--bg);
     min-height: 100vh;
   }
-  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 130px; }
+  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 130px; overflow-x: clip; }
 
   /* pull-to-refresh */
   .ptr-indicator {
@@ -981,6 +981,11 @@
   .view { display: none; }
   .view.active { display: block; animation: viewIn 0.28s ease; }
   @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  /* swipe direzionale al cambio tab: la nuova view entra dal lato in cui ci si sposta */
+  .view.active.from-right { animation: viewSlideR 0.34s cubic-bezier(.22,.61,.36,1); }
+  .view.active.from-left  { animation: viewSlideL 0.34s cubic-bezier(.22,.61,.36,1); }
+  @keyframes viewSlideR { from { opacity: 0; transform: translateX(8%); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes viewSlideL { from { opacity: 0; transform: translateX(-8%); } to { opacity: 1; transform: translateX(0); } }
   /* piccola transizione ovunque un contenuto viene ricaricato (cambio categoria,
      refresh, ricerca, ecc.), applicata via MutationObserver senza toccare ogni
      singola funzione di render */
@@ -2390,7 +2395,10 @@ function moveTabIndicator(btn) {
   indicator.style.transform = `translateX(${btn.offsetLeft - 6}px)`;
 }
 
+// ordine visivo delle tab, per decidere il verso dello swipe al cambio
+const TAB_ORDER = { profile: 0, tv: 1, film: 2, search: 3, settings: 4 };
 function switchTab(tab) {
+  const prevTab = currentTab;
   currentTab = tab;
   let activeBtn = null;
   document.querySelectorAll('.tabbtn').forEach(b => {
@@ -2404,8 +2412,10 @@ function switchTab(tab) {
     }
   });
   moveTabIndicator(activeBtn);
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + tab).classList.add('active');
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active', 'from-left', 'from-right'));
+  const newView = document.getElementById('view-' + tab);
+  const dir = (TAB_ORDER[tab] ?? 0) < (TAB_ORDER[prevTab] ?? 0) ? 'from-left' : 'from-right';
+  newView.classList.add('active', dir);
   // Le view condividono lo scroll della pagina: senza reset, cambiando tab si
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
