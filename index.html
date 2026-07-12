@@ -206,13 +206,13 @@
   /* riga tab categoria + dado "cosa guardo stasera": i tab restano centrati sullo
      schermo (padding simmetrico), il dado galleggia nello spazio a destra senza
      spostare il layout. */
-  .cat-tabs-row { position: relative; }
-  .cat-tabs-row .cat-tabs { padding: 14px 52px; align-items: center; }
+  /* tab + dado distribuiti su tutta la barra */
+  .cat-tabs-row { display: flex; align-items: center; gap: 8px; padding: 14px 16px; }
+  .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 0; overflow: visible; }
   /* tab categoria tutti della stessa larghezza, testo centrato */
-  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 6px; }
+  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; }
   .cat-dice {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    width: 32px; height: 32px; border-radius: 50%;
+    flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center; color: var(--fg);
     background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
   }
