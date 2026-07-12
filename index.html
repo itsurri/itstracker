@@ -210,7 +210,7 @@
   .cat-tabs-row { display: flex; align-items: center; gap: 8px; padding: 14px 16px; }
   .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 0; overflow: visible; }
   /* tab categoria tutti della stessa larghezza, testo centrato */
-  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; }
+  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; white-space: nowrap; }
   .cat-dice {
     flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center; color: var(--fg);
@@ -7246,10 +7246,10 @@ darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButton
 
 // ---------- colore app (accent) ----------
 const ACCENT_COLORS = [
-  {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD60A'}, {n:'Arancione', c:'#FF9500'},
-  {n:'Rosso fuoco', c:'#FF2200'}, {n:'Rosa', c:'#FF2D55'}, {n:'Magenta', c:'#FF2DAF'},
-  {n:'Viola', c:'#AF52DE'}, {n:'Violetto', c:'#7B61FF'}, {n:'Blu', c:'#0A84FF'},
-  {n:'Ciano', c:'#00C7FF'}, {n:'Verde acqua', c:'#00E5A0'}, {n:'Verde', c:'#32D74B'}
+  {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD400'}, {n:'Arancione', c:'#FF7A00'},
+  {n:'Rosso fuoco', c:'#FF2200'}, {n:'Rosa', c:'#FF1E5E'}, {n:'Magenta', c:'#FF10AE'},
+  {n:'Viola', c:'#B31FFF'}, {n:'Violetto', c:'#6E2BFF'}, {n:'Blu', c:'#0A6BFF'},
+  {n:'Ciano', c:'#00C6FF'}, {n:'Verde acqua', c:'#00E39A'}, {n:'Verde', c:'#1FE046'}
 ];
 function currentAccent() {
   try { return localStorage.getItem('itstracker_accent') || '#F7B538'; } catch(e) { return '#F7B538'; }
