@@ -206,25 +206,47 @@
   /* riga tab categoria + dado "cosa guardo stasera" */
   .cat-tabs-row { display: flex; align-items: center; }
   .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 14px 12px 16px 20px; }
+  /* tab categoria tutte della stessa larghezza, testo centrato */
+  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; white-space: nowrap; text-align: center; }
   .cat-dice {
     flex-shrink: 0; margin-right: 16px; margin-left: 2px; width: 34px; height: 34px; border-radius: 12px;
     display: inline-flex; align-items: center; justify-content: center; color: var(--fg);
     background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
   }
   .cat-dice svg { width: 19px; height: 19px; }
-  /* Blocco orientamento: su telefono in orizzontale l'app resta verticale.
-     Nessun messaggio: il contenuto viene ruotato per apparire sempre in portrait.
-     Attivo solo su telefoni (altezza ridotta in landscape), non su tablet/desktop. */
-  @media screen and (orientation: landscape) and (max-height: 540px) {
-    html { overflow: hidden; }
-    body {
-      position: absolute; top: 100%; left: 0;
-      width: 100vh; height: 100vw;
-      overflow-x: hidden; overflow-y: auto;
-      transform: rotate(-90deg); transform-origin: left top;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
+  /* ===== quiz "cosa guardo stasera" ===== */
+  .quizOverlay { position: fixed; inset: 0; z-index: 330; display: none; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    opacity: 0; transition: opacity 0.25s ease; }
+  .quizOverlay.open { display: flex; opacity: 1; }
+  .quiz-card { position: relative; width: 100%; max-width: 360px; max-height: 88vh; overflow-y: auto;
+    background: var(--sheet-bg); border-radius: 26px; padding: 24px 22px; border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.32s cubic-bezier(.34,1.56,.64,1); }
+  .quizOverlay.open .quiz-card { transform: scale(1); }
+  .quiz-close { position: absolute; top: 12px; right: 12px; z-index: 2; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(var(--overlay-rgb),0.08); display: flex; align-items: center; justify-content: center; color: var(--fg); }
+  .quiz-eyebrow { text-align: center; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 6px; }
+  .quiz-title { font-size: 19px; font-weight: 800; text-align: center; letter-spacing: -0.02em; }
+  .quiz-sub { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); text-align: center; margin-top: 4px; margin-bottom: 18px; }
+  .quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .quiz-choice { padding: 22px 12px; border-radius: 18px; background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+    display: flex; flex-direction: column; align-items: center; gap: 9px; font-weight: 700; font-size: 14px; color: var(--fg); font-family: inherit; }
+  .quiz-choice svg { width: 30px; height: 30px; color: var(--accent); }
+  .quiz-genres { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .quiz-genre { padding: 9px 14px; border-radius: 16px; background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+    font-size: 12.5px; font-weight: 600; color: var(--fg); font-family: inherit; }
+  .quiz-dice-big { font-size: 66px; line-height: 1; text-align: center; margin: 18px 0 8px; display: inline-block; width: 100%;
+    animation: quizRoll 0.55s cubic-bezier(.34,1.56,.64,1) infinite; }
+  @keyframes quizRoll { 0% { transform: rotate(-16deg) scale(1); } 50% { transform: rotate(16deg) scale(1.14); } 100% { transform: rotate(-16deg) scale(1); } }
+  .quiz-poster { width: 62%; max-width: 200px; aspect-ratio: 2/3; object-fit: cover; border-radius: 16px; margin: 4px auto 12px; display: block; box-shadow: 0 16px 44px rgba(0,0,0,0.5); }
+  .quiz-poster.pop { animation: quizPop 0.4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes quizPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .quiz-result-title { font-size: 20px; font-weight: 800; text-align: center; line-height: 1.2; letter-spacing: -0.02em; }
+  .quiz-result-meta { text-align: center; font-size: 12.5px; color: rgba(var(--overlay-rgb),0.55); margin-top: 7px; }
+  .quiz-add-btn { display: block; width: 100%; margin-top: 18px; padding: 14px; border-radius: 18px; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 14px; font-family: inherit; }
+  .quiz-reroll { display: block; width: 100%; margin-top: 8px; padding: 11px; border-radius: 16px; background: rgba(var(--overlay-rgb),0.08); color: var(--fg); font-weight: 600; font-size: 13px; font-family: inherit; }
+  .quiz-back { position: absolute; top: 12px; left: 12px; z-index: 2; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(var(--overlay-rgb),0.08); display: flex; align-items: center; justify-content: center; color: var(--fg); }
   .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
   .gc-top-right { top: 6px; right: 6px; }
   .gc-bottom-left { bottom: 6px; left: 6px; }
@@ -1565,8 +1587,8 @@
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="tvCatTabs">
         <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
       </div>
       <button class="cat-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
@@ -1714,7 +1736,7 @@
       <h2 class="settings-h2">TMDb</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">API Key</div><div class="sd">L'app usa una chiave TMDb condivisa integrata: non serve configurare nulla.</div></div>
+          <div class="st"><div class="sn">API Key</div><div class="sd">Serie, film e locandine provengono da TMDb (The Movie Database).</div></div>
           <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
         </div>
       </div>
@@ -1867,6 +1889,12 @@
 </div>
 
 <!-- CONFIRM DIALOG -->
+<div class="quizOverlay" id="quizOverlay" onclick="if(event.target===this)closeQuiz()">
+  <div class="quiz-card" id="quizCard">
+    <button class="quiz-close" onclick="closeQuiz()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <div id="quizBody"></div>
+  </div>
+</div>
 <div class="confirmbg" id="confirmBg">
   <div class="confirmbox">
     <h3 id="confirmTitle">Sei sicuro?</h3>
@@ -2496,24 +2524,120 @@ window.addEventListener('resize', () => moveTabIndicator(document.querySelector(
 // "Cosa guardo stasera?": pesca a caso qualcosa da guardare e apre la scheda.
 // Sui Film pesca tra i "Da vedere" (o tutti); sulle Serie tra "Continua" (poi
 // "In Lista", poi qualsiasi). Segue la tab attualmente attiva.
+// ===== quiz "cosa guardo stasera" =====
+// A quiz: tipo (serie/film) -> genere -> animazione dado -> un titolo nuovo da
+// TMDb con locandina grande e "Aggiungi in libreria" (finisce in Lista/Da vedere).
+let quizState = { type: null, genreId: null, genreName: '', map: null, result: null };
+
 function whatToWatch(btn) {
   if (btn) { btn.classList.remove('dice-roll'); void btn.offsetWidth; btn.classList.add('dice-roll'); }
   if (typeof haptic === 'function') haptic();
-  if (currentTab === 'film') {
-    const keys = Object.keys(filmLibrary || {});
-    if (!keys.length) { showToast('Aggiungi qualche film prima 🍿'); return; }
-    const todo = keys.filter(k => !filmLibrary[k].watched);
-    const pool = todo.length ? todo : keys;
-    openFilm(Number(pool[Math.floor(Math.random()*pool.length)]));
+  if (!hasTmdbKey()) { showToast('Ricerca non disponibile ora'); return; }
+  quizState = { type: null, genreId: null, genreName: '', map: null, result: null };
+  document.getElementById('quizOverlay').classList.add('open');
+  quizRenderType();
+}
+function closeQuiz() { document.getElementById('quizOverlay').classList.remove('open'); }
+
+function quizRenderType() {
+  document.getElementById('quizBody').innerHTML = `
+    <div class="quiz-eyebrow">Cosa guardo stasera?</div>
+    <div class="quiz-title">Serie TV o Film?</div>
+    <div class="quiz-sub">Scegli e ti pesco qualcosa di nuovo</div>
+    <div class="quiz-choices">
+      <button class="quiz-choice" onclick="quizPickType('tv')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/><path d="M8 3.5l4 4 4-4"/></svg>
+        Serie TV
+      </button>
+      <button class="quiz-choice" onclick="quizPickType('movie')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/></svg>
+        Film
+      </button>
+    </div>`;
+}
+
+async function quizPickType(type) {
+  quizState.type = type;
+  if (typeof haptic === 'function') haptic();
+  document.getElementById('quizBody').innerHTML = `<div class="quiz-eyebrow">${type==='tv'?'Serie TV':'Film'}</div><div class="quiz-title">Che genere?</div><div class="spinner"></div>`;
+  const map = await ensureGenreMap(type);
+  quizState.map = map;
+  const chips = Object.entries(map).sort((a,b)=>a[1].localeCompare(b[1]))
+    .map(([id,name]) => `<button class="quiz-genre" onclick="quizPickGenre('${id}')">${escapeHtml(name)}</button>`).join('');
+  document.getElementById('quizBody').innerHTML = `
+    <button class="quiz-back" onclick="quizRenderType()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="quiz-eyebrow">${type==='tv'?'Serie TV':'Film'}</div>
+    <div class="quiz-title">Che genere?</div>
+    <div class="quiz-sub">Scegli un genere</div>
+    <div class="quiz-genres">${chips}</div>`;
+}
+
+async function quizPickGenre(genreId) {
+  quizState.genreId = genreId;
+  quizState.genreName = (quizState.map && quizState.map[genreId]) || '';
+  if (typeof haptic === 'function') haptic();
+  document.getElementById('quizBody').innerHTML = `
+    <div class="quiz-eyebrow">${escapeHtml(quizState.genreName)}</div>
+    <div class="quiz-title">Sto scegliendo…</div>
+    <div class="quiz-dice-big">🎲</div>
+    <div class="quiz-sub">Un attimo di suspense</div>`;
+  const [pick] = await Promise.all([
+    quizFetchPick(quizState.type, genreId),
+    new Promise(r => setTimeout(r, 1100))
+  ]);
+  if (!pick) {
+    document.getElementById('quizBody').innerHTML = `<div class="quiz-title">Niente trovato</div><div class="quiz-sub">Prova un altro genere</div><button class="quiz-reroll" onclick="quizPickType('${quizState.type}')">Cambia genere</button>`;
     return;
   }
-  const keys = Object.keys(library || {});
-  if (!keys.length) { showToast('Aggiungi qualche serie prima 🍿'); return; }
-  const cont = keys.filter(k => categorizeShow(library[k]) === 'continua');
-  const todo = keys.filter(k => categorizeShow(library[k]) === 'davedere');
-  const pool = cont.length ? cont : (todo.length ? todo : keys);
-  openShow(Number(pool[Math.floor(Math.random()*pool.length)]));
+  quizShowResult(pick);
 }
+
+async function quizFetchPick(type, genreId) {
+  const path = type === 'tv' ? '/discover/tv' : '/discover/movie';
+  const page = 1 + Math.floor(Math.random()*5);
+  try {
+    const r = await fetch(tmdbUrl(path, { sort_by:'popularity.desc', page, with_genres: genreId, 'vote_count.gte': 80 }));
+    const d = await r.json();
+    const excluded = ['ja','zh','cn'];
+    const lib = type === 'tv' ? library : filmLibrary;
+    const items = (d.results||[]).filter(x => x.poster_path && !excluded.includes(x.original_language));
+    const fresh = items.filter(x => !lib[x.id]);
+    const pool = fresh.length ? fresh : items;
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random()*pool.length)];
+  } catch(e) { return null; }
+}
+
+function quizShowResult(item) {
+  quizState.result = item;
+  const isTv = quizState.type === 'tv';
+  const title = isTv ? item.name : item.title;
+  const date = isTv ? item.first_air_date : item.release_date;
+  const year = date ? date.slice(0,4) : '';
+  const rating = item.vote_average ? Math.round(item.vote_average*10)/10 : null;
+  const already = !!(isTv ? library[item.id] : filmLibrary[item.id]);
+  document.getElementById('quizBody').innerHTML = `
+    <div class="quiz-eyebrow">${escapeHtml(quizState.genreName)}</div>
+    <img class="quiz-poster pop" src="${tmdbImg(item.poster_path,'w500')}" alt="">
+    <div class="quiz-result-title">${escapeHtml(title||'')}</div>
+    <div class="quiz-result-meta">${[year, rating?('★ '+fmtRating(rating)):''].filter(Boolean).join('  ·  ')}</div>
+    <button class="quiz-add-btn" id="quizAddBtn" onclick="quizAdd()">${already ? 'Apri (già in libreria)' : (isTv ? '+ Aggiungi in lista' : '+ Aggiungi ai film')}</button>
+    <button class="quiz-reroll" onclick="quizReroll()">🎲 Gira di nuovo</button>`;
+  if (typeof haptic === 'function') haptic();
+}
+
+async function quizAdd() {
+  const item = quizState.result; if (!item) return;
+  const isTv = quizState.type === 'tv';
+  const lib = isTv ? library : filmLibrary;
+  if (lib[item.id]) { closeQuiz(); isTv ? openShow(item.id) : openFilm(item.id); return; }
+  const btn = document.getElementById('quizAddBtn');
+  if (btn) { btn.textContent = 'Aggiunta…'; btn.disabled = true; }
+  if (isTv) await quickAdd(item.id); else await quickAddFilm(item.id);
+  closeQuiz();
+}
+
+function quizReroll() { quizPickGenre(quizState.genreId); }
 
 const GENRE_PALETTE = ['#0A84FF','#30D158','#FF9F0A','#5E5CE6','#FF375F','#64D2FF'];
 // Ogni genere ha il suo colore fisso, ovunque nell'app.
@@ -5813,7 +5937,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
       <div id="castSec"></div>
       ${!inLib?`<button class="addlibbtn" onclick="addFromSheet(${show.id})">+ Aggiungi alla libreria</button>`:''}
       ${inLib?`<div class="btnrow">
-        <button class="markallbtn${allAiredWatched(library[show.id],episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(library[show.id],episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
+        <button class="markallbtn${allAiredWatched(library[show.id],episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(library[show.id],episodes)?'Rimuovi episodi':'Segna come vista'}</button>
         <button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>
       </div>`:''}
       ${seasons.length?`<div class="season-accordion" id="seasonAccordion">${seasons.map(s=>renderSeasonRow(show.id, episodes, s)).join('')}</div>`:''}
@@ -6309,7 +6433,7 @@ function updateMarkAllBtn(showId) {
   const btn = document.getElementById('markAllBtn');
   if (!btn) return;
   const isAll = allAiredWatched(library[showId], episodesCache[showId]);
-  btn.textContent = isAll ? 'Rimuovi tutti gli episodi' : 'Segna come vista';
+  btn.textContent = isAll ? 'Rimuovi episodi' : 'Segna come vista';
   btn.classList.toggle('danger', isAll);
 }
 
@@ -7587,10 +7711,6 @@ normalizeLibrary();
 normalizeFilmLibrary();
 applyAccent(currentAccent());
 renderAccentControl();
-// Prova a bloccare l'orientamento in verticale (dove supportato, es. Android/PWA
-// a schermo intero). Su iOS non è supportato: lì ci pensa il CSS a mantenere il
-// contenuto in portrait. Nessun messaggio in ogni caso.
-try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 updateLogo();
 (function(){
   const splash = document.getElementById('splash');
