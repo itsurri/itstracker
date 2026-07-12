@@ -202,7 +202,29 @@
   .airing-dot { display: block; width: 9px; height: 9px; border-radius: 50%; background: #FF3B30;
     box-shadow: 0 0 0 2px rgba(255,255,255,0.95), 0 1px 4px rgba(0,0,0,0.55); animation: livePulse 1.1s infinite; }
   @keyframes diceRoll { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
-  .icon-btn.dice-roll svg { animation: diceRoll 0.5s cubic-bezier(.34,1.56,.64,1); }
+  .dice-roll svg { animation: diceRoll 0.5s cubic-bezier(.34,1.56,.64,1); }
+  /* riga tab categoria + dado "cosa guardo stasera" */
+  .cat-tabs-row { display: flex; align-items: center; }
+  .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 14px 12px 16px 20px; }
+  .cat-dice {
+    flex-shrink: 0; margin-right: 16px; margin-left: 2px; width: 34px; height: 34px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--fg);
+    background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+  }
+  .cat-dice svg { width: 19px; height: 19px; }
+  /* Blocco orientamento: su telefono in orizzontale l'app resta verticale.
+     Nessun messaggio: il contenuto viene ruotato per apparire sempre in portrait.
+     Attivo solo su telefoni (altezza ridotta in landscape), non su tablet/desktop. */
+  @media screen and (orientation: landscape) and (max-height: 540px) {
+    html { overflow: hidden; }
+    body {
+      position: absolute; top: 100%; left: 0;
+      width: 100vh; height: 100vw;
+      overflow-x: hidden; overflow-y: auto;
+      transform: rotate(-90deg); transform-origin: left top;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
   .gc-top-left { top: 6px; left: 6px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
   .gc-top-right { top: 6px; right: 6px; }
   .gc-bottom-left { bottom: 6px; left: 6px; }
@@ -1485,16 +1507,6 @@
       <div class="topbar-logo" role="img" aria-label="itstracker"></div>
     </div>
     <div class="topbar-right" id="topbarRight">
-      <button class="icon-btn" id="btnDice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="4"/>
-          <circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>
-          <circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/>
-          <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/>
-          <circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/>
-          <circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/>
-        </svg>
-      </button>
       <button class="icon-btn" id="btnSettings" title="Impostazioni" onclick="switchTab('settings')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -1550,11 +1562,16 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
-    <div class="seasontabs cat-tabs" id="tvCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
-      <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
-      <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
-      <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
+    <div class="cat-tabs-row">
+      <div class="seasontabs cat-tabs" id="tvCatTabs">
+        <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
+      </div>
+      <button class="cat-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+      </button>
     </div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
@@ -1566,9 +1583,14 @@
 
   <!-- FILM -->
   <div class="view" id="view-film">
-    <div class="seasontabs cat-tabs" id="filmCatTabs" style="padding:14px 20px 16px">
-      <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
-      <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
+    <div class="cat-tabs-row">
+      <div class="seasontabs cat-tabs" id="filmCatTabs">
+        <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
+      </div>
+      <button class="cat-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+      </button>
     </div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
@@ -7565,6 +7587,10 @@ normalizeLibrary();
 normalizeFilmLibrary();
 applyAccent(currentAccent());
 renderAccentControl();
+// Prova a bloccare l'orientamento in verticale (dove supportato, es. Android/PWA
+// a schermo intero). Su iOS non è supportato: lì ci pensa il CSS a mantenere il
+// contenuto in portrait. Nessun messaggio in ogni caso.
+try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(() => {}); } catch (e) {}
 updateLogo();
 (function(){
   const splash = document.getElementById('splash');
