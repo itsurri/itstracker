@@ -976,20 +976,18 @@
   .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
   .tabbtn.active { color: var(--accent); }
 
-  /* lista colori app (Impostazioni) */
-  .accent-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
-  .accent-swatch {
-    position: relative; width: 100%; aspect-ratio: 1; border-radius: 50%;
-    background: var(--sw); border: none; cursor: pointer;
-    box-shadow: inset 0 1px 2px rgba(255,255,255,0.35), 0 2px 6px rgba(0,0,0,0.25);
-    transition: transform 0.15s ease;
+  /* colore app: menu a tendina (Impostazioni) */
+  .accent-select-wrap { position: relative; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .accent-dot { width: 15px; height: 15px; border-radius: 50%; background: var(--accent); flex: none;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 1px 3px rgba(0,0,0,0.3); }
+  .settings-select {
+    appearance: none; -webkit-appearance: none;
+    background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.2); border-radius: 14px;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 28px 8px 12px; cursor: pointer;
   }
-  .accent-swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--sw), 0 2px 6px rgba(0,0,0,0.25); }
-  .accent-swatch.active::after {
-    content: ''; position: absolute; inset: 0; margin: auto; width: 11px; height: 6px;
-    border-left: 2.5px solid #fff; border-bottom: 2.5px solid #fff;
-    transform: translateY(-1px) rotate(-45deg); filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
-  }
+  .settings-select-caret { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5; }
   .tabbtn.active::before {
     content: ''; position: absolute; inset: 0; z-index: -1;
     border-radius: 30px; background: rgba(var(--overlay-rgb),0.14);
@@ -1096,7 +1094,7 @@
   #view-settings .section:first-child { margin-top: 0; }
   .settingsrow {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 9px 14px; margin-bottom: 8px;
+    padding: 7px 13px; margin-bottom: 6px;
   }
   .settingsrow .st { flex: 1; }
   .settingsrow .sn { font-size: 13.5px; font-weight: 600; }
@@ -1641,9 +1639,13 @@
             <button class="filebtn" id="viewWallBtn" onclick="setView('wall')">Muro</button>
           </div>
         </div>
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:10px">
-          <div class="st"><div class="sn">Colore</div><div class="sd">Cambia il colore di "its", della selezione nel menu e del logo</div></div>
-          <div id="accentSwatches" class="accent-swatches"></div>
+        <div class="settingsrow">
+          <div class="st"><div class="sn">Colore</div></div>
+          <div class="accent-select-wrap">
+            <span class="accent-dot"></span>
+            <select id="accentSelect" class="settings-select" onchange="setAccent(this.value)"></select>
+            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -6938,7 +6940,12 @@ function updateLogo() {
 darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButtons(); });
 
 // ---------- colore app (accent) ----------
-const ACCENT_COLORS = ['#F7B538','#FFD60A','#FF9500','#FF3B30','#FF2D55','#FF2DAF','#AF52DE','#7B61FF','#0A84FF','#00C7FF','#00E5A0','#32D74B'];
+const ACCENT_COLORS = [
+  {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD60A'}, {n:'Arancione', c:'#FF9500'},
+  {n:'Rosso', c:'#FF3B30'}, {n:'Rosa', c:'#FF2D55'}, {n:'Magenta', c:'#FF2DAF'},
+  {n:'Viola', c:'#AF52DE'}, {n:'Violetto', c:'#7B61FF'}, {n:'Blu', c:'#0A84FF'},
+  {n:'Ciano', c:'#00C7FF'}, {n:'Verde acqua', c:'#00E5A0'}, {n:'Verde', c:'#32D74B'}
+];
 function currentAccent() {
   try { return localStorage.getItem('itstracker_accent') || '#F7B538'; } catch(e) { return '#F7B538'; }
 }
@@ -6946,15 +6953,15 @@ function applyAccent(c) { document.documentElement.style.setProperty('--accent',
 function setAccent(c) {
   applyAccent(c);
   try { localStorage.setItem('itstracker_accent', c); } catch(e) {}
-  renderAccentSwatches();
+  renderAccentControl();
   if (typeof haptic === 'function') haptic();
 }
-function renderAccentSwatches() {
-  const wrap = document.getElementById('accentSwatches');
-  if (!wrap) return;
+function renderAccentControl() {
+  const sel = document.getElementById('accentSelect');
+  if (!sel) return;
   const cur = currentAccent().toLowerCase();
-  wrap.innerHTML = ACCENT_COLORS.map(c =>
-    `<button class="accent-swatch${c.toLowerCase()===cur?' active':''}" style="--sw:${c}" onclick="setAccent('${c}')" aria-label="Colore ${c}"></button>`
+  sel.innerHTML = ACCENT_COLORS.map(o =>
+    `<option value="${o.c}"${o.c.toLowerCase()===cur?' selected':''}>${o.n}</option>`
   ).join('');
 }
 
@@ -7404,7 +7411,7 @@ loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
 applyAccent(currentAccent());
-renderAccentSwatches();
+renderAccentControl();
 updateLogo();
 (function(){
   const splash = document.getElementById('splash');
