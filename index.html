@@ -656,6 +656,18 @@
   .checkbtn.not-aired { opacity: 0.3; }
   .ep-actions .checkbtn { width: 34px; height: 34px; }
   .ep-actions .checkbtn svg { width: 15px; height: 15px; }
+  /* accordion stagioni nella scheda serie */
+  .season-accordion { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .season-block { border-radius: 16px; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08); }
+  .season-block.open { background: rgba(var(--overlay-rgb),0.03); }
+  .season-head { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; }
+  .season-info { flex: 1; min-width: 0; }
+  .season-title { font-size: 14.5px; font-weight: 700; }
+  .season-sub { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; }
+  .season-check { flex: none; }
+  .season-caret { flex: none; opacity: 0.4; transition: transform 0.28s ease; }
+  .season-block.open .season-caret { transform: rotate(180deg); }
+  .season-block > #episodeList { padding: 0 8px 8px; }
   .epdesc {
     font-size: 12.5px; line-height: 1.5; color: rgba(var(--overlay-rgb),0.55);
     margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(var(--overlay-rgb),0.08); display: none;
@@ -4097,7 +4109,7 @@ async function goToCommentNotification(id) {
   if (!n || !n.showId) return;
   closeNotifPanel();
   await openShow(n.showId);
-  if (n.season && n.season !== currentSeason) selectSeason(n.showId, n.season);
+  if (n.season) openSeason(n.showId, n.season);
   toggleEpisodeComments(n.showId, n.season, n.number);
   setTimeout(() => {
     const el = document.getElementById(`comment-${n.commentId}`);
@@ -5714,8 +5726,9 @@ async function openShow(id, originEl) {
     saveLibrary(); renderLibrary();
   }
 
-  const watched = (library[id]&&library[id].watched)||{};
-  currentSeason = pickResumeSeason(seasons, episodes, watched);
+  // Scheda a fisarmonica: nessuna stagione aperta di default (niente apertura
+  // automatica "dove sei"); l'utente apre la stagione che vuole.
+  currentSeason = null;
   renderSheet(show, episodes, seasons, inLib);
 }
 
@@ -5763,11 +5776,10 @@ async function renderSheet(show, episodes, seasons, inLib) {
         <button class="markallbtn${allAiredWatched(library[show.id],episodes)?' danger':''}" id="markAllBtn" onclick="toggleMarkAll(${show.id})">${allAiredWatched(library[show.id],episodes)?'Rimuovi tutti gli episodi':'Segna come vista'}</button>
         <button class="removebtn" onclick="removeShow(${show.id})">Rimuovi dalla libreria</button>
       </div>`:''}
-      ${seasons.length?`<div class="seasontabs" id="seasontabs">${seasons.map(s=>`<button class="seasontab ${s===currentSeason?'active':''}" data-season="${s}" onclick="selectSeason(${show.id},${s})">Stagione ${s}</button>`).join('')}</div>`:''}
-      <div id="episodeList"></div>
+      ${seasons.length?`<div class="season-accordion" id="seasonAccordion">${seasons.map(s=>renderSeasonRow(show.id, episodes, s)).join('')}</div>`:''}
+      <div id="episodeList" hidden></div>
     </div>`;
 
-  renderEpisodeList(show.id, episodes, currentSeason);
   if (poster) posterAccent(poster).then(col => {
     if (!col) return;
     const g = document.getElementById('heroGlow'); if (g) g.style.setProperty('--accent', col);
@@ -5875,10 +5887,105 @@ async function loadCast(type, id) {
   } catch(e) { box.innerHTML = ''; }
 }
 
-function selectSeason(showId, season) {
+// ---------- accordion stagioni ----------
+const SEASON_CHECK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+
+function seasonStats(showId, episodes, season) {
+  const w = (library[showId] && library[showId].watched) || {};
+  const eps = episodes.filter(e => e.season === season);
+  const watched = eps.filter(e => w[`${e.season}x${e.number}`]).length;
+  const aired = eps.filter(e => !isFutureEpisode(e));
+  const allAired = aired.length > 0 && aired.every(e => w[`${e.season}x${e.number}`]);
+  return { total: eps.length, watched, allAired };
+}
+
+function renderSeasonRow(showId, episodes, season) {
+  const st = seasonStats(showId, episodes, season);
+  return `<div class="season-block" data-season="${season}" id="seasonBlock-${season}">
+    <div class="season-head" onclick="toggleSeason(${showId},${season})">
+      <div class="season-info">
+        <div class="season-title">Stagione ${season}</div>
+        <div class="season-sub"><span id="seasonCount-${season}">${st.watched}/${st.total}</span> episodi</div>
+      </div>
+      <button class="checkbtn season-check ${st.allAired?'checked':''}" id="seasonCheck-${season}" onclick="event.stopPropagation();toggleSeasonWatched(${showId},${season})" aria-label="Segna stagione ${season} come vista">${st.allAired?SEASON_CHECK_SVG:''}</button>
+      <svg class="season-caret" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>`;
+}
+
+// Apre/chiude una stagione (una sola aperta per volta). Riusa la lista episodi
+// esistente (#episodeList) spostandola dentro la stagione aperta.
+function toggleSeason(showId, season) {
+  const block = document.getElementById(`seasonBlock-${season}`);
+  const epList = document.getElementById('episodeList');
+  if (!block || !epList) return;
+  const alreadyOpen = currentSeason === season && block.classList.contains('open');
+  document.querySelectorAll('.season-block.open').forEach(b => b.classList.remove('open'));
+  if (alreadyOpen) { currentSeason = null; epList.hidden = true; return; }
   currentSeason = season;
-  document.querySelectorAll('#seasontabs .seasontab').forEach(t => t.classList.toggle('active', Number(t.dataset.season)===season));
   renderEpisodeList(showId, episodesCache[showId], season);
+  block.appendChild(epList);
+  epList.hidden = false;
+  block.classList.add('open');
+}
+
+// Apre la stagione indicata (senza chiuderla se già aperta): usata dalle notifiche.
+function openSeason(showId, season) {
+  const block = document.getElementById(`seasonBlock-${season}`);
+  if (!block) return;
+  if (currentSeason === season && block.classList.contains('open')) return;
+  toggleSeason(showId, season);
+}
+// compat: vecchi richiami
+function selectSeason(showId, season) { openSeason(showId, season); }
+
+// Segna/rimuove come visti tutti gli episodi usciti di una stagione (senza conferma).
+function toggleSeasonWatched(showId, season) {
+  const eps = episodesCache[showId];
+  if (!eps) return;
+  const show = library[showId];
+  if (!show.watched) show.watched = {};
+  const w = show.watched;
+  const aired = eps.filter(e => e.season === season && !isFutureEpisode(e));
+  if (!aired.length) { showToast('Nessun episodio uscito in questa stagione'); return; }
+  const wasAll = aired.every(e => w[`${e.season}x${e.number}`]);
+  if (wasAll) {
+    aired.forEach(e => { delete w[`${e.season}x${e.number}`]; });
+    showToast(`Stagione ${season}: episodi rimossi`);
+  } else {
+    aired.forEach(e => { const k = `${e.season}x${e.number}`; if (!w[k]) w[k] = Date.now(); });
+    showToast(`Stagione ${season} segnata come vista`);
+  }
+  show.lastWatchedAt = Date.now();
+  show.next = computeNextEp(eps, w);
+  saveLibrary();
+  if (currentSeason === season) renderEpisodeList(showId, eps, season);
+  updateSeasonHeaders(showId, eps);
+  renderLibrary();
+  checkAchievements();
+  const wc = Object.keys(w).length;
+  const sw = document.getElementById('statW'); if (sw) sw.textContent = wc;
+  const sp = document.getElementById('statP'); if (sp) sp.textContent = (eps.length?Math.round(wc/eps.length*100):0)+'%';
+  const spc = document.getElementById('statPChip'); if (spc) spc.className = 'skpi ' + pctTier(eps.length?Math.round(wc/eps.length*100):0);
+  updateMarkAllBtn(showId);
+  if (!wasAll && categorizeShow(show) === 'inpari') {
+    celebrateShowComplete(show);
+    logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
+    refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
+  }
+}
+
+// Aggiorna intestazioni delle stagioni (conteggio visti/totali e spunta) senza
+// ricostruire l'accordion.
+function updateSeasonHeaders(showId, episodes) {
+  document.querySelectorAll('#seasonAccordion .season-block').forEach(block => {
+    const season = Number(block.dataset.season);
+    const st = seasonStats(showId, episodes, season);
+    const cnt = document.getElementById(`seasonCount-${season}`);
+    if (cnt) cnt.textContent = `${st.watched}/${st.total}`;
+    const chk = document.getElementById(`seasonCheck-${season}`);
+    if (chk) { chk.classList.toggle('checked', st.allAired); chk.innerHTML = st.allAired ? SEASON_CHECK_SVG : ''; }
+  });
 }
 
 // Impagina la lista episodi: renderizzare centinaia di .epitem.glass insieme
@@ -6104,6 +6211,7 @@ function applyToggleEpisode(showId, season, number) {
   if (episodesCache[showId]) library[showId].next = computeNextEp(episodesCache[showId], library[showId].watched);
   saveLibrary();
   renderEpisodeList(showId, episodesCache[showId], currentSeason);
+  updateSeasonHeaders(showId, episodesCache[showId]);
   renderLibrary();
   if (!wasWatched) {
     const btn = document.querySelector(`#ep-${CSS.escape(key)} .checkbtn`);
@@ -6186,6 +6294,7 @@ function toggleMarkAll(showId) {
   show.next = computeNextEp(eps, w);
   saveLibrary();
   renderEpisodeList(showId, eps, currentSeason);
+  updateSeasonHeaders(showId, eps);
   renderLibrary();
   checkAchievements();
   const wc = Object.keys(w).length;
@@ -6211,6 +6320,7 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     if (episodesCache[showId]) library[showId].next = computeNextEp(episodesCache[showId], library[showId].watched);
     saveLibrary();
     renderEpisodeList(showId, episodesCache[showId], currentSeason);
+    updateSeasonHeaders(showId, episodesCache[showId]);
     renderLibrary();
     checkAchievements();
     updateMarkAllBtn(showId);
