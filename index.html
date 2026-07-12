@@ -176,7 +176,7 @@
   .add-wide {
     min-width: 92px; height: 30px; padding: 0 12px; border-radius: 15px; border: none; font-family: inherit;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; line-height: 1.1; text-align: center; background: #F7B538; color: #1a1508;
+    font-size: 12px; font-weight: 700; line-height: 1.1; text-align: center; background: var(--accent); color: var(--accent-ink);
   }
   .lib-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   /* larghezza fissa: le barre finiscono tutte allo stesso punto e "Aggiungi"
@@ -649,8 +649,8 @@
     font-size: 13px; font-weight: 700; font-family: inherit; letter-spacing: 0.02em; margin-top: 6px;
   }
   .addlibbtn {
-    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(48,209,88,0.4);
-    background: rgba(48,209,88,0.12); color: #30D158; font-size: 14px; font-weight: 600;
+    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(var(--accent-rgb),0.45);
+    background: rgba(var(--accent-rgb),0.14); color: var(--accent); font-size: 14px; font-weight: 700;
     font-family: inherit; margin-bottom: 14px;
   }
   .btnrow { display: flex; gap: 10px; margin-bottom: 14px; }
@@ -1025,7 +1025,7 @@
     overflow: hidden;
   }
   .pill-main { flex: 1; }
-  .pill-search { flex: 0 0 auto; }
+  .pill-side { flex: 0 0 auto; }
   .tabbar::before {
     content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.03) 22%, rgba(255,255,255,0) 45%);
@@ -1037,7 +1037,7 @@
     padding: 12px 0 11px; border-radius: 26px; transition: color 0.2s;
     transform: translateZ(0);
   }
-  .pill-search .tabbtn { flex: 0 0 auto; padding: 12px 16px 11px; }
+  .pill-side .tabbtn { flex: 0 0 auto; padding: 12px 16px 11px; }
   .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
   .tabbtn.active { color: var(--accent); }
 
@@ -1754,10 +1754,6 @@
 <!-- TAB BAR -->
 <div class="tabbar-wrap">
   <div class="tabbar pill-main">
-    <button class="tabbtn" data-tab="profile" title="Profilo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
-      <span class="tab-label">Profilo</span>
-    </button>
     <button class="tabbtn active" data-tab="tv" title="Serie TV">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/>
@@ -1774,11 +1770,15 @@
       </svg>
       <span class="tab-label">Film</span>
     </button>
-  </div>
-  <div class="tabbar pill-search">
     <button class="tabbtn" data-tab="search" title="Cerca">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>
       <span class="tab-label">Ricerca</span>
+    </button>
+  </div>
+  <div class="tabbar pill-side">
+    <button class="tabbtn" data-tab="profile" title="Profilo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
+      <span class="tab-label">Profilo</span>
     </button>
   </div>
 </div>
@@ -2487,7 +2487,7 @@ function moveTabIndicator(btn) {
 }
 
 // ordine visivo delle tab, per decidere il verso dello swipe al cambio
-const TAB_ORDER = { profile: 0, tv: 1, film: 2, search: 3, settings: 4 };
+const TAB_ORDER = { tv: 0, film: 1, search: 2, profile: 3, settings: 4 };
 function switchTab(tab) {
   // Chiudi eventuali pannelli header aperti (notifiche/messaggi/follower), così
   // toccando Impostazioni (o un'altra tab) non restano aperti a coprire la vista.
@@ -7247,7 +7247,7 @@ darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButton
 // ---------- colore app (accent) ----------
 const ACCENT_COLORS = [
   {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD60A'}, {n:'Arancione', c:'#FF9500'},
-  {n:'Rosso', c:'#FF3B30'}, {n:'Rosa', c:'#FF2D55'}, {n:'Magenta', c:'#FF2DAF'},
+  {n:'Rosso fuoco', c:'#FF2200'}, {n:'Rosa', c:'#FF2D55'}, {n:'Magenta', c:'#FF2DAF'},
   {n:'Viola', c:'#AF52DE'}, {n:'Violetto', c:'#7B61FF'}, {n:'Blu', c:'#0A84FF'},
   {n:'Ciano', c:'#00C7FF'}, {n:'Verde acqua', c:'#00E5A0'}, {n:'Verde', c:'#32D74B'}
 ];
