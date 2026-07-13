@@ -2875,25 +2875,28 @@ let wrappedSlides = [], wrappedIndex = 0, wrappedTimer = null, wrappedSummary = 
 // Anni per cui esiste almeno un'attività, piu' l'anno corrente (cosi' un
 // nuovo anno appare automaticamente il 1 gennaio anche senza nulla ancora
 // visto in quell'anno).
-function renderWrappedCard() {
-  const years = getWrappedYears();
-  return `<div class="wrap-card glass ach-details" id="wrappedYearCard">
-    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer" onclick="toggleWrappedYearPicker()">
+// Teaser a meta' larghezza (accanto a Trofei): un tocco espande la lista anni
+// a piena larghezza sotto la riga (in #wrappedFull), stesso trattamento dei Trofei.
+function renderWrappedTeaser() {
+  return `<div class="wrap-card glass ach-details" id="wrappedTeaser">
+    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer" onclick="toggleWrappedFull()">
       <span class="ach-summary-title">🎬 Wrapped</span>
-      <svg class="ach-chevron" id="wrappedYearChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-    </div>
-    <div id="wrappedYearList" style="display:none; padding:0 16px 16px; flex-direction:column; gap:8px">
-      ${years.map(y => `<button class="filebtn" onclick="event.stopPropagation();openWrapped(${y})">${y}</button>`).join('')}
+      <svg class="ach-chevron" id="wrappedChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
   </div>`;
 }
-function toggleWrappedYearPicker() {
-  const list = document.getElementById('wrappedYearList');
-  const chevron = document.getElementById('wrappedYearChevron');
-  const isOpen = list.classList.contains('open');
-  list.classList.toggle('open', !isOpen);
-  list.style.display = isOpen ? 'none' : 'flex';
-  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+function toggleWrappedFull() {
+  const wrap = document.getElementById('wrappedFull');
+  const chevron = document.getElementById('wrappedChevron');
+  const isOpen = wrap.style.display !== 'none';
+  if (isOpen) { wrap.style.display = 'none'; chevron.style.transform = ''; return; }
+  const years = getWrappedYears();
+  wrap.innerHTML = `<div style="padding:16px; display:flex; flex-direction:column; gap:8px">
+    ${years.map(y => `<button class="filebtn" onclick="openWrapped(${y})">${y}</button>`).join('')}
+  </div>`;
+  wrap.style.display = 'block';
+  chevron.style.transform = 'rotate(180deg)';
+  if (typeof haptic === 'function') haptic();
 }
 
 function getWrappedYears() {
@@ -3976,9 +3979,10 @@ function renderProfile() {
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
   }
   html += `<div style="display:flex; gap:10px; align-items:flex-start">
-    <div style="flex:1; min-width:0">${renderWrappedCard()}</div>
+    <div style="flex:1; min-width:0">${renderWrappedTeaser()}</div>
     <div style="flex:1; min-width:0">${renderAchievementsTeaser(w)}</div>
   </div>
+  <div class="wrap-card glass ach-full" id="wrappedFull" style="display:none; margin-top:10px"></div>
   <div class="wrap-card glass ach-full" id="achievementsFull" style="display:none; margin-top:10px"></div>`;
 
   if (w.hasActivity) {
