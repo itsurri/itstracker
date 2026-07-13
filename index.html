@@ -164,6 +164,7 @@
   /* --- azioni rapide --- */
   .act-btn { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; display: flex; align-items: center; justify-content: center; }
   .act-remove { background: rgba(255,69,58,0.18); color: #FF6961; }
+  .act-next { background: rgba(48,209,88,0.18); color: #30D158; }
   /* spunta episodio: vuoto (da vedere) · blu (in corso) · verde (in pari) */
   .ep-check {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; position: relative;
@@ -173,19 +174,6 @@
   .ep-check.prog { background: #0A84FF; }
   .ep-check.empty { background: transparent; border: 1.5px solid rgba(var(--overlay-rgb),0.4); }
   .ep-check.empty svg { display: none; }
-  /* vista lista: anello di avanzamento (stessa dimensione della X di fianco) al
-     posto del cerchio pieno; l'arco colorato mostra la percentuale vista */
-  .ep-ring {
-    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; border: none; padding: 0; position: relative;
-    display: flex; align-items: center; justify-content: center; background: none; color: var(--fg);
-  }
-  .ep-ring svg:first-child { position: absolute; inset: 0; }
-  .ep-ring .ring-track { stroke: rgba(var(--overlay-rgb),0.14); }
-  .ep-ring .ring-fill { stroke: var(--accent); transition: stroke-dashoffset 0.4s ease; }
-  .cat-inpari .list-item .ep-ring .ring-fill { stroke: #30D158; }
-  .ep-ring .ep-ring-icon { position: relative; z-index: 1; display: flex; }
-  .ep-ring .ep-ring-icon svg { width: 12px; height: 12px; }
-  .ep-ring.empty .ep-ring-icon { opacity: 0.5; }
   /* pillola stato (ricerca/profilo): blu = da vedere, verde = visto */
   .watch-pill {
     min-width: 92px; height: 34px; padding: 0 12px; border-radius: 14px; border: none; flex-shrink: 0;
@@ -365,7 +353,8 @@
   .chip-date { background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.65); font-weight: 700; }
   .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* chip informative compatte (prossimo ep, rating, stagioni, stato) */
-  .li-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+  .li-chips { display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; margin-top: 4px; overflow-x: auto; scrollbar-width: none; }
+  .li-chips::-webkit-scrollbar { display: none; }
   .chip {
     font-size: 10px; font-weight: 700; padding: 2.5px 8px; border-radius: 12px; flex-shrink: 0;
     background: rgba(var(--overlay-rgb),0.07); color: rgba(var(--overlay-rgb),0.6); white-space: nowrap;
@@ -1306,10 +1295,10 @@
   @keyframes heroIn { from { transform: scale(1.09); opacity: 0.35; } to { transform: scale(1); opacity: 1; } }
 
   /* ===== check pop ===== */
-  .checkbtn.justchecked, .ep-check.justchecked, .ep-ring.justchecked { animation: pop 0.32s cubic-bezier(.34,1.56,.64,1); }
+  .checkbtn.justchecked, .ep-check.justchecked, .act-next.justchecked { animation: pop 0.32s cubic-bezier(.34,1.56,.64,1); }
   @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.28); } 100% { transform: scale(1); } }
   /* anello che si espande quando spunti un episodio */
-  .checkbtn.justchecked::after, .ep-check.justchecked::after, .ep-ring.justchecked::after {
+  .checkbtn.justchecked::after, .ep-check.justchecked::after, .act-next.justchecked::after {
     content: ''; position: absolute; inset: -3px; border-radius: 50%;
     border: 2.5px solid #30D158; pointer-events: none;
     animation: checkRing 0.5s ease-out forwards;
@@ -4477,11 +4466,9 @@ function renderListTv(key, s) {
   const id = validId(s, key);
   const watched = Object.keys(s.watched || {}).length;
   const total = s.totalEpisodes || 0;
-  const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
   const isDone = total > 0 && watched >= total;
   // Anche le serie mai iniziate mostrano il prossimo episodio (S1 E1): stessa struttura per tutte.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
-  const tier = pctTier(pct);
   const chips = [
     s.rating ? `<span class="chip chip-star">★ ${fmtRating(s.rating)}</span>` : null,
     s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null,
@@ -4493,11 +4480,7 @@ function renderListTv(key, s) {
       <div class="li-name">${hasNewEp(s) ? `<span class="new-ep-dot" title="Nuovo episodio"></span>` : ''}${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
     </div>
-    <div class="lib-actions">
-      ${total ? `<span class="li-pct ${tier}">${pct}%</span>` : ''}
-      ${epRingBtn(id)}
-      ${removeBtnTv(id)}
-    </div>
+    <div class="lib-actions">${nextEpBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
 }
 
@@ -5740,27 +5723,10 @@ function epCheckBtn(id) {
   const icon = (cls === 'done' || isLastOne) ? ICO_V : ICO_ARROW;
   return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${icon}</button>`;
 }
-const RING_C_SMALL = 2 * Math.PI * 12.5; // r=12.5, stesso diametro (30px) del bottone Rimuovi
-// Vista lista: bottone "segna prossimo episodio" come anello di avanzamento
-// (stessa dimensione della X di rimozione), al posto del cerchio pieno usato
-// in griglia. L'anello mostra la percentuale vista come arco colorato.
-function epRingBtn(id) {
-  const s = library[id];
-  const cat = s ? categorizeShow(s) : 'davedere';
-  const cls = cat === 'inpari' ? 'done' : (cat === 'continua' ? 'prog' : 'empty');
-  const watched = s ? Object.keys(s.watched || {}).length : 0;
-  const total = s ? (s.totalEpisodes || 0) : 0;
-  const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
-  const isLastOne = total > 0 && watched + 1 >= total;
-  const icon = (cls === 'done' || isLastOne) ? ICO_V : ICO_ARROW;
-  const off = (RING_C_SMALL - (pct/100)*RING_C_SMALL).toFixed(1);
-  return `<button class="ep-ring ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">
-    <svg width="30" height="30" viewBox="0 0 30 30">
-      <circle class="ring-track" cx="15" cy="15" r="12.5" fill="none" stroke-width="2.5"/>
-      ${total ? `<circle class="ring-fill" cx="15" cy="15" r="12.5" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${RING_C_SMALL.toFixed(1)}" stroke-dashoffset="${off}" transform="rotate(-90 15 15)"/>` : ''}
-    </svg>
-    <span class="ep-ring-icon">${icon}</span>
-  </button>`;
+// Vista lista: bottone "segna prossimo episodio" nello stesso stile della X
+// di rimozione (cerchio con tinta piena, act-btn), verde con freccia a destra.
+function nextEpBtn(id) {
+  return `<button class="act-btn act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_ARROW}</button>`;
 }
 // Spunta film: verde con V quando visto, vuota quando no; toggle.
 function filmCheckBtn(id) {
@@ -6609,7 +6575,7 @@ async function markNext(id) {
   s.next = eps ? computeNextEp(eps, s.watched) : null;
   saveLibrary();
   renderLibrary();
-  const btn = document.querySelector(`.ep-check[data-show-id="${id}"], .ep-ring[data-show-id="${id}"]`);
+  const btn = document.querySelector(`.ep-check[data-show-id="${id}"], .act-next[data-show-id="${id}"]`);
   if (btn) { btn.classList.add('justchecked'); setTimeout(() => btn.classList.remove('justchecked'), 550); }
   if (categorizeShow(s) === 'inpari') {
     celebrateShowComplete(s);
