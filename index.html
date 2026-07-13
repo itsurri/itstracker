@@ -2624,7 +2624,18 @@ async function quizFetchPick(type, genreId) {
     const fresh = items.filter(x => !lib[x.id]);
     const pool = (fresh.length ? fresh : items).slice(0, 12);
     if (!pool.length) return null;
-    return pool[Math.floor(Math.random()*pool.length)];
+    const pick = pool[Math.floor(Math.random()*pool.length)];
+    // Stagioni/episodi totali non sono nei risultati di /discover: servono i
+    // dettagli della serie (stesso endpoint usato per aggiungerla in libreria).
+    if (type === 'tv') {
+      try {
+        const dr = await fetch(tmdbUrl(`/tv/${pick.id}`, {}));
+        const detail = await dr.json();
+        pick.totalSeasons = (detail.seasons||[]).filter(se=>se.season_number>0).length || detail.number_of_seasons || 0;
+        pick.totalEpisodes = detail.number_of_episodes || 0;
+      } catch(e) {}
+    }
+    return pick;
   } catch(e) { return null; }
 }
 
@@ -2636,11 +2647,23 @@ function quizShowResult(item) {
   const year = date ? date.slice(0,4) : '';
   const rating = item.vote_average ? Math.round(item.vote_average*10)/10 : null;
   const already = !!(isTv ? library[item.id] : filmLibrary[item.id]);
+  // Serie: valutazione, stagioni totali, episodi totali, anno.
+  // Film: valutazione, genere, anno.
+  const meta = isTv ? [
+    rating ? `★ ${fmtRating(rating)}` : null,
+    item.totalSeasons ? `${item.totalSeasons} ${item.totalSeasons===1?'stagione':'stagioni'}` : null,
+    item.totalEpisodes ? `${item.totalEpisodes} episodi` : null,
+    year || null
+  ] : [
+    rating ? `★ ${fmtRating(rating)}` : null,
+    (item.genre_ids && item.genre_ids.length && quizState.map ? quizState.map[item.genre_ids[0]] : quizState.genreName) || null,
+    year || null
+  ];
   document.getElementById('quizBody').innerHTML = `
     <div class="quiz-eyebrow">${escapeHtml(quizState.genreName)}</div>
     <img class="quiz-poster pop" src="${tmdbImg(item.poster_path,'w500')}" alt="" onclick="quizOpen()">
     <div class="quiz-result-title">${escapeHtml(title||'')}</div>
-    <div class="quiz-result-meta">${[year, rating?('★ '+fmtRating(rating)):''].filter(Boolean).join('  ·  ')}</div>
+    <div class="quiz-result-meta">${meta.filter(Boolean).join('  ·  ')}</div>
     <button class="addlibbtn quiz-add-btn" id="quizAddBtn" onclick="quizAdd()">${already ? 'Apri la scheda' : (isTv ? '+ Aggiungi in lista' : '+ Aggiungi ai film')}</button>
     <button class="quiz-reroll" onclick="quizReroll()">🎲 Gira di nuovo</button>`;
   if (typeof haptic === 'function') haptic();
@@ -7326,10 +7349,13 @@ darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButton
 
 // ---------- colore app (accent) ----------
 const ACCENT_COLORS = [
-  {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD400'}, {n:'Arancione', c:'#FF7A00'},
-  {n:'Rosso fuoco', c:'#FF2200'}, {n:'Rosa', c:'#FF1E5E'}, {n:'Magenta', c:'#FF10AE'},
-  {n:'Viola', c:'#B31FFF'}, {n:'Violetto', c:'#6E2BFF'}, {n:'Blu', c:'#0A6BFF'},
-  {n:'Ciano', c:'#00C6FF'}, {n:'Verde acqua', c:'#00E39A'}, {n:'Verde', c:'#1FE046'}
+  {n:'Oro', c:'#F7B538'}, {n:'Giallo', c:'#FFD400'}, {n:'Lime', c:'#B4FF00'},
+  {n:'Verde', c:'#1FE046'}, {n:'Smeraldo', c:'#00D68F'}, {n:'Verde acqua', c:'#00E39A'},
+  {n:'Turchese', c:'#00E0C0'}, {n:'Ciano', c:'#00C6FF'}, {n:'Azzurro', c:'#2D9CFF'},
+  {n:'Blu', c:'#0A6BFF'}, {n:'Indaco', c:'#4B2FFF'}, {n:'Violetto', c:'#6E2BFF'},
+  {n:'Viola', c:'#B31FFF'}, {n:'Fucsia', c:'#E619FF'}, {n:'Magenta', c:'#FF10AE'},
+  {n:'Rosa', c:'#FF1E5E'}, {n:'Cremisi', c:'#FF0037'}, {n:'Rosso', c:'#FF2200'},
+  {n:'Corallo', c:'#FF5A36'}, {n:'Arancione', c:'#FF7A00'}, {n:'Ambra', c:'#FFAA00'}
 ];
 function currentAccent() {
   try { return localStorage.getItem('itstracker_accent') || '#F7B538'; } catch(e) { return '#F7B538'; }
