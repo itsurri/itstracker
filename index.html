@@ -212,20 +212,18 @@
     box-shadow: 0 0 0 2px rgba(255,255,255,0.95), 0 1px 4px rgba(0,0,0,0.55); animation: livePulse 1.1s infinite; }
   @keyframes diceRoll { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
   .dice-roll svg { animation: diceRoll 0.5s cubic-bezier(.34,1.56,.64,1); }
-  /* riga tab categoria + dado "cosa guardo stasera": i tab restano centrati sullo
-     schermo (padding simmetrico), il dado galleggia nello spazio a destra senza
-     spostare il layout. */
-  /* tab + dado distribuiti su tutta la barra */
-  .cat-tabs-row { display: flex; align-items: center; gap: 8px; padding: 14px 16px; }
+  /* riga tab categoria: distribuiti su tutta la barra, larghezza uguale */
+  .cat-tabs-row { display: flex; align-items: center; padding: 14px 16px; }
   .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 0; overflow: visible; }
   /* tab categoria tutti della stessa larghezza, testo centrato */
   .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; white-space: nowrap; }
-  .cat-dice {
-    flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+  /* dado "cosa guardo stasera" nella ricerca, vicino a SERIE/FILM: stessa altezza della searchbar/mode-btn */
+  .search-dice {
+    flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center; color: var(--fg);
-    background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12);
+    background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
   }
-  .cat-dice svg { width: 18px; height: 18px; display: block; }
+  .search-dice svg { width: 20px; height: 20px; display: block; }
   /* ===== quiz "cosa guardo stasera" ===== */
   .quizOverlay { position: fixed; inset: 0; z-index: 330; display: none; align-items: center; justify-content: center;
     padding: 24px; background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
@@ -1610,13 +1608,10 @@
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="tvCatTabs">
         <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
       </div>
-      <button class="cat-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
-      </button>
     </div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
@@ -1633,9 +1628,6 @@
         <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
       </div>
-      <button class="cat-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
-      </button>
     </div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
@@ -1655,6 +1647,9 @@
         </div>
         <button class="mode-btn active-view" id="modeTvBtn" onclick="setSearchMode('tv')">SERIE</button>
         <button class="mode-btn" id="modeFilmBtn" onclick="setSearchMode('film')">FILM</button>
+        <button class="search-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+        </button>
       </div>
     </div>
     <div class="section" style="padding-top:14px">
