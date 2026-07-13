@@ -622,7 +622,8 @@
   .ach-summary-count { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); margin-left: 8px; }
   .ach-chevron { transition: transform 0.25s ease; color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0; }
   .ach-details[open] .ach-chevron { transform: rotate(180deg); }
-  .ach-details .ach-grid-wrap { padding: 0 16px 16px; }
+  .ach-details .ach-grid-wrap, .ach-full .ach-grid-wrap { padding: 0 16px 16px; }
+  .wrap-card.ach-full { padding: 0; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 18px 8px; }
   .ach { display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; opacity: 0.45; transition: transform 0.15s ease; }
   .ach.unlocked { opacity: 1; }
@@ -657,8 +658,8 @@
     font-size: 13px; font-weight: 700; font-family: inherit; letter-spacing: 0.02em; margin-top: 6px;
   }
   .addlibbtn {
-    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(var(--accent-rgb),0.45);
-    background: rgba(var(--accent-rgb),0.14); color: var(--accent); font-size: 14px; font-weight: 700;
+    width: 100%; padding: 13px; border-radius: 20px; border: 0.5px solid rgba(48,209,88,0.4);
+    background: rgba(48,209,88,0.12); color: #30D158; font-size: 14px; font-weight: 600;
     font-family: inherit; margin-bottom: 14px;
   }
   .btnrow { display: flex; gap: 10px; margin-bottom: 14px; }
@@ -3741,20 +3742,35 @@ function achievementGridHtml(defs) {
   }).join('');
 }
 
-function renderAchievements(w) {
+// Teaser a meta' larghezza (accanto a Wrapped): un tocco espande i trofei a
+// piena larghezza sotto la riga (in #achievementsFull), come Classifica e
+// Attività del mese, invece di restare compressi nella colonna stretta.
+function renderAchievementsTeaser(w) {
   const defs = getAchievements(w);
   const unlockedCount = defs.filter(a => a.unlocked).length;
-  const options = ACH_CATEGORIES.map(c => `<option value="${c.id}"${achievementTab===c.id?' selected':''}>${c.label}</option>`).join('');
-  return `<details class="wrap-card glass ach-details">
-    <summary>
+  return `<div class="wrap-card glass ach-details" id="achievementsTeaser">
+    <div style="padding:16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer" onclick="toggleAchievementsFull()">
       <span><span class="ach-summary-title">🏆 Trofei</span><span class="ach-summary-count">${unlockedCount}/${defs.length}</span></span>
-      <svg class="ach-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-    </summary>
-    <div style="padding:0 16px 12px">
-      <select class="ach-cat-select" onclick="event.stopPropagation()" onchange="setAchievementTab(this.value)">${options}</select>
+      <svg class="ach-chevron" id="achievementsChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
-    <div class="ach-grid-wrap"><div class="ach-grid" id="achGridBody">${achievementGridHtml(defs)}</div></div>
-  </details>`;
+  </div>`;
+}
+
+function toggleAchievementsFull() {
+  const wrap = document.getElementById('achievementsFull');
+  const chevron = document.getElementById('achievementsChevron');
+  const isOpen = wrap.style.display !== 'none';
+  if (isOpen) { wrap.style.display = 'none'; chevron.style.transform = ''; return; }
+  const defs = getAchievements(computeWrapped());
+  const options = ACH_CATEGORIES.map(c => `<option value="${c.id}"${achievementTab===c.id?' selected':''}>${c.label}</option>`).join('');
+  wrap.innerHTML = `
+    <div style="padding:16px 16px 0">
+      <select class="ach-cat-select" onchange="setAchievementTab(this.value)">${options}</select>
+    </div>
+    <div class="ach-grid-wrap"><div class="ach-grid" id="achGridBody">${achievementGridHtml(defs)}</div></div>`;
+  wrap.style.display = 'block';
+  chevron.style.transform = 'rotate(180deg)';
+  if (typeof haptic === 'function') haptic();
 }
 
 // ---------- tracciamento sblocco achievement ----------
@@ -3961,8 +3977,9 @@ function renderProfile() {
   }
   html += `<div style="display:flex; gap:10px; align-items:flex-start">
     <div style="flex:1; min-width:0">${renderWrappedCard()}</div>
-    <div style="flex:1; min-width:0">${renderAchievements(w)}</div>
-  </div>`;
+    <div style="flex:1; min-width:0">${renderAchievementsTeaser(w)}</div>
+  </div>
+  <div class="wrap-card glass ach-full" id="achievementsFull" style="display:none; margin-top:10px"></div>`;
 
   if (w.hasActivity) {
     heatmapMonthOffset = 0;
