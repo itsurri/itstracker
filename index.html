@@ -2538,12 +2538,16 @@ window.addEventListener('resize', () => moveTabIndicator(document.querySelector(
 // A quiz: tipo (serie/film) -> genere -> animazione dado -> un titolo nuovo da
 // TMDb con locandina grande e "Aggiungi in libreria" (finisce in Lista/Da vedere).
 let quizState = { type: null, genreId: null, genreName: '', map: null, result: null };
+// true quando la scheda serie/film e' stata aperta dal dado: chiudendola (X) si
+// torna al risultato del dado invece di chiudere tutto.
+let quizReturnPending = false;
 
 function whatToWatch(btn) {
   if (btn) { btn.classList.remove('dice-roll'); void btn.offsetWidth; btn.classList.add('dice-roll'); }
   if (typeof haptic === 'function') haptic();
   if (!hasTmdbKey()) { showToast('Ricerca non disponibile ora'); return; }
   quizState = { type: null, genreId: null, genreName: '', map: null, result: null };
+  quizReturnPending = false;
   document.getElementById('quizOverlay').classList.add('open');
   quizRenderType();
 }
@@ -2645,6 +2649,7 @@ function quizShowResult(item) {
 // Apre la scheda del titolo proposto (dal poster o dal bottone se già in libreria).
 function quizOpen() {
   const item = quizState.result; if (!item) return;
+  quizReturnPending = true;
   closeQuiz();
   quizState.type === 'tv' ? openShow(item.id) : openFilm(item.id);
 }
@@ -7173,6 +7178,14 @@ function closeSheet() {
   const sheet = document.getElementById('sheet');
   sheet.style.transition = ''; sheet.style.transform = '';
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
+  // Se eri arrivato qui dal dado "cosa guardo stasera", torna al risultato del dado
+  // (stessa proposta, con le scelte Aggiungi / Gira di nuovo) invece di chiudere tutto.
+  if (quizReturnPending) {
+    quizReturnPending = false;
+    document.getElementById('quizOverlay').classList.add('open');
+    quizShowResult(quizState.result);
+    return;
+  }
   // Se eri arrivato qui dalla scheda di un utente, torna a quella.
   if (sheetReturnPersonUid) { const uid = sheetReturnPersonUid; sheetReturnPersonUid = null; openPerson(uid); }
 }
