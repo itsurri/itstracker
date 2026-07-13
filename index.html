@@ -624,7 +624,7 @@
   .ach-summary-count { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.5); margin-left: 8px; }
   .ach-chevron { transition: transform 0.25s ease; color: rgba(var(--overlay-rgb),0.4); flex-shrink: 0; }
   .ach-details[open] .ach-chevron { transform: rotate(180deg); }
-  .ach-details .ach-grid-wrap, .ach-full .ach-grid-wrap { padding: 0 16px 16px; }
+  .ach-details .ach-grid-wrap, .ach-full .ach-grid-wrap { padding: 10px 16px 16px; }
   .wrap-card.ach-full { padding: 0; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 18px 8px; }
   .ach { display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; opacity: 0.45; transition: transform 0.15s ease; }
@@ -2004,6 +2004,8 @@ function syncPublicProfile() {
     shows, films,
     monthKey: currentMonthKey(),
     monthHours: hoursInMonth(new Date().getFullYear(), new Date().getMonth()),
+    weekKey: currentWeekKey(),
+    weekHours: hoursInWeek(),
     totalHours: computeWrapped().hours,
     updatedAt: Date.now()
   }, { merge: true }).catch(() => {});
@@ -2887,11 +2889,25 @@ function renderWrappedTeaser() {
     </div>
   </div>`;
 }
+// Wrapped e Trofei sono mutuamente esclusivi: aprendo uno si chiude l'altro,
+// cosi' non restano mai aperti insieme a piena larghezza.
+function closeAchievementsFull() {
+  const wrap = document.getElementById('achievementsFull');
+  const chevron = document.getElementById('achievementsChevron');
+  if (wrap && wrap.style.display !== 'none') { wrap.style.display = 'none'; if (chevron) chevron.style.transform = ''; }
+}
+function closeWrappedFull() {
+  const wrap = document.getElementById('wrappedFull');
+  const chevron = document.getElementById('wrappedChevron');
+  if (wrap && wrap.style.display !== 'none') { wrap.style.display = 'none'; if (chevron) chevron.style.transform = ''; }
+}
+
 function toggleWrappedFull() {
   const wrap = document.getElementById('wrappedFull');
   const chevron = document.getElementById('wrappedChevron');
   const isOpen = wrap.style.display !== 'none';
   if (isOpen) { wrap.style.display = 'none'; chevron.style.transform = ''; return; }
+  closeAchievementsFull();
   const years = getWrappedYears();
   wrap.innerHTML = `<div style="padding:16px; display:flex; flex-direction:column; gap:8px">
     ${years.map(y => `<button class="filebtn" onclick="openWrapped(${y})">${y}</button>`).join('')}
@@ -3388,9 +3404,23 @@ function hoursInMonth(year, month) {
   return Math.round(mins/60);
 }
 function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${n.getMonth()}`; }
+function mondayOfWeek(d) {
+  const day = new Date(d); day.setHours(0,0,0,0);
+  const idx = (day.getDay() + 6) % 7; // 0 = lunedì
+  day.setDate(day.getDate() - idx);
+  return day;
+}
+function hoursInWeek() {
+  const monday = mondayOfWeek(new Date()).getTime();
+  let mins = 0;
+  Object.values(library).forEach(s => { const rt = s.runtime||42; Object.values(s.watched||{}).forEach(v => { if (typeof v==='number' && v >= monday) mins += rt; }); });
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt==='number' && f.watchedAt >= monday) mins += (f.runtime||110); });
+  return Math.round(mins/60);
+}
+function currentWeekKey() { return mondayOfWeek(new Date()).toISOString().slice(0,10); }
 
-let lbTotalShown = 3, lbMonthShown = 3;
-let lbTotalRowsCache = [], lbMonthRowsCache = [];
+let lbTotalShown = 3, lbMonthShown = 3, lbWeekShown = 3;
+let lbTotalRowsCache = [], lbMonthRowsCache = [], lbWeekRowsCache = [];
 
 function leaderboardRowsHtml(rows, shown, kind) {
   const medals = ['🥇','🥈','🥉'];
@@ -3418,6 +3448,9 @@ function renderLeaderboardBody(kind) {
   if (kind === 'Total') {
     const el = document.getElementById('leaderboardTotalBody');
     if (el) el.innerHTML = leaderboardRowsHtml(lbTotalRowsCache, lbTotalShown, 'Total');
+  } else if (kind === 'Week') {
+    const el = document.getElementById('leaderboardWeekBody');
+    if (el) el.innerHTML = leaderboardRowsHtml(lbWeekRowsCache, lbWeekShown, 'Week');
   } else {
     const el = document.getElementById('leaderboardBody');
     if (el) el.innerHTML = leaderboardRowsHtml(lbMonthRowsCache, lbMonthShown, 'Month');
@@ -3427,14 +3460,18 @@ function renderLeaderboardBody(kind) {
 async function renderLeaderboard() {
   const totalEl = document.getElementById('leaderboardTotalBody');
   const monthEl = document.getElementById('leaderboardBody');
-  if ((!totalEl && !monthEl) || !fbDb || !currentUser || !followingList.length) return;
+  const weekEl = document.getElementById('leaderboardWeekBody');
+  if ((!totalEl && !monthEl && !weekEl) || !fbDb || !currentUser || !followingList.length) return;
   const mk = currentMonthKey();
+  const wk = currentWeekKey();
   const myName = getNickname() || (currentUser.displayName || '').split(' ')[0] || 'Tu';
   const myPhoto = getAvatarUrl();
   const myMonthHours = hoursInMonth(new Date().getFullYear(), new Date().getMonth());
+  const myWeekHours = hoursInWeek();
   const myTotalHours = computeWrapped().hours;
   const totalRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myTotalHours, lvlHours: myTotalHours, me: true }];
   const monthRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myMonthHours, lvlHours: myTotalHours, me: true }];
+  const weekRows = [{ uid: currentUser.uid, name: myName, photo: myPhoto, lastActive: Date.now(), hours: myWeekHours, lvlHours: myTotalHours, me: true }];
   try {
     // Carico per ID documento (= uid): più affidabile di where('uid','in',...).
     const docs = await Promise.all(followingList.slice(0, 30).map(u => fbDb.collection('publicProfiles').doc(u).get()));
@@ -3444,14 +3481,18 @@ async function renderLeaderboard() {
       const photo = p.photoURL || '';
       totalRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: p.totalHours || 0, lvlHours: p.totalHours || 0 });
       monthRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: (p.monthKey === mk ? (p.monthHours||0) : 0), lvlHours: p.totalHours || 0 });
+      weekRows.push({ uid: p.uid || d.id, name, photo, lastActive: p.lastActive, hours: (p.weekKey === wk ? (p.weekHours||0) : 0), lvlHours: p.totalHours || 0 });
     });
   } catch(e) {}
   totalRows.sort((a,b) => b.hours - a.hours);
   monthRows.sort((a,b) => b.hours - a.hours);
+  weekRows.sort((a,b) => b.hours - a.hours);
   lbTotalRowsCache = totalRows;
   lbMonthRowsCache = monthRows;
+  lbWeekRowsCache = weekRows;
   if (totalEl) totalEl.innerHTML = leaderboardRowsHtml(totalRows, lbTotalShown, 'Total');
   if (monthEl) monthEl.innerHTML = leaderboardRowsHtml(monthRows, lbMonthShown, 'Month');
+  if (weekEl) weekEl.innerHTML = leaderboardRowsHtml(weekRows, lbWeekShown, 'Week');
 }
 
 function animateCountUp(el) {
@@ -3766,6 +3807,7 @@ function toggleAchievementsFull() {
   const chevron = document.getElementById('achievementsChevron');
   const isOpen = wrap.style.display !== 'none';
   if (isOpen) { wrap.style.display = 'none'; chevron.style.transform = ''; return; }
+  closeWrappedFull();
   const defs = getAchievements(computeWrapped());
   const options = ACH_CATEGORIES.map(c => `<option value="${c.id}"${achievementTab===c.id?' selected':''}>${c.label}</option>`).join('');
   wrap.innerHTML = `
@@ -3978,7 +4020,8 @@ function renderProfile() {
   }
   if (currentUser && followingList.length) {
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · di sempre</div><div id="leaderboardTotalBody"></div></div>`;
-    html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
+    html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
+    html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questa settimana</div><div id="leaderboardWeekBody"></div></div>`;
   }
   html += `<div style="display:flex; gap:10px; align-items:flex-start">
     <div style="flex:1; min-width:0">${renderWrappedTeaser()}</div>
