@@ -136,14 +136,15 @@
   /* search */
   .searchwrap { padding: 14px 16px 4px; }
   .searchrow { display: flex; align-items: center; gap: 8px; }
-  .searchbar { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px; }
-  .searchbar input { flex: 1; background: none; border: none; outline: none; color: var(--fg); font-size: 16px; font-family: inherit; }
+  .searchbar { flex: 1; min-width: 0; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 16px; }
+  .searchbar input { flex: 1; background: none; border: none; outline: none; color: var(--fg); font-size: 15px; font-family: inherit; }
   .searchbar input::placeholder { color: rgba(var(--overlay-rgb),0.4); }
   .searchbar svg { flex-shrink: 0; opacity: 0.5; }
-  /* bottoni SERIE / FILM nella ricerca (uguali e centrati) */
+  /* bottoni SERIE / FILM nella ricerca (uguali e centrati, stessa altezza degli
+     altri bottoni dell'app - 34px, come i tab categoria e i bottoni impostazioni) */
   .mode-btn {
-    flex: 0 0 auto; min-width: 64px; height: 42px; padding: 0 14px; border-radius: 16px;
-    font-size: 12px; font-weight: 800; letter-spacing: 0.05em; font-family: inherit;
+    flex: 0 0 auto; min-width: 58px; height: 34px; padding: 0 12px; border-radius: 14px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.05em; font-family: inherit;
     background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
     color: rgba(var(--overlay-rgb),0.55); display: inline-flex; align-items: center; justify-content: center;
   }
@@ -234,12 +235,12 @@
   /* dado "cosa guardo stasera" nella ricerca, vicino a SERIE/FILM: stessa altezza
      della searchbar/mode-btn, del colore scelto e con un alone che pulsa per farlo notare */
   .search-dice {
-    flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center; color: var(--accent-ink);
     background: var(--accent); border: none;
     animation: diceGlow 1.8s ease-in-out infinite;
   }
-  .search-dice svg { width: 20px; height: 20px; display: block; }
+  .search-dice svg { width: 17px; height: 17px; display: block; }
   @keyframes diceGlow {
     0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),0.6); }
     50% { box-shadow: 0 0 0 7px rgba(var(--accent-rgb),0); }
