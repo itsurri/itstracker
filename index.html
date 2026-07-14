@@ -2380,9 +2380,11 @@ function applyCardGlows(container) {
 }
 
 // "Nuovo ep": è uscito un episodio (rilevato da refreshShowTotals) da meno di
-// 7 giorni e non l'hai ancora visto. Si spegne appena guardi qualcosa della serie.
+// 12 ore e non l'hai ancora visto: un segnale "appena uscito", non un promemoria
+// permanente finché non lo guardi. Si spegne comunque subito appena guardi
+// qualcosa della serie.
 function hasNewEp(s) {
-  return !!(s && s.newEpAt && (Date.now() - s.newEpAt) < 7*86400000 && categorizeShow(s) !== 'inpari');
+  return !!(s && s.newEpAt && (Date.now() - s.newEpAt) < 12*3600000 && categorizeShow(s) !== 'inpari');
 }
 
 // Fascia colore per l'avanzamento: 0-33 rosso, 34-66 arancio, 67-89 giallo, 90-100 verde.
