@@ -6147,7 +6147,7 @@ async function loadCast(type, id) {
     const r = await fetch(tmdbUrl(`/${type}/${id}${type === 'tv' ? '/aggregate_credits' : '/credits'}`, {}));
     const cast = (((await r.json()).cast) || []).slice(0, 12);
     if (!cast.length) { box.innerHTML = ''; return; }
-    box.innerHTML = `<div class="wp-label" style="margin-bottom:8px">Cast</div><div class="cast-row">` + cast.map(c => {
+    box.innerHTML = `<div class="cast-row">` + cast.map(c => {
       const role = type === 'tv' ? ((c.roles && c.roles[0] && c.roles[0].character) || '') : (c.character || '');
       const photo = c.profile_path ? `<img src="${tmdbImg(c.profile_path,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="cast-noimg">${escapeHtml((c.name||'?').charAt(0))}</div>`;
       return `<div class="cast-item">${photo}<div class="cast-name">${escapeHtml(c.name||'')}</div>${role?`<div class="cast-role">${escapeHtml(role)}</div>`:''}</div>`;
