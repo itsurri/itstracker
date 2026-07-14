@@ -4117,7 +4117,7 @@ function renderLibrary() {
   sortTvItems(items);
   tvCategoryIds = items.map(([k, s]) => validId(s, k));
   const rail = tvCategory === 'continua' ? renderResumeRail(items) : '';
-  container.innerHTML = `${rail}<div class="section">
+  container.innerHTML = `${rail}<div class="section" style="padding-top:0">
     ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg><span>Nessuna serie in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
@@ -4444,13 +4444,13 @@ async function markAllNotificationsRead() {
 }
 
 async function renderUpcoming(container) {
-  if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = `<div class="section"><div class="cat-empty">Aggiungi la tua API key TMDb in Impostazioni.</div></div>`; return; }
-  if (!upcomingCache) container.innerHTML = `<div class="section" style="padding-top:14px">${viewMode === 'grid' ? searchSkeletonGrid(6) : `<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(5)}</div>`}</div>`;
+  if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = `<div class="section" style="padding-top:0"><div class="cat-empty">Aggiungi la tua API key TMDb in Impostazioni.</div></div>`; return; }
+  if (!upcomingCache) container.innerHTML = `<div class="section" style="padding-top:0">${viewMode === 'grid' ? searchSkeletonGrid(6) : `<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(5)}</div>`}</div>`;
   await ensureUpcomingCache();
   const upcoming90 = upcomingWithin90Days();
 
   if (!upcoming90.length) {
-    container.innerHTML = `<div class="section"><div class="empty" style="padding:34px 20px">
+    container.innerHTML = `<div class="section" style="padding-top:0"><div class="empty" style="padding:34px 20px">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       <div>Nessuna uscita nei prossimi 90 giorni<br>per le serie che segui.</div></div></div>`;
     return;
@@ -4480,8 +4480,8 @@ async function renderUpcoming(container) {
     </div>`;
   }).join('');
   container.innerHTML = viewMode === 'grid'
-    ? `<div class="section" style="padding-top:14px"><div class="grid">${rows}</div></div>`
-    : `<div class="section" style="padding-top:14px">${rows}</div>`;
+    ? `<div class="section" style="padding-top:0"><div class="grid">${rows}</div></div>`
+    : `<div class="section" style="padding-top:0">${rows}</div>`;
 }
 
 
@@ -4763,7 +4763,7 @@ function renderFilmLibrary() {
   const items = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
   sortFilmItems(items);
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
-  container.innerHTML = `<div class="section">
+  container.innerHTML = `<div class="section" style="padding-top:0">
     ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg><span>Nessun film in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
