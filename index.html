@@ -89,7 +89,16 @@
   .topbar {
     padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
     display: flex; align-items: center; justify-content: center; gap: 10px;
+    position: relative;
   }
+  /* tasto indietro nell'header: visibile solo nella scheda Impostazioni, per
+     tornare al Profilo da cui si apre sempre */
+  .topbar-back {
+    display: none; position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
+    background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
+  }
+  .topbar-back.show { display: flex; }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
@@ -209,7 +218,7 @@
   @keyframes diceRoll { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
   .dice-roll svg { animation: diceRoll 0.5s cubic-bezier(.34,1.56,.64,1); }
   /* riga tab categoria: distribuiti su tutta la barra, larghezza uguale */
-  .cat-tabs-row { display: flex; align-items: center; padding: 14px 16px; }
+  .cat-tabs-row { display: flex; align-items: center; padding: 18px 16px; }
   .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 0; overflow: visible; }
   /* tab categoria tutti della stessa larghezza, testo centrato */
   .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; }
@@ -1557,6 +1566,9 @@
 
   <div class="topbar-wrap">
   <div class="topbar">
+    <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
     <div class="topbar-left">
       <div class="topbar-logo" role="img" aria-label="itstracker"></div>
     </div>
@@ -1658,12 +1670,14 @@
 
   <!-- PROFILO -->
   <div class="view" id="view-profile">
-    <div class="section" style="padding-top:14px">
-      <div class="seasontabs cat-tabs" id="profileTopTabs" style="margin-bottom:14px">
+    <div class="cat-tabs-row">
+      <div class="seasontabs cat-tabs" id="profileTopTabs">
         <button class="seasontab cat-tab-corner" id="btnSettings" title="Impostazioni" onclick="switchTab('settings')"><span class="cat-tab-label">Impostazioni</span></button>
         <button class="seasontab cat-tab-corner" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)"><span class="cat-tab-label">Messaggi</span><span class="notif-badge cat-corner-badge" id="chatListBadge"></span></button>
         <button class="seasontab cat-tab-corner" id="btnNotif" title="Notifiche" onclick="toggleNotifPanel(event)"><span class="cat-tab-label">Notifiche</span><span class="notif-badge cat-corner-badge" id="notifBadge"></span></button>
       </div>
+    </div>
+    <div class="section" style="padding-top:0">
       <div class="glass" id="profileShareTarget" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
           <div style="padding:16px; font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
@@ -2518,6 +2532,7 @@ function switchTab(tab) {
   // Le view condividono lo scroll della pagina: senza reset, cambiando tab si
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
+  document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
   if (tab === 'profile') renderProfile();
   if (tab === 'search') {
     // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
