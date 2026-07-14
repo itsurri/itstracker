@@ -12,8 +12,7 @@
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" id="metaThemeColor" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="its tracker">
@@ -216,7 +215,11 @@
   .cat-tabs-row { display: flex; align-items: center; padding: 14px 16px; }
   .cat-tabs-row .cat-tabs { flex: 1; min-width: 0; padding: 0; overflow: visible; }
   /* tab categoria tutti della stessa larghezza, testo centrato */
-  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; white-space: nowrap; }
+  .cat-tabs .cat-tab-corner { flex: 1 1 0; min-width: 0; text-align: center; padding: 7px 4px; }
+  /* etichetta del tab: tronca con i puntini se non c'è spazio, invece di uscire
+     dal bordo del bottone (il bottone deve restare overflow:visible per il
+     badge d'angolo, quindi il troncamento va sull'etichetta, non sul bottone) */
+  .cat-tab-label { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
   /* dado "cosa guardo stasera" nella ricerca, vicino a SERIE/FILM: stessa altezza
      della searchbar/mode-btn, del colore scelto e con un alone che pulsa per farlo notare */
   .search-dice {
@@ -689,7 +692,7 @@
   .people-search-tab svg { display: block; }
   /* tab Attività amici / Amici suggeriti / Ricerca: distribuiti su tutta la larghezza */
   #profilePeopleTabs { justify-content: stretch; gap: 6px; }
-  #profilePeopleTabs .seasontab { flex: 1 1 0; min-width: 0; text-align: center; }
+  #profilePeopleTabs .seasontab { flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #profilePeopleTabs .people-search-tab { flex: 0 0 auto; }
   .people-search-input {
     width: 100%; padding: 11px 16px; border-radius: 14px; border: 0.5px solid rgba(var(--overlay-rgb),0.12);
@@ -1613,10 +1616,10 @@
   <div class="view active" id="view-tv">
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="tvCatTabs">
-        <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')">Continua<span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')">In Pari<span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')">In Lista<span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')">In Arrivo<span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
+        <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')"><span class="cat-tab-label">Continua</span><span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')"><span class="cat-tab-label">In Pari</span><span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')"><span class="cat-tab-label">In Lista</span><span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')"><span class="cat-tab-label">In Arrivo</span><span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
       </div>
     </div>
     <div id="tvContent"></div>
@@ -1631,8 +1634,8 @@
   <div class="view" id="view-film">
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="filmCatTabs">
-        <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')">Visti<span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')">Da Vedere<span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
+        <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')"><span class="cat-tab-label">Visti</span><span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')"><span class="cat-tab-label">Da Vedere</span><span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
       </div>
     </div>
     <div id="filmContent"></div>
@@ -7341,7 +7344,16 @@ function updateLogo() {
   const src = isDarkActive() ? 'logo-header-dark.png' : 'logo-header.png';
   document.querySelectorAll('.topbar-logo').forEach(img => img.src = src);
 }
-darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButtons(); });
+// Colore della barra di sistema (status/nav bar Android): impostato via JS in
+// base al tema REALMENTE applicato (system o override manuale), non solo alla
+// preferenza di sistema con media query su <meta theme-color> - poco affidabile
+// su molti browser/webview Android (es. MIUI), dove poteva restare bianca
+// anche a tema scuro attivo, lasciando una striscia bianca fissa in basso.
+function updateThemeColorMeta() {
+  const meta = document.getElementById('metaThemeColor');
+  if (meta) meta.setAttribute('content', isDarkActive() ? '#000000' : '#ffffff');
+}
+darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButtons(); updateThemeColorMeta(); });
 
 // ---------- colore app (accent) ----------
 const ACCENT_COLORS = [
@@ -7393,6 +7405,7 @@ function setTheme(theme) {
   try { localStorage.setItem('serietracker_theme', theme); } catch(e) {}
   updateThemeButtons();
   updateLogo();
+  updateThemeColorMeta();
 }
 function updateThemeButtons() {
   // Se l'utente non ha mai scelto esplicitamente un tema, l'attributo
@@ -7836,6 +7849,7 @@ normalizeFilmLibrary();
 applyAccent(currentAccent());
 renderAccentControl();
 updateLogo();
+updateThemeColorMeta();
 (function(){
   const splash = document.getElementById('splash');
   const img = document.getElementById('splashLogo');
