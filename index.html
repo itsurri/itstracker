@@ -436,12 +436,11 @@
   .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; will-change: transform; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
-  /* dove si guarda: subito sotto il titolo, i loghi non superano l'altezza
-     della maiuscola del titolo (h2 24px -> cap-height ~17px) */
-  .watch-providers { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 10px; }
-  .watch-providers:empty { margin-bottom: 0; }
-  .watch-providers .wp-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.4); width: 100%; margin-bottom: 1px; }
-  .watch-providers img { width: 17px; height: 17px; border-radius: 4px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+  /* dove si guarda: in linea subito dopo il testo del titolo (es. "One Piece [Netflix]"),
+     i loghi non superano l'altezza di una maiuscola del titolo (h2 24px -> ~19px) */
+  .watch-providers { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; margin-left: 8px; }
+  .watch-providers:empty { margin-left: 0; }
+  .watch-providers img { height: 19px; width: 19px; border-radius: 5px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.25); vertical-align: middle; }
   /* stima tempo rimanente */
   .time-left { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent-tv, #0A84FF); background: rgba(10,132,255,0.12); padding: 6px 12px; border-radius: 14px; margin-bottom: 16px; }
   /* trailer */
@@ -6025,8 +6024,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
     </div>
     <div class="sheet-tint" id="sheetTint"></div>
     <div class="sheetbody">
-      <h2>${escapeHtml(show.name)}</h2>
-      <div class="watch-providers" id="watchProviders"></div>
+      <h2>${escapeHtml(show.name)}<span class="watch-providers" id="watchProviders" aria-label="Dove si guarda"></span></h2>
       <div class="metarow">
         ${rating?`<span class="pill pill-rating">★ ${fmtRating(rating)}${votes?` · ${votes}`:''}</span>`:''}
         ${genres.map(g=>genrePill(g)).join('')}
@@ -6111,7 +6109,7 @@ async function loadWatchProviders(type, id) {
       .filter(p => { if (seen.has(p.provider_id)) return false; seen.add(p.provider_id); return true; })
       .slice(0, 6);
     if (!providers.length) { box.innerHTML = ''; return; }
-    box.innerHTML = `<span class="wp-label">Dove si guarda</span>` + providers.map(p =>
+    box.innerHTML = providers.map(p =>
       `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${escapeHtml(p.provider_name)}" title="${escapeHtml(p.provider_name)}">`
     ).join('');
   } catch(e) { box.innerHTML = ''; }
@@ -7153,8 +7151,7 @@ async function renderFilmSheet(f, inLib) {
     </div>
     <div class="sheet-tint" id="sheetTint"></div>
     <div class="sheetbody">
-      <h2>${escapeHtml(f.title)}</h2>
-      <div class="watch-providers" id="watchProviders"></div>
+      <h2>${escapeHtml(f.title)}<span class="watch-providers" id="watchProviders" aria-label="Dove si guarda"></span></h2>
       <div class="metarow">
         ${f.rating?`<span class="pill pill-rating">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
         ${(f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : [])).map(g=>genrePill(g)).join('')}
