@@ -687,15 +687,6 @@
   }
   .ach.unlocked .ach-emoji { filter: none; opacity: 1; }
   .ach-lock { position: absolute; bottom: -2px; right: -2px; font-size: 11px; background: var(--sheet-bg); border-radius: 50%; padding: 2px; line-height: 1; }
-  /* trofei nel profilo di un altro utente: solo visualizzazione, un'icona per categoria */
-  .ph-trophies { margin-top: 14px; }
-  .ph-trophy-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .ph-trophy {
-    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(circle at 32% 28%, #FFD166, #F7B538 65%);
-    box-shadow: 0 3px 10px rgba(247,181,56,0.4), inset 0 1px 0 rgba(255,255,255,0.5);
-  }
-  .ph-trophy-emoji { font-size: 18px; line-height: 1; }
   .ach-cat-select {
     width: 100%; padding: 9px 30px 9px 14px; border-radius: 14px; border: none;
     background: rgba(var(--overlay-rgb),0.07) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
@@ -3704,34 +3695,6 @@ function getAchievements(w) {
   return defs.map(a => ({ ...a, emoji: emojiFor(a.id), category: categoryFor(a.id), value: metricFor(a.id), target: targetFor(a.id) }));
 }
 
-// Mappa id -> {label, emoji, category}: etichetta/emoji/categoria di un trofeo
-// non dipendono dai dati dell'utente, quindi bastano UNA volta (qualunque `w`
-// va bene) per costruire una tabella statica riusabile anche per mostrare i
-// trofei sbloccati di ALTRI utenti, di cui conosciamo solo la lista di id.
-let _achievementDefsCache = null;
-function achievementDefsById() {
-  if (!_achievementDefsCache) {
-    _achievementDefsCache = {};
-    getAchievements(computeWrapped()).forEach(a => { _achievementDefsCache[a.id] = a; });
-  }
-  return _achievementDefsCache;
-}
-// Riga compatta con i migliori trofei sbloccati di un profilo altrui (solo
-// visualizzazione, un trofeo per categoria - il piu' alto raggiunto).
-function personTrophiesHtml(p) {
-  const ids = p.unlockedAchievements || [];
-  if (!ids.length) return '';
-  const map = achievementDefsById();
-  const bestByCategory = {};
-  ids.forEach(id => { const a = map[id]; if (a) bestByCategory[a.category] = a; });
-  const shown = Object.values(bestByCategory);
-  if (!shown.length) return '';
-  return `<div class="ph-trophies">
-    <div class="wrap-sec-title">🏆 Trofei <span class="ach-summary-count">${ids.length}</span></div>
-    <div class="ph-trophy-row">${shown.map(a => `<div class="ph-trophy" title="${escapeHtml(a.label)}"><span class="ph-trophy-emoji">${a.emoji}</span></div>`).join('')}</div>
-  </div>`;
-}
-
 const ACH_CATEGORIES = [
   { id: 'serie',  label: 'Serie' },
   { id: 'film',   label: 'Film' },
@@ -5156,13 +5119,12 @@ function renderPersonSheet(p) {
         <div class="stat kpi kpi-p"><div class="v">${filmsWatched}</div><div class="l">film</div></div>
         <div class="stat kpi kpi-o"><div class="v">${p.totalHours||0}</div><div class="l">ore</div></div>
       </div>
-      ${personTrophiesHtml(p)}
       ${canMessage ? `<div class="person-action-btns">
         <button id="personFollowBtn" class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')"><span class="fb-label">${isFollowing(p.uid)?'Segui già':'Segui'}</span></button>
         <button class="follow-btn following" onclick="openChat('${p.uid}','${nameEsc.replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')"><span class="fb-label">Messaggia</span></button>
       </div>` : ''}
     </div>
-    <div class="section">
+    <div class="section" style="padding-top:0">
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
         const inLib = !!library[s.id];
