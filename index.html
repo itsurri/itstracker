@@ -7446,9 +7446,9 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 const ONLINE_WINDOW_MS = 3 * 60 * 1000;
-const RECENT_WINDOW_MS = 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 5 * 60 * 60 * 1000;
 function isOnline(lastActive) { return typeof lastActive === 'number' && (Date.now() - lastActive) < ONLINE_WINDOW_MS; }
-// 'online' (verde, attivo ora) / 'recent' (giallo, nell'ultima ora) / 'offline' (grigio).
+// 'online' (verde, attivo ora) / 'recent' (giallo, nelle ultime 5 ore) / 'offline' (grigio, oltre 5 ore).
 function presenceStatus(lastActive) {
   if (typeof lastActive !== 'number') return 'offline';
   const diff = Date.now() - lastActive;
@@ -7459,7 +7459,7 @@ function presenceStatus(lastActive) {
 // Pallino di presenza (verde/giallo/grigio) da affiancare al nickname.
 function onlineDot(lastActive) {
   const status = presenceStatus(lastActive);
-  const title = status === 'online' ? 'Online' : status === 'recent' ? 'Attivo nell\'ultima ora' : 'Non attivo di recente';
+  const title = status === 'online' ? 'Online' : status === 'recent' ? 'Attivo nelle ultime 5 ore' : 'Non attivo di recente';
   return `<span class="online-dot dot-${status}" title="${title}"></span>`;
 }
 // Testo "Online" / "Attivo X fa" da mostrare accanto al nickname in chat.
