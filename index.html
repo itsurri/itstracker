@@ -134,16 +134,24 @@
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
-  /* wordmark "itstracker": il PNG fa da maschera, i colori vengono da un gradiente
-     ("its" fino al ~25% segue il tema chiaro/scuro, "tracker" prende il colore scelto). */
-  .topbar-logo, #splashLogo {
-    display: block; aspect-ratio: 1020 / 192; width: auto;
+  /* splash: wordmark "itstracker" ancora come PNG mascherato + gradiente */
+  #splashLogo {
+    display: block; aspect-ratio: 1020 / 192; width: auto; height: 48px; margin: 0 auto;
     -webkit-mask: url("logo-header.png") center / 100% 100% no-repeat;
     mask: url("logo-header.png") center / 100% 100% no-repeat;
     background: linear-gradient(90deg, var(--fg) 0 25%, var(--accent) 25% 100%);
   }
-  .topbar-logo { height: 44px; }
-  #splashLogo { height: 48px; margin: 0 auto; }
+  /* wordmark header: testo live maiuscolo (SF Rounded, peso 900), stessa logica
+     colore di prima ("ITS" segue il tema, "TRACKER" il colore scelto). max-width
+     tiene la scritta corta cosi' i bottoni ai lati restano sempre centrati. */
+  .topbar-logo {
+    font-family: -apple-system, ui-rounded, "SF Pro Rounded", "Segoe UI", sans-serif;
+    font-weight: 900; font-size: clamp(19px, 5.2vw, 25px); letter-spacing: -0.01em;
+    line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: min(230px, 56vw);
+  }
+  .topbar-logo .tw-its { color: var(--fg); }
+  .topbar-logo .tw-tracker { color: var(--accent); }
   .icon-btn {
     width: 32px; height: 32px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); display: flex; align-items: center; justify-content: center;
@@ -1596,7 +1604,7 @@
       <span class="notif-badge" id="notifBadge"></span>
     </button>
     <div class="topbar-left">
-      <div class="topbar-logo" role="img" aria-label="itstracker"></div>
+      <div class="topbar-logo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
     </div>
     <button class="topbar-msg" id="topbarMsg" onclick="toggleChatListPanel(event)" title="Messaggi">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
