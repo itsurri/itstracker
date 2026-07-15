@@ -100,17 +100,17 @@
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
   }
   .topbar-left { grid-column: 2; justify-self: center; }
-  /* tasto indietro e Messaggi condividono lo slot sinistro (mai insieme: il
+  /* tasto indietro e Notifiche condividono lo slot sinistro (mai insieme: il
      primo solo nella scheda Impostazioni, per tornare al Profilo da cui si
-     apre sempre; il secondo su tutte le altre schede). Notifiche sta a destra,
+     apre sempre; il secondo su tutte le altre schede). Messaggi sta a destra,
      sempre visibile. Entrambi centrati nello spazio disponibile sul loro lato. */
-  .topbar-back, .topbar-msg {
+  .topbar-back, .topbar-notif {
     display: none; grid-column: 1; justify-self: center; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
   }
-  .topbar-back.show, .topbar-msg.show { display: flex; }
-  .topbar-notif {
+  .topbar-back.show, .topbar-notif.show { display: flex; }
+  .topbar-msg {
     grid-column: 3; justify-self: center; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg);
@@ -1592,16 +1592,16 @@
     <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <button class="topbar-msg show" id="topbarMsg" onclick="toggleChatListPanel(event)" title="Messaggi">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-      <span class="notif-badge" id="chatListBadge"></span>
+    <button class="topbar-notif show" id="topbarNotif" onclick="toggleNotifPanel(event)" title="Notifiche">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="notif-badge" id="notifBadge"></span>
     </button>
     <div class="topbar-left">
       <div class="topbar-logo" role="img" aria-label="itstracker"></div>
     </div>
-    <button class="topbar-notif" id="topbarNotif" onclick="toggleNotifPanel(event)" title="Notifiche">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      <span class="notif-badge" id="notifBadge"></span>
+    <button class="topbar-msg" id="topbarMsg" onclick="toggleChatListPanel(event)" title="Messaggi">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <span class="notif-badge" id="chatListBadge"></span>
     </button>
   </div>
   </div>
@@ -2558,7 +2558,7 @@ function switchTab(tab) {
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
   document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
-  document.getElementById('topbarMsg').classList.toggle('show', tab !== 'settings');
+  document.getElementById('topbarNotif').classList.toggle('show', tab !== 'settings');
   if (tab === 'profile') renderProfile();
   if (tab === 'search') {
     // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
