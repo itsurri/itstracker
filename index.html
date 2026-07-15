@@ -86,28 +86,32 @@
     -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
     border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08);
   }
-  /* griglia a 3 colonne (indietro | logo | spazio) cosi' il tasto indietro e il
-     logo condividono lo stesso centraggio verticale: con position:absolute e
-     top:50% il tasto si centrava sull'intero blocco header, il cui padding è
-     più alto sopra che sotto (tacca/notch) - risultava piu' in alto del logo,
-     che invece è centrato solo nell'area di contenuto. */
+  /* griglia a 3 colonne fluide (spazio sinistro | logo | spazio destro): le due
+     colonne laterali sono "1fr" cioe' si dividono equamente lo spazio rimasto
+     ai lati del logo (che ha larghezza fissa/auto), qualunque sia la larghezza
+     dello schermo - e i bottoni al loro interno sono centrati in quello spazio
+     invece di stare incollati al bordo. Il tasto indietro e il logo
+     condividono anche lo stesso centraggio verticale (in precedenza, con
+     position:absolute e top:50%, il tasto si centrava sull'intero blocco
+     header, il cui padding è più alto sopra che sotto per la tacca/notch,
+     risultando piu' in alto del logo). */
   .topbar {
     padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
-    display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; gap: 10px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
   }
   .topbar-left { grid-column: 2; justify-self: center; }
   /* tasto indietro e Messaggi condividono lo slot sinistro (mai insieme: il
      primo solo nella scheda Impostazioni, per tornare al Profilo da cui si
      apre sempre; il secondo su tutte le altre schede). Notifiche sta a destra,
-     sempre visibile. */
+     sempre visibile. Entrambi centrati nello spazio disponibile sul loro lato. */
   .topbar-back, .topbar-msg {
-    display: none; grid-column: 1; justify-self: start; position: relative;
+    display: none; grid-column: 1; justify-self: center; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
   }
   .topbar-back.show, .topbar-msg.show { display: flex; }
   .topbar-notif {
-    grid-column: 3; justify-self: end; position: relative;
+    grid-column: 3; justify-self: center; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg);
     display: flex; align-items: center; justify-content: center; padding: 0;
@@ -667,6 +671,15 @@
   }
   .ach.unlocked .ach-emoji { filter: none; opacity: 1; }
   .ach-lock { position: absolute; bottom: -2px; right: -2px; font-size: 11px; background: var(--sheet-bg); border-radius: 50%; padding: 2px; line-height: 1; }
+  /* trofei nel profilo di un altro utente: solo visualizzazione, un'icona per categoria */
+  .ph-trophies { margin-top: 14px; }
+  .ph-trophy-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .ph-trophy {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 32% 28%, #FFD166, #F7B538 65%);
+    box-shadow: 0 3px 10px rgba(247,181,56,0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .ph-trophy-emoji { font-size: 18px; line-height: 1; }
   .ach-cat-select {
     width: 100%; padding: 9px 30px 9px 14px; border-radius: 14px; border: none;
     background: rgba(var(--overlay-rgb),0.07) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>') no-repeat right 10px center;
@@ -2027,6 +2040,7 @@ function syncPublicProfile() {
     weekKey: currentWeekKey(),
     weekHours: hoursInWeek(),
     totalHours: computeWrapped().hours,
+    unlockedAchievements: [...getUnlockedAchievementIds()],
     updatedAt: Date.now()
   }, { merge: true }).catch(() => {});
 }
@@ -3672,6 +3686,34 @@ function getAchievements(w) {
   return defs.map(a => ({ ...a, emoji: emojiFor(a.id), category: categoryFor(a.id), value: metricFor(a.id), target: targetFor(a.id) }));
 }
 
+// Mappa id -> {label, emoji, category}: etichetta/emoji/categoria di un trofeo
+// non dipendono dai dati dell'utente, quindi bastano UNA volta (qualunque `w`
+// va bene) per costruire una tabella statica riusabile anche per mostrare i
+// trofei sbloccati di ALTRI utenti, di cui conosciamo solo la lista di id.
+let _achievementDefsCache = null;
+function achievementDefsById() {
+  if (!_achievementDefsCache) {
+    _achievementDefsCache = {};
+    getAchievements(computeWrapped()).forEach(a => { _achievementDefsCache[a.id] = a; });
+  }
+  return _achievementDefsCache;
+}
+// Riga compatta con i migliori trofei sbloccati di un profilo altrui (solo
+// visualizzazione, un trofeo per categoria - il piu' alto raggiunto).
+function personTrophiesHtml(p) {
+  const ids = p.unlockedAchievements || [];
+  if (!ids.length) return '';
+  const map = achievementDefsById();
+  const bestByCategory = {};
+  ids.forEach(id => { const a = map[id]; if (a) bestByCategory[a.category] = a; });
+  const shown = Object.values(bestByCategory);
+  if (!shown.length) return '';
+  return `<div class="ph-trophies">
+    <div class="wrap-sec-title">🏆 Trofei <span class="ach-summary-count">${ids.length}</span></div>
+    <div class="ph-trophy-row">${shown.map(a => `<div class="ph-trophy" title="${escapeHtml(a.label)}"><span class="ph-trophy-emoji">${a.emoji}</span></div>`).join('')}</div>
+  </div>`;
+}
+
 const ACH_CATEGORIES = [
   { id: 'serie',  label: 'Serie' },
   { id: 'film',   label: 'Film' },
@@ -5100,6 +5142,7 @@ function renderPersonSheet(p) {
         <div class="stat kpi kpi-p"><div class="v">${filmsWatched}</div><div class="l">film</div></div>
         <div class="stat kpi kpi-o"><div class="v">${p.totalHours||0}</div><div class="l">ore</div></div>
       </div>
+      ${personTrophiesHtml(p)}
       ${canMessage ? `<div class="person-action-btns">
         <button id="personFollowBtn" class="follow-btn${isFollowing(p.uid)?' following':''}" onclick="toggleFollow('${p.uid}')"><span class="fb-label">${isFollowing(p.uid)?'Segui già':'Segui'}</span></button>
         <button class="follow-btn following" onclick="openChat('${p.uid}','${nameEsc.replace(/'/g,"\\'")}','${(p.photoURL||'').replace(/'/g,"\\'")}')"><span class="fb-label">Messaggia</span></button>
