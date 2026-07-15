@@ -107,10 +107,14 @@
      spazio disponibile sul loro lato. */
   .topbar-back {
     display: none; grid-column: 1; justify-self: center; position: relative;
-    width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
-    background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--accent); color: var(--accent-ink); align-items: center; justify-content: center; padding: 0;
   }
   .topbar-back.show { display: flex; }
+  /* piccola correzione ottica: una freccia "<" con le punte arrotondate pesa
+     visivamente un filo a destra (gli estremi aperti hanno un cappuccio
+     tondo, la punta no), sembrando decentrata anche se la viewBox è simmetrica */
+  .topbar-back svg { transform: translateX(-1px); }
   /* Messaggi e Notifiche: colorati del colore scelto, come il dado in
      Ricerca, cosi' si notano di piu' nell'header. */
   .topbar-notif, .topbar-msg {
@@ -1103,12 +1107,11 @@
   .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
   .tabbtn.active { color: var(--accent); }
 
-  /* colore app: menu a tendina (Impostazioni) */
+  /* tendine di Impostazioni (Tema/Visualizzazione/Colore): stessa larghezza fissa */
   .accent-select-wrap { position: relative; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .accent-dot { width: 15px; height: 15px; border-radius: 50%; background: var(--accent); flex: none;
-    box-shadow: inset 0 1px 2px rgba(255,255,255,0.4), 0 1px 3px rgba(0,0,0,0.3); }
   .settings-select {
     appearance: none; -webkit-appearance: none;
+    width: 132px;
     background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
     border: 0.5px solid rgba(var(--overlay-rgb),0.2); border-radius: 14px;
     font-family: inherit; font-size: 13px; font-weight: 600;
@@ -1727,24 +1730,26 @@
           <div class="st"><div class="sn">Tema</div></div>
           <div class="accent-select-wrap">
             <select id="themeSelect" class="settings-select" onchange="setTheme(this.value)">
-              <option value="light">☀️ Chiaro</option>
-              <option value="dark">🌙 Scuro</option>
+              <option value="light">Chiaro</option>
+              <option value="dark">Scuro</option>
             </select>
             <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </div>
         </div>
         <div class="settingsrow">
           <div class="st"><div class="sn">Visualizzazione</div></div>
-          <div style="display:flex; gap:8px">
-            <button class="filebtn" id="viewGridBtn" onclick="setView('grid')">Griglia</button>
-            <button class="filebtn" id="viewListBtn" onclick="setView('list')">Lista</button>
-            <button class="filebtn" id="viewWallBtn" onclick="setView('wall')">Muro</button>
+          <div class="accent-select-wrap">
+            <select id="viewSelect" class="settings-select" onchange="setView(this.value)">
+              <option value="grid">Griglia</option>
+              <option value="list">Lista</option>
+              <option value="wall">Muro</option>
+            </select>
+            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </div>
         </div>
         <div class="settingsrow">
           <div class="st"><div class="sn">Colore</div></div>
           <div class="accent-select-wrap">
-            <span class="accent-dot"></span>
             <select id="accentSelect" class="settings-select" onchange="setAccent(this.value)"></select>
             <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </div>
@@ -2535,10 +2540,8 @@ function setView(mode) {
 }
 
 function updateViewButtons() {
-  const g = document.getElementById('viewGridBtn'), l = document.getElementById('viewListBtn'), w = document.getElementById('viewWallBtn');
-  if (g) g.classList.toggle('active', viewMode === 'grid');
-  if (l) l.classList.toggle('active', viewMode === 'list');
-  if (w) w.classList.toggle('active', viewMode === 'wall');
+  const sel = document.getElementById('viewSelect');
+  if (sel) sel.value = viewMode;
 }
 
 // ---------- tabs ----------
