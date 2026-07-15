@@ -242,6 +242,7 @@
      rating/stato/genere/anno (film) o rating/stagioni+episodi (ricerca). */
   .gc-top-left, .gc-top-right, .gc-bottom-left, .gc-bottom-right, .gc-bottom-center, .gc-top-center { position: absolute; z-index: 3; }
   .gc-top-center { top: 8px; left: 50%; transform: translateX(-50%); }
+  /* pallino "nuovo episodio" in griglia, centrato tra voto e % (vedi hasNewEp) */
   .airing-dot { display: block; width: 9px; height: 9px; border-radius: 50%; background: #FF3B30;
     box-shadow: 0 0 0 2px rgba(255,255,255,0.95), 0 1px 4px rgba(0,0,0,0.55); animation: livePulse 1.1s infinite; }
   @keyframes diceRoll { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
@@ -828,11 +829,6 @@
   }
   .live-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #fff; animation: livePulse 1.2s infinite; }
   @keyframes livePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  /* badge "Nuovo ep": episodio appena uscito e non ancora visto */
-  .new-ep-badge {
-    display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em;
-    padding: 2px 7px; border-radius: 20px; background: #0A84FF; color: #fff; text-transform: uppercase;
-  }
   /* segnale discreto "c'è un nuovo episodio" nella lista: un pallino accanto al nome */
   .new-ep-dot {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
@@ -2428,12 +2424,12 @@ function applyCardGlows(container) {
   });
 }
 
-// "Nuovo ep": è uscito un episodio (rilevato da refreshShowTotals) da meno di
-// 12 ore e non l'hai ancora visto: un segnale "appena uscito", non un promemoria
-// permanente finché non lo guardi. Si spegne comunque subito appena guardi
-// qualcosa della serie.
+// "Nuovo ep": entro le 24 ore dal giorno REALE di uscita (non da quando l'app
+// se n'e' accorta) e non l'hai ancora visto: un segnale "appena uscito", non
+// un promemoria permanente finché non lo guardi. Si spegne comunque subito
+// appena guardi qualcosa della serie.
 function hasNewEp(s) {
-  return !!(s && s.newEpAt && (Date.now() - s.newEpAt) < 12*3600000 && categorizeShow(s) !== 'inpari');
+  return !!(s && s.newEpAt && (Date.now() - s.newEpAt) < 24*3600000 && categorizeShow(s) !== 'inpari');
 }
 
 // Fascia colore per l'avanzamento: 0-33 rosso, 34-66 arancio, 67-89 giallo, 90-100 verde.
@@ -2468,6 +2464,7 @@ async function refreshShowTotals(id) {
     // onda, altrimenti il totale resta sempre più alto del conteggio "visti" anche quando si
     // è perfettamente in pari (mancano solo episodi futuri).
     let newTotal = show.number_of_episodes || 0;
+    let latestAiredDate = null; // data reale dell'episodio più recente uscito, per il pallino "nuovo ep"
     if (realSeasons.length) {
       const latest = realSeasons.reduce((a,b) => b.season_number > a.season_number ? b : a);
       const priorTotal = realSeasons.filter(se => se.season_number !== latest.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
@@ -2480,8 +2477,9 @@ async function refreshShowTotals(id) {
         // (quando la rete torna a funzionare e il totale corretto è più alto) -
         // anche su serie finite da anni.
         if (!latestEps.length && latest.episode_count) throw new Error('fetch stagione fallito');
-        const airedInLatest = latestEps.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
-        newTotal = priorTotal + airedInLatest;
+        const airedEps = latestEps.filter(e => e.airdate && !isFutureDateStr(e.airdate));
+        newTotal = priorTotal + airedEps.length;
+        if (airedEps.length) latestAiredDate = airedEps.reduce((max,e) => (!max || e.airdate > max) ? e.airdate : max, null);
       } catch(e) { newTotal = realSeasons.reduce((sum,se)=>sum+(se.episode_count||0),0); }
     }
     const newSeasons = realSeasons.length || show.number_of_seasons || library[id].totalSeasons;
@@ -2490,8 +2488,12 @@ async function refreshShowTotals(id) {
     const newNextAirDate = (show.next_episode_to_air && show.next_episode_to_air.air_date) || null;
     const changed = (newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating || newBackdrop !== library[id].backdrop || newNextAirDate !== library[id].nextAirDate;
     if (changed) {
-      // Episodi in più rispetto a prima = è uscito un nuovo episodio → badge "Nuovo ep".
-      if (newTotal && library[id].totalEpisodes && newTotal > library[id].totalEpisodes) library[id].newEpAt = Date.now();
+      // Episodi in più rispetto a prima = è uscito un nuovo episodio → pallino "nuovo ep".
+      // Ancorato alla data REALE di uscita (non al momento in cui l'app se ne accorge),
+      // cosi' la finestra di visibilità del pallino (24h) parte dal giorno vero.
+      if (newTotal && library[id].totalEpisodes && newTotal > library[id].totalEpisodes) {
+        library[id].newEpAt = latestAiredDate ? new Date(latestAiredDate + 'T00:00:00').getTime() : Date.now();
+      }
       if (newTotal && newTotal !== library[id].totalEpisodes) { library[id].totalEpisodes = newTotal; delete episodesCache[id]; }
       library[id].totalSeasons = newSeasons;
       library[id].rating = newRating;
@@ -4430,10 +4432,8 @@ function renderCardTv(key, s) {
   const done = total > 0 && watched >= total;
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
-  const airing = showAiringToday(s);
-  const corner = (!airing && hasNewEp(s)) ? `<span class="new-ep-badge">Nuovo ep</span>` : '';
-  const topLeft = corner + (s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '');
-  const topCenter = airing ? `<span class="airing-dot" title="In onda"></span>` : '';
+  const topLeft = s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '';
+  const topCenter = hasNewEp(s) ? `<span class="airing-dot" title="Nuovo episodio"></span>` : '';
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
   const bottomRight = next ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>` : (done ? `<span class="grating" style="color:#30D158">Completata</span>` : '');
@@ -4456,10 +4456,6 @@ function isTodayStr(dateStr) {
   const today = new Date(); today.setHours(0,0,0,0);
   return new Date(dateStr + 'T00:00:00').getTime() === today.getTime();
 }
-function showAiringToday(s) {
-  return !!(s && isTodayStr(s.nextAirDate));
-}
-
 function renderListTv(key, s) {
   const id = validId(s, key);
   const watched = Object.keys(s.watched || {}).length;
