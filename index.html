@@ -123,9 +123,10 @@
   .topbar-notif.show { display: flex; }
   .topbar-msg { grid-column: 3; display: flex; }
   .topbar-notif svg, .topbar-msg svg { width: 18px; height: 18px; }
-  /* il badge e' dello stesso colore scelto del bottone: senza un bordo che lo
-     stacca (colore di sfondo dell'app) sparirebbe dentro il bottone */
-  .topbar-notif .notif-badge, .topbar-msg .notif-badge { box-shadow: 0 0 0 2px var(--bg); }
+  /* badge bianco/nero (segue il tema chiaro/scuro) invece del colore scelto:
+     contrasta sempre bene col bottone, qualunque sia il colore scelto, senza
+     bisogno di un anello per staccarlo */
+  .topbar-notif .notif-badge, .topbar-msg .notif-badge { background: var(--fg); color: var(--bg); }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
