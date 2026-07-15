@@ -1725,9 +1725,12 @@
       <div class="glass settings-group">
         <div class="settingsrow">
           <div class="st"><div class="sn">Tema</div></div>
-          <div style="display:flex; gap:8px">
-            <button class="filebtn" id="themeLightBtn" onclick="setTheme('light')">Chiaro</button>
-            <button class="filebtn" id="themeDarkBtn" onclick="setTheme('dark')">Scuro</button>
+          <div class="accent-select-wrap">
+            <select id="themeSelect" class="settings-select" onchange="setTheme(this.value)">
+              <option value="light">☀️ Chiaro</option>
+              <option value="dark">🌙 Scuro</option>
+            </select>
+            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </div>
         </div>
         <div class="settingsrow">
@@ -5130,6 +5133,8 @@ function renderPersonSheet(p) {
   const following = seguitiUids.length;
   // Amici in comune = persone che seguiamo entrambi.
   const mutual = currentUser ? followingList.filter(u => u !== p.uid && seguitiUids.includes(u)).length : 0;
+  const statusText = formatLastSeen(p.lastActive);
+  const statusHtml = statusText ? `<span class="ph-mutual"> · ${statusText}</span>` : '';
   const mutualHtml = mutual > 0 ? `<span class="ph-mutual"> · ${mutual} ${mutual === 1 ? 'amico in comune' : 'amici in comune'}</span>` : '';
   const nameEsc = escapeHtml(p.nickname || p.displayName || 'Utente');
   sheet.innerHTML = `
@@ -5140,7 +5145,7 @@ function renderPersonSheet(p) {
       <div class="profile-top">
         <div class="avatar-wrap">${p.photoURL ? `<img class="profile-avatar cover-lift" style="${levelRing(p.totalHours||0, 3)}" src="${p.photoURL}" alt="">` : `<div class="profile-avatar cover-lift" style="${levelRing(p.totalHours||0, 3)}"></div>`}</div>
         <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-4px">
-          <div class="profile-name">${onlineDot(p.lastActive)}${nameEsc}${mutualHtml}</div>
+          <div class="profile-name">${onlineDot(p.lastActive)}${nameEsc}${statusHtml}${mutualHtml}</div>
           <div class="profile-level-line">Livello: ${getUserLevel(p.totalHours||0).label}</div>
         </div>
       </div>
@@ -7361,13 +7366,10 @@ function updateThemeButtons() {
   // Se l'utente non ha mai scelto esplicitamente un tema, l'attributo
   // data-theme non e' impostato e il tema effettivo segue le preferenze di
   // sistema: in quel caso isDarkActive() (non il solo attributo) dice qual
-  // e' il tema davvero visibile, altrimenti nessuno dei due bottoni
-  // risultava selezionato pur essendo uno dei due chiaramente attivo.
-  const dark = isDarkActive();
-  const lb = document.getElementById('themeLightBtn');
-  const db = document.getElementById('themeDarkBtn');
-  if (lb) lb.classList.toggle('active', !dark);
-  if (db) db.classList.toggle('active', dark);
+  // e' il tema davvero visibile, altrimenti la tendina non risultava
+  // impostata su nessuno dei due pur essendo uno dei due chiaramente attivo.
+  const sel = document.getElementById('themeSelect');
+  if (sel) sel.value = isDarkActive() ? 'dark' : 'light';
 }
 
 // ---------- nickname ----------
