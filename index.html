@@ -100,22 +100,32 @@
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
   }
   .topbar-left { grid-column: 2; justify-self: center; }
-  /* tasto indietro e Notifiche condividono lo slot sinistro (mai insieme: il
-     primo solo nella scheda Impostazioni, per tornare al Profilo da cui si
-     apre sempre; il secondo su tutte le altre schede). Messaggi sta a destra,
-     sempre visibile. Entrambi centrati nello spazio disponibile sul loro lato. */
-  .topbar-back, .topbar-notif {
+  /* tasto indietro (neutro, e' solo navigazione) e Notifiche condividono lo
+     slot sinistro (mai insieme: il primo solo nella scheda Impostazioni, per
+     tornare al Profilo da cui si apre sempre; il secondo su tutte le altre
+     schede). Messaggi sta a destra, sempre visibile. Entrambi centrati nello
+     spazio disponibile sul loro lato. */
+  .topbar-back {
     display: none; grid-column: 1; justify-self: center; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
   }
-  .topbar-back.show, .topbar-notif.show { display: flex; }
-  .topbar-msg {
-    grid-column: 3; justify-self: center; position: relative;
-    width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
-    background: rgba(var(--overlay-rgb),0.08); color: var(--fg);
-    display: flex; align-items: center; justify-content: center; padding: 0;
+  .topbar-back.show { display: flex; }
+  /* Messaggi e Notifiche: colorati del colore scelto, come il dado in
+     Ricerca, cosi' si notano di piu' nell'header. */
+  .topbar-notif, .topbar-msg {
+    justify-self: center; position: relative;
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: var(--accent); color: var(--accent-ink);
+    align-items: center; justify-content: center; padding: 0;
   }
+  .topbar-notif { grid-column: 1; display: none; }
+  .topbar-notif.show { display: flex; }
+  .topbar-msg { grid-column: 3; display: flex; }
+  .topbar-notif svg, .topbar-msg svg { width: 18px; height: 18px; }
+  /* il badge e' dello stesso colore scelto del bottone: senza un bordo che lo
+     stacca (colore di sfondo dell'app) sparirebbe dentro il bottone */
+  .topbar-notif .notif-badge, .topbar-msg .notif-badge { box-shadow: 0 0 0 2px var(--bg); }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
