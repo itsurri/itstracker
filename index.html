@@ -96,14 +96,22 @@
     display: grid; grid-template-columns: 34px 1fr 34px; align-items: center; gap: 10px;
   }
   .topbar-left { grid-column: 2; justify-self: center; }
-  /* tasto indietro nell'header: visibile solo nella scheda Impostazioni, per
-     tornare al Profilo da cui si apre sempre */
-  .topbar-back {
-    display: none; grid-column: 1; justify-self: start;
+  /* tasto indietro e Messaggi condividono lo slot sinistro (mai insieme: il
+     primo solo nella scheda Impostazioni, per tornare al Profilo da cui si
+     apre sempre; il secondo su tutte le altre schede). Notifiche sta a destra,
+     sempre visibile. */
+  .topbar-back, .topbar-msg {
+    display: none; grid-column: 1; justify-self: start; position: relative;
     width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
     background: rgba(var(--overlay-rgb),0.08); color: var(--fg); align-items: center; justify-content: center; padding: 0;
   }
-  .topbar-back.show { display: flex; }
+  .topbar-back.show, .topbar-msg.show { display: flex; }
+  .topbar-notif {
+    grid-column: 3; justify-self: end; position: relative;
+    width: 34px; height: 34px; border-radius: 50%; border: 0.5px solid rgba(var(--overlay-rgb),0.15);
+    background: rgba(var(--overlay-rgb),0.08); color: var(--fg);
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
@@ -144,7 +152,7 @@
      altri bottoni dell'app - 34px, come i tab categoria e i bottoni impostazioni) */
   .mode-btn {
     flex: 0 0 auto; min-width: 58px; height: 34px; padding: 0 12px; border-radius: 14px;
-    font-size: 11px; font-weight: 800; letter-spacing: 0.05em; font-family: inherit;
+    font-size: 11px; font-weight: 400; letter-spacing: 0.05em; font-family: inherit;
     background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
     color: rgba(var(--overlay-rgb),0.55); display: inline-flex; align-items: center; justify-content: center;
   }
@@ -594,7 +602,7 @@
     background: rgba(255,69,58,0.14); color: #ff453a;
     display: flex; align-items: center; justify-content: center;
   }
-  .profile-share-btn {
+  .profile-settings-btn {
     width: 30px; height: 30px; border-radius: 50%; border: none; flex-shrink: 0;
     background: rgba(var(--overlay-rgb),0.1); color: var(--fg);
     display: flex; align-items: center; justify-content: center;
@@ -1473,10 +1481,6 @@
     align-items: center; justify-content: center; line-height: 1;
   }
   .notif-badge.show { display: flex; }
-  /* pallino (senza numero) sul tab Profilo del menu in basso, quando ci sono
-     messaggi o notifiche non lette */
-  .tab-icon-wrap { position: relative; display: inline-flex; }
-  .notif-badge.dot { min-width: 9px; width: 9px; height: 9px; padding: 0; top: -2px; right: -3px; border-radius: 50%; }
   .notifOverlay {
     display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 69; background: transparent;
   }
@@ -1575,9 +1579,17 @@
     <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
+    <button class="topbar-msg show" id="topbarMsg" onclick="toggleChatListPanel(event)" title="Messaggi">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <span class="notif-badge" id="chatListBadge"></span>
+    </button>
     <div class="topbar-left">
       <div class="topbar-logo" role="img" aria-label="itstracker"></div>
     </div>
+    <button class="topbar-notif" id="topbarNotif" onclick="toggleNotifPanel(event)" title="Notifiche">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="notif-badge" id="notifBadge"></span>
+    </button>
   </div>
   </div>
 
@@ -1676,14 +1688,7 @@
 
   <!-- PROFILO -->
   <div class="view" id="view-profile">
-    <div class="cat-tabs-row">
-      <div class="seasontabs cat-tabs" id="profileTopTabs">
-        <button class="seasontab cat-tab-corner" id="btnSettings" title="Impostazioni" onclick="switchTab('settings')"><span class="cat-tab-label">Impostazioni</span></button>
-        <button class="seasontab cat-tab-corner" id="btnChatList" title="Messaggi" onclick="toggleChatListPanel(event)"><span class="cat-tab-label">Messaggi</span><span class="notif-badge cat-corner-badge" id="chatListBadge"></span></button>
-        <button class="seasontab cat-tab-corner" id="btnNotif" title="Notifiche" onclick="toggleNotifPanel(event)"><span class="cat-tab-label">Notifiche</span><span class="notif-badge cat-corner-badge" id="notifBadge"></span></button>
-      </div>
-    </div>
-    <div class="section" style="padding-top:0">
+    <div class="section" style="padding-top:14px">
       <div class="glass" id="profileShareTarget" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
         <div id="profileAuthCard">
           <div style="padding:16px; font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
@@ -1799,10 +1804,7 @@
   </div>
   <div class="tabbar pill-side">
     <button class="tabbtn" data-tab="profile" title="Profilo">
-      <span class="tab-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
-        <span class="notif-badge dot" id="profileTabBadge"></span>
-      </span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
       <span class="tab-label">Profilo</span>
     </button>
   </div>
@@ -2093,8 +2095,11 @@ function renderProfileAuth() {
             <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
           </div>
           <div style="display:flex; gap:6px">
-            <button class="profile-share-btn" onclick="shareProfileImage()" title="Condividi profilo">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13"/></svg>
+            <button class="profile-settings-btn" onclick="switchTab('settings')" title="Impostazioni">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
             </button>
             <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -2539,6 +2544,7 @@ function switchTab(tab) {
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
   document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
+  document.getElementById('topbarMsg').classList.toggle('show', tab !== 'settings');
   if (tab === 'profile') renderProfile();
   if (tab === 'search') {
     // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
@@ -3117,140 +3123,6 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r);
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
-}
-
-async function shareProfileImage() {
-  showToast('Preparo l\'immagine…');
-  try {
-    const W = 1080, H = 1000, PAD = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-
-    // sfondo scuro con un alone giallo soffuso dietro l'avatar, in stile app
-    ctx.fillStyle = '#0b0b0d'; ctx.fillRect(0, 0, W, H);
-    const glow = ctx.createRadialGradient(PAD + 90, 175, 10, PAD + 90, 175, 340);
-    glow.addColorStop(0, 'rgba(247,181,56,0.28)'); glow.addColorStop(1, 'rgba(247,181,56,0)');
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
-
-    // avatar tutto a sinistra
-    const avR = 90, avX = PAD + avR, avY = 175;
-    const avatarImg = await loadImageSafe(getAvatarUrl());
-    ctx.save();
-    ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-    if (avatarImg) ctx.drawImage(avatarImg, avX - avR, avY - avR, avR * 2, avR * 2);
-    else { ctx.fillStyle = '#333'; ctx.fillRect(avX - avR, avY - avR, avR * 2, avR * 2); }
-    ctx.restore();
-    ctx.lineWidth = 5; ctx.strokeStyle = '#F7B538';
-    ctx.beginPath(); ctx.arc(avX, avY, avR, 0, Math.PI * 2); ctx.stroke();
-
-    // nickname + livello, subito a destra dell'avatar
-    const textX = avX + avR + 36;
-    ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-    const firstName = (currentUser && currentUser.displayName || '').split(' ')[0] || 'Utente';
-    const displayHandle = getNickname() || firstName;
-    ctx.font = '800 50px -apple-system, "Segoe UI", sans-serif';
-    ctx.fillText(displayHandle, textX, avY - 12);
-
-    const level = getUserLevel(computeWrapped().hours);
-    ctx.font = '600 27px -apple-system, sans-serif';
-    ctx.fillStyle = '#F7B538';
-    ctx.fillText(`Livello: ${level.label}`, textX, avY + 30);
-
-    // follower / seguiti, allineati a destra sulla stessa riga
-    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
-    ctx.font = '800 34px -apple-system, sans-serif';
-    ctx.fillText(`${followerUids.length}`, W - PAD, avY - 14);
-    ctx.font = '700 20px -apple-system, sans-serif'; ctx.globalAlpha = 0.55;
-    ctx.fillText('Follower', W - PAD, avY + 16);
-    ctx.globalAlpha = 1;
-    ctx.font = '800 34px -apple-system, sans-serif'; ctx.fillStyle = '#fff';
-    ctx.fillText(`${followingList.length}`, W - PAD - 150, avY - 14);
-    ctx.font = '700 20px -apple-system, sans-serif'; ctx.globalAlpha = 0.55;
-    ctx.fillText('Seguiti', W - PAD - 150, avY + 16);
-    ctx.globalAlpha = 1;
-
-    // riga statistiche (serie / episodi / film / ore), centrata
-    const w = computeWrapped();
-    const stats = [[w.totalShows, 'SERIE'], [w.episodesWatched, 'EPISODI'], [w.filmsWatched, 'FILM'], [w.hours, 'ORE']];
-    const statY = 400;
-    ctx.textAlign = 'center';
-    const colW = (W - PAD * 2) / 4;
-    stats.forEach(([val, lab], i) => {
-      const cx = PAD + colW * i + colW / 2;
-      ctx.fillStyle = '#fff';
-      ctx.font = '800 52px -apple-system, sans-serif';
-      const txt = String(val).length > 6 ? String(val).slice(0, 5) + '…' : String(val);
-      ctx.fillText(txt, cx, statY);
-      ctx.font = '700 20px -apple-system, sans-serif';
-      ctx.globalAlpha = 0.5;
-      ctx.fillText(lab, cx, statY + 34);
-      ctx.globalAlpha = 1;
-    });
-
-    // achievement sbloccati: solo il livello più alto raggiunto per categoria,
-    // con etichetta sotto, cosi' il badge dice davvero cosa hai ottenuto.
-    const defs = getAchievements(w);
-    const unlocked = defs.filter(a => a.unlocked);
-    const bestByCategory = {};
-    unlocked.forEach(a => { bestByCategory[a.emoji] = a; });
-    const shown = Object.values(bestByCategory).slice(0, 6);
-    const achY = 610;
-    ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.55;
-    ctx.font = '700 24px -apple-system, sans-serif';
-    ctx.fillText(`🏆 ACHIEVEMENT · ${unlocked.length}/${defs.length}`, W / 2, achY);
-    ctx.globalAlpha = 1;
-    const badgeR = 44, gap = (W - PAD * 2) / Math.max(shown.length, 1);
-    let bx = PAD + gap / 2;
-    shown.forEach(a => {
-      const bGrad = ctx.createRadialGradient(bx - 14, achY + 74 - 16, 4, bx, achY + 74, badgeR);
-      bGrad.addColorStop(0, '#FFD166'); bGrad.addColorStop(1, '#F7B538');
-      ctx.beginPath(); ctx.arc(bx, achY + 74, badgeR, 0, Math.PI * 2);
-      ctx.fillStyle = bGrad; ctx.fill();
-      ctx.font = '36px -apple-system, sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(a.emoji, bx, achY + 76);
-      ctx.textBaseline = 'alphabetic';
-      // etichetta, troncata se piu' larga della colonna disponibile
-      let label = a.label;
-      ctx.font = '600 17px -apple-system, sans-serif';
-      const maxW = gap - 14;
-      while (ctx.measureText(label).width > maxW && label.length > 3) label = label.slice(0, -1);
-      if (label !== a.label) label = label.replace(/\s*$/, '') + '…';
-      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.7;
-      ctx.fillText(label, bx, achY + 140);
-      ctx.globalAlpha = 1;
-      bx += gap;
-    });
-    if (!shown.length) {
-      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.4;
-      ctx.font = '600 24px -apple-system, sans-serif';
-      ctx.fillText('Nessuno sbloccato ancora', W / 2, achY + 76);
-      ctx.globalAlpha = 1;
-    }
-
-    // firma itstracker in fondo
-    ctx.font = '800 36px -apple-system, sans-serif';
-    const its = 'its', tracker = 'tracker';
-    const itsW = ctx.measureText(its).width, trackerW = ctx.measureText(tracker).width;
-    const logoY = H - 60;
-    let lx = W / 2 - (itsW + trackerW) / 2;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#F7B538'; ctx.fillText(its, lx, logoY); lx += itsW;
-    ctx.fillStyle = '#fff'; ctx.fillText(tracker, lx, logoY);
-
-    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-    if (!blob) { showToast('Errore nella creazione dell\'immagine'); return; }
-    const file = new File([blob], 'itstracker-profilo.png', { type: 'image/png' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: 'Il mio profilo su itstracker' });
-    } else {
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'itstracker-profilo.png'; a.click();
-      showToast('Immagine salvata');
-    }
-  } catch(e) {
-    showToast('Errore nella creazione dell\'immagine');
-  }
 }
 
 async function shareWrapped() {
@@ -4356,7 +4228,6 @@ function renderNotifPanel() {
   const unread = items.filter(n => !n.read).length;
   badge.textContent = unread > 9 ? '9+' : unread;
   badge.classList.toggle('show', unread > 0);
-  updateProfileTabBadge();
   notifItemsCache = {};
   items.forEach(n => { notifItemsCache[n.id] = n; });
   list.innerHTML = items.length
@@ -5442,18 +5313,7 @@ function renderChatListBadge() {
   const unread = chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid)).length;
   badge.textContent = unread > 9 ? '9+' : unread;
   badge.classList.toggle('show', unread > 0);
-  updateProfileTabBadge();
 }
-// Pallino sul tab Profilo (menu in basso): acceso se c'e' un badge non letto
-// tra messaggi o notifiche, cosi' si vede anche senza aprire la scheda Profilo.
-function updateProfileTabBadge() {
-  const b = document.getElementById('profileTabBadge');
-  const notifOn = document.getElementById('notifBadge');
-  const chatOn = document.getElementById('chatListBadge');
-  if (!b) return;
-  b.classList.toggle('show', !!(notifOn && notifOn.classList.contains('show')) || !!(chatOn && chatOn.classList.contains('show')));
-}
-
 async function markAllChatsRead() {
   if (!fbDb || !currentUser) return;
   const unread = chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid));
