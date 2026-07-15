@@ -1284,7 +1284,6 @@
   /* ===== ambient color from poster ===== */
   .card { transition: box-shadow 0.5s ease; }
   .card.glow { box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 10px 28px -8px var(--accent, transparent); }
-  .hero .glow-wash { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 0%, var(--accent, transparent) 0%, transparent 62%); opacity: 0.72; mix-blend-mode: screen; pointer-events: none; }
 
   /* ===== accento dinamico dal poster: colore che "bagna" tutta la scheda ===== */
   /* Il gradiente parte da trasparente (non da un colore pieno) così non c'è un
@@ -5962,7 +5961,6 @@ async function renderSheet(show, episodes, seasons, inLib) {
   sheet.innerHTML = `
     <div class="hero">
       ${poster?`<img src="${poster}" alt="">`:''}
-      <div class="glow-wash" id="heroGlow"></div>
       <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       </a>
@@ -5996,7 +5994,6 @@ async function renderSheet(show, episodes, seasons, inLib) {
 
   if (poster) posterAccent(poster).then(col => {
     if (!col) return;
-    const g = document.getElementById('heroGlow'); if (g) g.style.setProperty('--accent', col);
     sheet.style.setProperty('--accent', col);
     const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
   });
@@ -7104,7 +7101,6 @@ async function renderFilmSheet(f, inLib) {
   sheet.innerHTML = `
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
-      <div class="glow-wash" id="heroGlow"></div>
       <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       </a>
@@ -7129,7 +7125,6 @@ async function renderFilmSheet(f, inLib) {
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => {
     if (!col) return;
-    const g = document.getElementById('heroGlow'); if (g) g.style.setProperty('--accent', col);
     sheet.style.setProperty('--accent', col);
     const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
   });
