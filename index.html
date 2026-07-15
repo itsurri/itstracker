@@ -2473,6 +2473,13 @@ async function refreshShowTotals(id) {
       const priorTotal = realSeasons.filter(se => se.season_number !== latest.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
       try {
         const latestEps = await fetchTvEpisodes(id, [latest.season_number]);
+        // fetchTvEpisodes ingoia i propri errori di rete e restituisce [] per la
+        // stagione fallita: senza questo controllo, un fallimento momentaneo
+        // veniva letto come "0 episodi usciti" e salvato come totale vero,
+        // per poi sembrare "sono usciti nuovi episodi" al refresh successivo
+        // (quando la rete torna a funzionare e il totale corretto è più alto) -
+        // anche su serie finite da anni.
+        if (!latestEps.length && latest.episode_count) throw new Error('fetch stagione fallito');
         const airedInLatest = latestEps.filter(e => e.airdate && !isFutureDateStr(e.airdate)).length;
         newTotal = priorTotal + airedInLatest;
       } catch(e) { newTotal = realSeasons.reduce((sum,se)=>sum+(se.episode_count||0),0); }
