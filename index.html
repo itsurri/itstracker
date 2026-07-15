@@ -1098,13 +1098,12 @@
   }
   .tabbtn {
     position: relative; z-index: 1; flex: 1;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    display: flex; align-items: center; justify-content: center;
     background: none; border: none; color: rgba(var(--overlay-rgb),0.45); font-family: inherit;
-    padding: 12px 0 11px; border-radius: 26px; transition: color 0.2s;
+    padding: 15px 0; border-radius: 26px; transition: color 0.2s;
     transform: translateZ(0);
   }
-  .pill-side .tabbtn { flex: 0 0 auto; padding: 12px 16px 11px; }
-  .tab-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; line-height: 1; }
+  .pill-side .tabbtn { flex: 0 0 auto; padding: 15px 18px; }
   .tabbtn.active { color: var(--accent); }
 
   /* tendine di Impostazioni (Tema/Visualizzazione/Colore): stessa larghezza fissa */
@@ -1123,7 +1122,7 @@
     border-radius: 30px; background: rgba(var(--overlay-rgb),0.14);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 2px rgba(0,0,0,0.15);
   }
-  .tabbtn svg { width: 25px; height: 25px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
+  .tabbtn svg { width: 29px; height: 29px; shape-rendering: geometricPrecision; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1); }
   .tabbtn.bounce svg { animation: tabBounce 0.4s cubic-bezier(.34,1.56,.64,1); }
   @keyframes tabBounce {
     0% { transform: scale(1); }
@@ -1811,7 +1810,6 @@
         <rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/>
         <path d="M8 3.5l4 4 4-4"/>
       </svg>
-      <span class="tab-label">Serie</span>
     </button>
     <button class="tabbtn" data-tab="film" title="Film">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1820,17 +1818,14 @@
         <path d="m12.4 3.4 3.1 4"/>
         <path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/>
       </svg>
-      <span class="tab-label">Film</span>
     </button>
     <button class="tabbtn" data-tab="search" title="Cerca">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>
-      <span class="tab-label">Ricerca</span>
     </button>
   </div>
   <div class="tabbar pill-side">
     <button class="tabbtn" data-tab="profile" title="Profilo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
-      <span class="tab-label">Profilo</span>
     </button>
   </div>
 </div>
@@ -7323,10 +7318,17 @@ function currentAccent() {
 }
 // Nero o bianco a seconda di quanto è chiaro il colore scelto, così il testo
 // sui badge pieni resta leggibile (es. giallo -> testo nero, blu -> testo bianco).
+// Nero o bianco scegliendo quello con CONTRASTO reale piu' alto (formula WCAG),
+// non solo "colore chiaro -> nero": con la vecchia soglia fissa il bianco
+// usciva anche su colori medio-saturi dove in realta' si legge peggio del nero.
 function accentInk(hex) {
   const h = hex.replace('#',''); if (h.length < 6) return '#fff';
-  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-  return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.6 ? '#000' : '#fff';
+  const toLin = c => { c /= 255; return c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4); };
+  const r = toLin(parseInt(h.slice(0,2),16)), g = toLin(parseInt(h.slice(2,4),16)), b = toLin(parseInt(h.slice(4,6),16));
+  const L = 0.2126*r + 0.7152*g + 0.0722*b;
+  const contrastWithBlack = (L + 0.05) / 0.05;
+  const contrastWithWhite = 1.05 / (L + 0.05);
+  return contrastWithBlack >= contrastWithWhite ? '#000' : '#fff';
 }
 function accentRgb(hex) {
   const h = hex.replace('#',''); if (h.length < 6) return '247,181,56';
