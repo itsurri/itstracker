@@ -408,21 +408,25 @@
     font-size: 15px; font-weight: 700; line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .chip-episodes { background: rgba(10,132,255,0.14); color: #0A84FF; font-weight: 800; }
-  .chip-date { background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.65); font-weight: 700; }
   .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* chip informative compatte (prossimo ep, rating, stagioni, stato) */
-  .li-chips { display: flex; align-items: center; flex-wrap: nowrap; gap: 5px; margin-top: 5px; overflow-x: auto; scrollbar-width: none; }
+  /* meta compatte (voto, stagioni, prossimo ep, stato): scritte colorate senza
+     badge, separate da un punto neutro — piu' pulito dei riquadri pieni */
+  .li-chips { display: flex; align-items: center; flex-wrap: nowrap; gap: 0; margin-top: 4px; overflow-x: auto; scrollbar-width: none; }
   .li-chips::-webkit-scrollbar { display: none; }
   .chip {
-    font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 12px; flex-shrink: 0;
-    background: rgba(var(--overlay-rgb),0.07); color: rgba(var(--overlay-rgb),0.6); white-space: nowrap;
+    font-size: 11.5px; font-weight: 800; flex-shrink: 0;
+    background: none; padding: 0; border-radius: 0; white-space: nowrap;
+    color: rgba(var(--overlay-rgb),0.6); display: inline-flex; align-items: center;
   }
-  .chip-next { background: rgba(10,132,255,0.14); color: #0A84FF; font-weight: 800; }
-  .chip-done { background: rgba(48,209,88,0.14); color: #30D158; font-weight: 800; }
-  .chip-new  { background: rgba(255,159,10,0.16); color: #FF9F0A; font-weight: 800; }
-  .chip-star { background: rgba(255,214,10,0.16); color: #FFD60A; font-weight: 800; }
-  .chip-seasons { background: rgba(191,90,242,0.18); color: #C77DFF; font-weight: 800; }
+  .li-chips .chip + .chip::before {
+    content: "·"; margin: 0 6px; font-weight: 700; color: rgba(var(--overlay-rgb),0.3);
+  }
+  .chip-next, .chip-episodes { color: #0A84FF; }
+  .chip-done { color: #30D158; }
+  .chip-new  { color: #FF9F0A; }
+  .chip-star { color: #FFD60A; }
+  .chip-seasons { color: #C77DFF; }
+  .chip-date { color: rgba(var(--overlay-rgb),0.6); }
   /* KPI della scheda serie: visti, totali, % (a fasce), tempo rimanente */
   .sheet-kpis { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .skpi {
@@ -2780,7 +2784,7 @@ function genreColor(name) {
   return GENRE_PALETTE[h % GENRE_PALETTE.length];
 }
 function genrePill(name) { const c = genreColor(name); return `<span class="pill" style="background:${c}22;color:${c};font-weight:700">${escapeHtml(name)}</span>`; }
-function genreChip(name) { const c = genreColor(name); return `<span class="chip" style="background:${c}22;color:${c};font-weight:800">${escapeHtml(name)}</span>`; }
+function genreChip(name) { const c = genreColor(name); return `<span class="chip" style="color:${c}">${escapeHtml(name)}</span>`; }
 
 // Piccola pioggia di coriandoli quando finisci tutti gli episodi di una serie.
 function celebrateShowComplete(show) {
