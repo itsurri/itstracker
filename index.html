@@ -4455,7 +4455,7 @@ function renderListTv(key, s) {
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}${hasNewEp(s) ? `<span class="new-ep-dot" title="Nuovo episodio"></span>` : ''}</div>
       <div class="li-chips">${chips}</div>
     </div>
-    <div class="lib-actions">${nextEpBtn(id)}${removeBtnTv(id)}</div>
+    <div class="lib-actions">${isDone ? seriesCheckBtn(id) : nextEpBtn(id)}${removeBtnTv(id)}</div>
   </div>`;
 }
 
@@ -5717,14 +5717,23 @@ function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick=
 function epCheckBtn(id) {
   const s = library[id];
   const cat = s ? categorizeShow(s) : 'davedere';
-  const cls = cat === 'inpari' ? 'done' : (cat === 'continua' ? 'prog' : 'empty');
+  // In pari: non c'e' un "prossimo episodio" da segnare, quindi qui la spunta
+  // non chiama markNext (fallirebbe, s.next è vuoto) ma toglie la serie da
+  // "in pari" riportandola a "da vedere", come il toggle Visto/Da Vedere dei film.
+  if (cat === 'inpari') return seriesCheckBtn(id);
+  const cls = cat === 'continua' ? 'prog' : 'empty';
   // Freccia se segnando questo episodio ne resta almeno un altro dopo; V se
-  // questo è l'ultimo (la serie si completerebbe) o se è già completa.
+  // questo è l'ultimo (la serie si completerebbe).
   const watched = s ? Object.keys(s.watched || {}).length : 0;
   const total = s ? (s.totalEpisodes || 0) : 0;
   const isLastOne = total > 0 && watched + 1 >= total;
-  const icon = (cls === 'done' || isLastOne) ? ICO_V : ICO_ARROW;
+  const icon = isLastOne ? ICO_V : ICO_ARROW;
   return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${icon}</button>`;
+}
+// Spunta serie "in pari": stessa spunta bianca dei film visti; un tocco
+// riporta la serie a "da vedere" (azzera gli episodi visti).
+function seriesCheckBtn(id) {
+  return `<button class="ep-check done" data-show-id="${id}" onclick="event.stopPropagation();toggleSeriesWatchedQuick(${id})" title="Segna come da vedere">${ICO_V}</button>`;
 }
 // Vista lista: bottone "segna prossimo episodio" nello stesso stile della X
 // di rimozione (cerchio con tinta piena, act-btn), verde con freccia a destra.
