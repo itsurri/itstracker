@@ -439,10 +439,11 @@
     align-items: center; justify-content: center; line-height: 1;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
-  /* badge conteggio delle sezioni: colore scelto, testo a contrasto (chiaro/scuro) */
+  /* badge conteggio delle sezioni: bianco/nero di tema invece del colore
+     scelto, ora che il bottone attivo usa il colore scelto come sfondo */
   #tvCount-continua, #tvCount-inpari, #tvCount-davedere,
   #filmCount-visti, #filmCount-davedere,
-  #inarrivoBadge { background: var(--accent); color: var(--accent-ink); }
+  #inarrivoBadge { background: var(--fg); color: var(--bg); }
   /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
@@ -736,6 +737,9 @@
     display: inline-flex; align-items: center; justify-content: center;
   }
   .seasontab.active { background: var(--fg); color: var(--bg); }
+  /* Continua/In Pari/In Lista/In Arrivo, Visti/Da Vedere: prova col colore
+     scelto invece del bianco/nero di tema (solo qui per ora). */
+  .cat-tab-corner.active { background: var(--accent); color: var(--accent-ink); }
   .cat-tabs { justify-content: center; }
   .cat-tabs .seasontab { text-transform: uppercase; letter-spacing: 0.02em; font-size: 11px; }
   .people-search-tab { display: inline-flex; align-items: center; justify-content: center; padding: 7px 14px; }
