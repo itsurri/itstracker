@@ -145,8 +145,8 @@
   .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); }
   /* max-width tiene la scritta corta cosi' i bottoni ai lati restano sempre centrati */
   .topbar-logo {
-    font-size: clamp(28px, 9vw, 40px); letter-spacing: -0.03em;
-    overflow: hidden; text-overflow: ellipsis; max-width: min(255px, 60vw);
+    font-size: clamp(32px, 10vw, 44px); letter-spacing: -0.035em;
+    overflow: hidden; text-overflow: ellipsis; max-width: min(270px, 62vw);
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
@@ -180,7 +180,7 @@
      altri bottoni dell'app - 34px, come i tab categoria e i bottoni impostazioni) */
   .mode-btn {
     flex: 0 0 auto; min-width: 58px; height: 34px; padding: 0 12px; border-radius: 14px;
-    font-size: 11px; font-weight: 400; letter-spacing: 0.05em; font-family: inherit;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em; font-family: inherit;
     background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
     color: rgba(var(--overlay-rgb),0.55); display: inline-flex; align-items: center; justify-content: center;
   }
@@ -268,7 +268,7 @@
   /* etichetta del tab: tronca con i puntini se non c'è spazio, invece di uscire
      dal bordo del bottone (il bottone deve restare overflow:visible per il
      badge d'angolo, quindi il troncamento va sull'etichetta, non sul bottone) */
-  .cat-tab-label { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  .cat-tab-label { display: inline-block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
   /* dado "cosa guardo stasera" nella ricerca, vicino a SERIE/FILM: stessa altezza
      della searchbar/mode-btn, del colore scelto e con un alone che pulsa per farlo notare */
   .search-dice {
@@ -733,6 +733,7 @@
   .seasontab {
     flex-shrink: 0; padding: 7px 16px; border-radius: 18px; font-size: 13px; font-weight: 600;
     color: rgba(var(--overlay-rgb),0.55); background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.1);
+    display: inline-flex; align-items: center; justify-content: center;
   }
   .seasontab.active { background: var(--fg); color: var(--bg); }
   .cat-tabs { justify-content: center; }
