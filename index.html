@@ -1324,16 +1324,21 @@
   }
   .resume-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .resume-card .rc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.06) 30%, rgba(0,0,0,0.22) 52%, rgba(0,0,0,0.55) 76%, rgba(0,0,0,0.9) 100%); }
-  .resume-card .rc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 11px; display: flex; align-items: flex-end; gap: 10px; }
-  .rc-info { flex: 1; min-width: 0; color: #fff; }
-  .rc-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 2px; }
+  .resume-card .rc-top {
+    position: absolute; left: 0; right: 0; top: 0; padding: 11px; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .rc-label, .rc-pct {
+    font-size: 12px; font-weight: 800; line-height: 1; color: var(--accent);
+    background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    padding: 5px 8px; border-radius: 8px;
+  }
+  .rc-pct { border: none; font-variant-numeric: tabular-nums; }
+  .rc-pct:active { transform: scale(0.92); }
+  .resume-card .rc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 11px; }
+  .rc-info { min-width: 0; color: #fff; }
   .rc-name { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc-ep { font-size: 10.5px; opacity: 0.85; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rc-pct {
-    flex-shrink: 0; border: none; background: none; padding: 0 0 0 10px; margin-right: -2px;
-    color: var(--accent); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums;
-  }
-  .rc-pct:active { transform: scale(0.92); }
 
   /* ===== progress ring shared ===== */
   .ring-track { stroke: rgba(255,255,255,0.28); }
@@ -4152,13 +4157,15 @@ function renderResumeRail(items) {
     return `<div class="resume-card" onclick="openShow(${id}, this)" data-poster="${bg ? thumbImg(bg,'w92') : ''}">
       ${bg ? `<img src="${thumbImg(bg,'w500')}" alt="" loading="lazy" decoding="async">` : ''}
       <div class="rc-shade"></div>
+      <div class="rc-top">
+        <span class="rc-label">Riprendi</span>
+        <button class="rc-pct" onclick="event.stopPropagation();markNext(${id})" title="Segna come visto">${pct}%</button>
+      </div>
       <div class="rc-body">
         <div class="rc-info">
-          <div class="rc-label">Riprendi</div>
           <div class="rc-name">${escapeHtml(s.name || '')}</div>
           <div class="rc-ep">${epMeta}</div>
         </div>
-        <button class="rc-pct" onclick="event.stopPropagation();markNext(${id})" title="Segna come visto">${pct}%</button>
       </div>
     </div>`;
   }).join('');
