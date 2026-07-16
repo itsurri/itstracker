@@ -426,7 +426,7 @@
   .chip-new  { color: #FF9F0A; }
   .chip-star { color: #FFD60A; }
   .chip-seasons { color: #C77DFF; }
-  .chip-date { color: rgba(var(--overlay-rgb),0.6); }
+  .chip-date { color: #0A84FF; }
   /* KPI della scheda serie: visti, totali, % (a fasce), tempo rimanente */
   .sheet-kpis { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .skpi {
@@ -4762,7 +4762,7 @@ function renderListFilm(key, f) {
       <div class="li-chips">${[
         f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null,
         f.genre ? genreChip(f.genre) : null,
-        f.year ? `<span class="chip">${f.year}</span>` : null
+        f.year ? `<span class="chip chip-date">${f.year}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
