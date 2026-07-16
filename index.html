@@ -1329,11 +1329,9 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   .rc-label, .rc-pct {
-    font-size: 12px; font-weight: 800; line-height: 1; color: var(--accent);
-    background: rgba(0,0,0,0.6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    padding: 5px 8px; border-radius: 8px;
+    border: none; background: none; padding: 0; margin: 0;
+    color: var(--accent); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums;
   }
-  .rc-pct { border: none; font-variant-numeric: tabular-nums; }
   .rc-pct:active { transform: scale(0.92); }
   .resume-card .rc-body { position: absolute; left: 0; right: 0; bottom: 0; padding: 11px; }
   .rc-info { min-width: 0; color: #fff; }
