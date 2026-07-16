@@ -1295,6 +1295,41 @@
   .cb-cancel { background: rgba(var(--overlay-rgb),0.1); color: var(--fg); }
   .cb-confirm { background: #ff453a; color: #fff; }
 
+  /* ===== tutorial primo accesso (per scheda) ===== */
+  .tut-card {
+    background: var(--panel-bg); border: 0.5px solid rgba(var(--overlay-rgb),0.15);
+    border-radius: 26px; padding: 22px 20px; width: 88%; max-width: 340px; text-align: left;
+    max-height: 84vh; overflow-y: auto; transform: scale(0.92); transition: transform 0.25s;
+  }
+  .confirmbg.open .tut-card { transform: scale(1); }
+  .tut-head { display: flex; align-items: center; gap: 11px; }
+  .tut-badge {
+    width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0;
+    background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tut-badge svg { width: 20px; height: 20px; }
+  .tut-title { font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .tut-sub { font-size: 13px; color: rgba(var(--overlay-rgb),0.6); line-height: 1.45; margin: 10px 0 18px; }
+  .tut-steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+  .tut-step { display: flex; align-items: center; gap: 12px; }
+  .tut-vis { flex-shrink: 0; width: 40px; display: flex; align-items: center; justify-content: center; }
+  .tut-vis svg { width: 17px; height: 17px; }
+  .tut-c-accent, .tut-c-neutral { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .tut-c-accent { background: var(--accent); color: var(--accent-ink); }
+  .tut-c-neutral { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
+  .tut-vis .act-btn, .tut-vis .ep-check { pointer-events: none; }
+  .tut-txt { min-width: 0; }
+  .tut-label { font-size: 14px; font-weight: 700; line-height: 1.2; }
+  .tut-desc { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.6); line-height: 1.4; margin-top: 2px; }
+  .tut-actions { display: flex; flex-direction: column; gap: 8px; }
+  .tut-ok {
+    width: 100%; padding: 13px; border-radius: 16px; border: none;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 14.5px; font-weight: 800; font-family: inherit;
+  }
+  .tut-skip { background: none; border: none; color: rgba(var(--overlay-rgb),0.45); font-size: 12.5px; font-family: inherit; padding: 4px; }
+
   /* ===== ambient color from poster ===== */
   .card { transition: box-shadow 0.5s ease; }
   .card.glow { box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 10px 28px -8px var(--accent, transparent); }
@@ -1977,6 +2012,9 @@
     </div>
   </div>
 </div>
+<div class="confirmbg" id="tutorialBg">
+  <div class="tut-card" id="tutorialCard"></div>
+</div>
 <div class="confirmbg" id="avatarMenuBg">
   <div class="confirmbox">
     <h3>Foto profilo</h3>
@@ -2606,6 +2644,8 @@ function switchTab(tab) {
     if (hasCache) { searchMode === 'tv' ? renderTvResultsFromCache() : renderFilmResultsFromCache(); }
     else if (!document.getElementById('searchInput').value.trim()) { loadPopular(searchMode); }
   }
+  // tutorial primo accesso della scheda (dopo che la transizione e' partita)
+  setTimeout(() => maybeShowTutorial(tab), 280);
 }
 window.addEventListener('resize', () => moveTabIndicator(document.querySelector('.tabbtn.active')));
 
@@ -7831,6 +7871,81 @@ function initBackButton() {
   });
 }
 
+// ===== tutorial primo accesso (una volta per scheda) =====
+const TUT_KEY = 'itstracker_tut_v1';
+function tutSeen() { try { return JSON.parse(localStorage.getItem(TUT_KEY) || '{}'); } catch(e) { return {}; } }
+function tutSetSeen(obj) { try { localStorage.setItem(TUT_KEY, JSON.stringify(obj)); } catch(e) {} }
+function tutSkipAll() { tutSetSeen({ tv:1, film:1, search:1, profile:1, _skip:1 }); closeTutorial(); }
+const TUT_SVG = {
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>',
+  dice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>',
+  people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6"/><path d="M17.5 20a5.5 5.5 0 0 0-2-4.3"/></svg>',
+  hand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 11V4a1.5 1.5 0 0 1 3 0v7"/><path d="M14 11V6a1.5 1.5 0 0 1 3 0v6"/><path d="M17 8.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-5.3-3.2L5.5 15"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  tabTv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/><path d="M8 3.5l4 4 4-4"/></svg>',
+  tabFilm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/></svg>',
+  tabSearch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>',
+  tabProfile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>'
+};
+function tutAccent(svg) { return `<span class="tut-c-accent">${svg}</span>`; }
+function tutNeutral(svg) { return `<span class="tut-c-neutral">${svg}</span>`; }
+function tutData(tab) {
+  const T = {
+    tv: { icon: TUT_SVG.tabTv, title: 'Le tue Serie', sub: 'La schermata iniziale: le serie che segui, divise per stato.', steps: [
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista, In arrivo. Toccane uno per filtrare.' },
+      { vis: `<span class="act-btn act-next">${ICO_ARROW}</span>`, label: 'Segna visto', desc: 'Il cerchio verde segna come visto il prossimo episodio; a serie finita diventa una spunta.' },
+      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Il cerchio rosso toglie la serie dalla libreria.' },
+      { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca una serie per episodi, cast, trailer e statistiche.' }
+    ]},
+    film: { icon: TUT_SVG.tabFilm, title: 'I tuoi Film', sub: 'I film che segui, divisi tra Visti e Da vedere.', steps: [
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Visti e Da vedere. Toccane uno per filtrare.' },
+      { vis: `<span class="ep-check done">${ICO_V}</span>`, label: 'Visto / Da vedere', desc: 'La spunta verde segna il film come visto, o lo riporta tra i da vedere.' },
+      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Il cerchio rosso toglie il film dalla libreria.' },
+      { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca un film per trama, cast e trailer.' }
+    ]},
+    search: { icon: TUT_SVG.tabSearch, title: 'Cerca e scopri', sub: 'Trova nuove serie e film e aggiungili alla tua libreria.', steps: [
+      { vis: tutNeutral(TUT_SVG.search), label: 'Barra di ricerca', desc: 'Scrivi un titolo per cercarlo tra migliaia di serie e film.' },
+      { vis: tutAccent(TUT_SVG.tabTv), label: 'Serie o Film', desc: 'I bottoni SERIE e FILM scelgono in cosa cercare.' },
+      { vis: tutNeutral(TUT_SVG.dice), label: 'Cosa guardo stasera?', desc: 'Il dado pesca a caso un titolo da guardare, per genere.' },
+      { vis: tutAccent(TUT_SVG.plus), label: 'Aggiungi', desc: 'Il bottone + Aggiungi mette il titolo in libreria. Se ce l\'hai già, trovi Visto/Da vedere e il cerchio rosso.' }
+    ]},
+    profile: { icon: TUT_SVG.tabProfile, title: 'Il tuo Profilo', sub: 'Il tuo spazio: statistiche, amici e impostazioni.', steps: [
+      { vis: tutAccent(TUT_SVG.bell), label: 'Notifiche', desc: 'In alto a sinistra: le tue notifiche.' },
+      { vis: tutAccent(TUT_SVG.chat), label: 'Messaggi', desc: 'In alto a destra: le chat con gli amici.' },
+      { vis: tutNeutral(TUT_SVG.people), label: 'Persone', desc: 'Attività degli amici, amici suggeriti e ricerca di persone da seguire.' },
+      { vis: tutNeutral(TUT_SVG.gear), label: 'Impostazioni', desc: 'Tema, colore, vista, importa/esporta e altro.' }
+    ]}
+  };
+  return T[tab];
+}
+let tutOpen = false;
+function maybeShowTutorial(tab) {
+  if (tutOpen) return;
+  const seen = tutSeen();
+  if (seen._skip || seen[tab] || !tutData(tab)) return;
+  // non sovrapporre a schermate importanti gia' aperte
+  if (document.querySelector('.sheetbg.open, #personBg.open, #chatBg.open, #nicknameOnboardBg.open')) return;
+  showTutorial(tab);
+}
+function showTutorial(tab) {
+  const t = tutData(tab); if (!t) return;
+  const steps = t.steps.map(s => `<div class="tut-step"><div class="tut-vis">${s.vis}</div><div class="tut-txt"><div class="tut-label">${s.label}</div><div class="tut-desc">${s.desc}</div></div></div>`).join('');
+  document.getElementById('tutorialCard').innerHTML =
+    `<div class="tut-head"><div class="tut-badge">${t.icon}</div><div class="tut-title">${t.title}</div></div>`
+    + `<div class="tut-sub">${t.sub}</div>`
+    + `<div class="tut-steps">${steps}</div>`
+    + `<div class="tut-actions"><button class="tut-ok" onclick="closeTutorial()">Ho capito</button><button class="tut-skip" onclick="tutSkipAll()">Non mostrare più i tutorial</button></div>`;
+  const seen = tutSeen(); seen[tab] = 1; tutSetSeen(seen);
+  tutOpen = true;
+  document.getElementById('tutorialBg').classList.add('open');
+  if (typeof haptic === 'function') haptic();
+}
+function closeTutorial() { document.getElementById('tutorialBg').classList.remove('open'); tutOpen = false; }
+
 // ---------- init ----------
 loadLibrary();
 normalizeLibrary();
@@ -7864,6 +7979,8 @@ initSheetParallax();
 initCardTilt();
 initBackButton();
 initContentFadeIn();
+// tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
+setTimeout(() => maybeShowTutorial('tv'), 2600);
 </script>
 </body>
 </html>
