@@ -498,6 +498,15 @@
   .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
   .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; will-change: transform; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
+  /* riflesso di luce che attraversa la copertina all'apertura della scheda */
+  .hero .hero-sheen {
+    position: absolute; top: 0; left: -60%; width: 45%; height: 100%; pointer-events: none; z-index: 1;
+    transform: skewX(-18deg); opacity: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
+    animation: heroSheen 1.15s 0.22s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes heroSheen { 0% { left: -60%; opacity: 0; } 22% { opacity: 1; } 82% { opacity: 1; } 100% { left: 135%; opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .hero .hero-sheen { display: none; } }
   /* dove si guarda: in linea subito dopo il testo del titolo (es. "One Piece [Netflix]"),
      i loghi non superano l'altezza di una maiuscola del titolo (h2 24px -> ~19px) */
   .watch-providers { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; margin-left: 8px; }
@@ -1407,6 +1416,35 @@
     animation: checkRing 0.5s ease-out forwards;
   }
   @keyframes checkRing { from { transform: scale(0.75); opacity: 0.85; } to { transform: scale(2.1); opacity: 0; } }
+  /* timbro "visto": una spunta verde che compare sul bottone e svanisce */
+  .mark-stamp {
+    position: fixed; z-index: 600; pointer-events: none; color: #30D158;
+    transform: translate(-50%,-50%) scale(0.3); opacity: 0;
+    filter: drop-shadow(0 3px 10px rgba(48,209,88,0.55));
+  }
+  .mark-stamp svg { width: 46px; height: 46px; display: block; }
+  .mark-stamp.go { animation: markStamp 0.72s cubic-bezier(.3,1.5,.5,1) forwards; }
+  @keyframes markStamp {
+    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3) rotate(-14deg); }
+    28% { opacity: 1; transform: translate(-50%,-50%) scale(1.18) rotate(0); }
+    52% { transform: translate(-50%,-50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.05); }
+  }
+  /* lampo verde sulla copertina della card appena segnata */
+  .mark-posterflash {
+    position: fixed; z-index: 590; pointer-events: none; opacity: 0;
+    box-shadow: inset 0 0 0 2px rgba(48,209,88,0.9), inset 0 0 22px rgba(48,209,88,0.5);
+  }
+  .mark-posterflash.go { animation: posterFlash 0.58s ease-out; }
+  @keyframes posterFlash {
+    0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mark-stamp, .mark-posterflash { display: none; }
+  }
+  /* pop del riquadro statistica quando il numero finisce di contare */
+  .count-done { animation: countPop 0.42s cubic-bezier(.34,1.5,.6,1); }
+  @keyframes countPop { 0% { transform: scale(1); } 42% { transform: scale(1.06); } 100% { transform: scale(1); } }
 
   /* ===== upcoming (In arrivo) ===== */
   .up-item { display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08); }
@@ -3504,13 +3542,21 @@ async function renderLeaderboard() {
 
 function animateCountUp(el) {
   const target = Number(el.getAttribute('data-count')) || 0;
-  const duration = 600;
+  const fmt = n => n.toLocaleString('it-IT');
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = fmt(target); return; }
+  const duration = 850;
   const start = performance.now();
   function step(now) {
     const p = Math.min(1, (now - start) / duration);
     const eased = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(target * eased);
+    el.textContent = fmt(Math.round(target * eased));
     if (p < 1) requestAnimationFrame(step);
+    else {
+      el.textContent = fmt(target);
+      // piccolo "pop" quando il numero atterra sul valore finale
+      const tile = el.closest('.kpi, .stat');
+      if (tile) { tile.classList.remove('count-done'); void tile.offsetWidth; tile.classList.add('count-done'); }
+    }
   }
   requestAnimationFrame(step);
 }
@@ -4202,7 +4248,7 @@ function renderResumeRail(items) {
       <div class="rc-shade"></div>
       <div class="rc-top">
         <span class="rc-label">Riprendi</span>
-        <button class="rc-pct" onclick="event.stopPropagation();markNext(${id})" title="Segna come visto">${pct}%</button>
+        <button class="rc-pct" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna come visto">${pct}%</button>
       </div>
       <div class="rc-body">
         <div class="rc-info">
@@ -5758,7 +5804,7 @@ function watchPillTv(id) {
 }
 function watchPillFilm(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
-  return `<button class="watch-pill${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})">${done?'Visto':'Da Vedere'}</button>`;
+  return `<button class="watch-pill${done?' done':''}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id}, this)">${done?'Visto':'Da Vedere'}</button>`;
 }
 function removeBtnTv(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('tv',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
 function removeBtnFilm(id) { return `<button class="act-btn act-remove" onclick="event.stopPropagation();confirmRemove('film',${id})" title="Rimuovi dalla libreria">${ICO_X}</button>`; }
@@ -5778,7 +5824,7 @@ function epCheckBtn(id) {
   const total = s ? (s.totalEpisodes || 0) : 0;
   const isLastOne = total > 0 && watched + 1 >= total;
   const icon = isLastOne ? ICO_V : ICO_ARROW;
-  return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${icon}</button>`;
+  return `<button class="ep-check ${cls}" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna il prossimo episodio">${icon}</button>`;
 }
 // Spunta serie "in pari": stessa spunta bianca dei film visti; un tocco
 // riporta la serie a "da vedere" (azzera gli episodi visti).
@@ -5788,12 +5834,12 @@ function seriesCheckBtn(id) {
 // Vista lista: bottone "segna prossimo episodio" nello stesso stile della X
 // di rimozione (cerchio con tinta piena, act-btn), verde con freccia a destra.
 function nextEpBtn(id) {
-  return `<button class="act-btn act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id})" title="Segna il prossimo episodio">${ICO_ARROW}</button>`;
+  return `<button class="act-btn act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna il prossimo episodio">${ICO_ARROW}</button>`;
 }
 // Spunta film: verde con V quando visto, vuota quando no; toggle.
 function filmCheckBtn(id) {
   const done = !!(filmLibrary[id] && filmLibrary[id].watched);
-  return `<button class="ep-check ${done?'done':'empty'}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id})" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_V}</button>`;
+  return `<button class="ep-check ${done?'done':'empty'}" onclick="event.stopPropagation();toggleFilmWatchedQuick(${id}, this)" title="${done?'Segna come da vedere':'Segna come visto'}">${ICO_V}</button>`;
 }
 // RICERCA/PROFILO (lista+griglia): non in libreria → "Aggiungi in libreria";
 // in libreria → [Visto/Da Vedere][×]. Larghezza fissa così le barre coincidono.
@@ -5819,11 +5865,11 @@ function gridCard(o) {
   </div>`;
 }
 
-async function toggleFilmWatchedQuick(id) {
+async function toggleFilmWatchedQuick(id, srcEl) {
   const f = filmLibrary[id];
   if (!f) return;
   f.watched = !f.watched;
-  if (f.watched) { f.watchedAt = Date.now(); haptic(); }
+  if (f.watched) { f.watchedAt = Date.now(); haptic(); if (srcEl) celebrateMark(srcEl); }
   saveFilmLibrary(); renderFilmLibrary(); renderFilmResultsFromCache();
   if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
   if (f.watched) { checkAchievements(); logActivity({ type: 'watched_film', showId: Number(id), title: f.title||'', image: f.image||null }); }
@@ -6022,7 +6068,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
   sheet.style.removeProperty('--accent');
   sheet.innerHTML = `
     <div class="hero">
-      ${poster?`<img src="${poster}" alt="">`:''}
+      ${poster?`<img src="${poster}" alt=""><div class="hero-sheen"></div>`:''}
       <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       </a>
@@ -6648,13 +6694,39 @@ async function ensureEpisodes(id) {
 }
 
 // Segna visto il "prossimo episodio" dalla schermata Continua, avanzando al successivo.
-async function markNext(id) {
+// "Timbro visto": spunta verde animata sul bottone + lampo sulla copertina della
+// card. Usa overlay fixed su body cosi' sopravvivono al re-render della lista.
+function celebrateMark(el) {
+  if (!el || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const r = el.getBoundingClientRect();
+  const st = document.createElement('div');
+  st.className = 'mark-stamp';
+  st.style.left = (r.left + r.width/2) + 'px'; st.style.top = (r.top + r.height/2) + 'px';
+  st.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  document.body.appendChild(st); void st.offsetWidth; st.classList.add('go');
+  setTimeout(() => st.remove(), 740);
+  const card = el.closest('.gcard, .list-item, .resume-card, .person-item, .searchcard');
+  const img = card && card.querySelector('img');
+  if (img) {
+    const p = img.getBoundingClientRect();
+    const fl = document.createElement('div');
+    fl.className = 'mark-posterflash';
+    fl.style.left = p.left + 'px'; fl.style.top = p.top + 'px';
+    fl.style.width = p.width + 'px'; fl.style.height = p.height + 'px';
+    fl.style.borderRadius = getComputedStyle(img).borderRadius || '8px';
+    document.body.appendChild(fl); void fl.offsetWidth; fl.classList.add('go');
+    setTimeout(() => fl.remove(), 620);
+  }
+}
+
+async function markNext(id, srcEl) {
   const s = library[id];
   if (!s || !s.next) { showToast('Apri la serie per iniziare a segnare gli episodi'); return; }
   if (!episodesCache[id]) await ensureEpisodes(id);
   const eps = episodesCache[id];
   const nextEp = eps && eps.find(e => e.season===s.next.season && e.number===s.next.number);
   if (isFutureEpisode(nextEp)) { showToast('Episodio non ancora uscito'); return; }
+  if (srcEl) celebrateMark(srcEl);
   const markedSeason = s.next.season, markedNumber = s.next.number;
   const key = `${markedSeason}x${markedNumber}`;
   if (!s.watched) s.watched = {};
@@ -7172,7 +7244,7 @@ async function renderFilmSheet(f, inLib) {
   sheet.style.removeProperty('--accent');
   sheet.innerHTML = `
     <div class="hero">
-      ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt="">`:''}
+      ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt=""><div class="hero-sheen"></div>`:''}
       <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       </a>
