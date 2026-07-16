@@ -184,7 +184,7 @@
     background: rgba(var(--overlay-rgb),0.08); border: 0.5px solid rgba(var(--overlay-rgb),0.14);
     color: rgba(var(--overlay-rgb),0.55); display: inline-flex; align-items: center; justify-content: center;
   }
-  .mode-btn.active-view { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .mode-btn.active-view { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 
   /* sections */
   .section { padding: 18px 16px 0; }
@@ -746,6 +746,7 @@
   .people-search-tab svg { display: block; }
   /* tab Attività amici / Amici suggeriti / Ricerca: distribuiti su tutta la larghezza */
   #profilePeopleTabs { justify-content: stretch; gap: 6px; }
+  #profilePeopleTabs .seasontab.active { background: var(--accent); color: var(--accent-ink); }
   #profilePeopleTabs .seasontab { flex: 1 1 0; min-width: 0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #profilePeopleTabs .people-search-tab { flex: 0 0 auto; }
   .people-search-input {
