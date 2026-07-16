@@ -5067,6 +5067,19 @@ function renderProfileFeedBody() {
 // ---------- scheda persona ----------
 let currentPersonProfile = null;
 
+// Cache la query "chi segue questo utente" (array-contains, fino a 500 doc):
+// riaprire lo stesso profilo entro un minuto non la rifà da zero.
+const seguitiUidsCache = new Map(); // uid -> { ts, uids }
+const SEGUITI_UIDS_TTL = 60000;
+async function getSeguitiUids(uid) {
+  const cached = seguitiUidsCache.get(uid);
+  if (cached && Date.now() - cached.ts < SEGUITI_UIDS_TTL) return cached.uids;
+  const seg = await fbDb.collection('publicProfiles').where('followers', 'array-contains', uid).limit(500).get();
+  const uids = seg.docs.map(d => d.id);
+  seguitiUidsCache.set(uid, { ts: Date.now(), uids });
+  return uids;
+}
+
 async function openPerson(uid) {
   if (!fbDb) return;
   closePeopleList();
@@ -5075,17 +5088,18 @@ async function openPerson(uid) {
   sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="spinner"></div></div>`;
   bg.classList.add('open');
   try {
-    const doc = await fbDb.collection('publicProfiles').doc(uid).get();
-    if (!doc.exists) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Profilo non trovato.</div></div>`; return; }
-    currentPersonProfile = doc.data();
     // "Seguiti" affidabile: chi ha questo utente tra i propri follower è, per
     // definizione, seguito da lui. Deriva dal campo followers (sempre aggiornato
     // lato server) invece che dal suo following (che dipende dalla versione
     // dell'app che ha in uso e potrebbe non essersi ancora sincronizzato).
-    try {
-      const seg = await fbDb.collection('publicProfiles').where('followers', 'array-contains', uid).limit(500).get();
-      currentPersonProfile._seguitiUids = seg.docs.map(d => d.id);
-    } catch(e) { currentPersonProfile._seguitiUids = currentPersonProfile.following || []; }
+    // Le due letture non dipendono l'una dall'altra: partono in parallelo.
+    const [doc, seguitiUids] = await Promise.all([
+      fbDb.collection('publicProfiles').doc(uid).get(),
+      getSeguitiUids(uid).catch(() => null)
+    ]);
+    if (!doc.exists) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Profilo non trovato.</div></div>`; return; }
+    currentPersonProfile = doc.data();
+    currentPersonProfile._seguitiUids = seguitiUids || currentPersonProfile.following || [];
     renderPersonSheet(currentPersonProfile);
   } catch(e) { sheet.innerHTML = `<div class="section" style="padding-top:40px"><div class="empty">Errore nel caricamento.</div></div>`; }
 }
@@ -5230,6 +5244,7 @@ function openChat(uid, name, photoURL) {
   if (unsubscribeChat) { unsubscribeChat(); unsubscribeChat = null; }
   const chatId = chatIdFor(uid);
   unsubscribeChat = fbDb.collection('chats').doc(chatId).collection('messages')
+    .orderBy('createdAt').limitToLast(200)
     .onSnapshot(snap => {
       const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => chatMillis(a) - chatMillis(b));
       renderChatMessages(msgs);
@@ -5396,6 +5411,12 @@ async function deleteChat(chatId) {
   } catch(e) { showToast('Errore durante l\'eliminazione'); }
 }
 
+// Cache le foto/nomi "live" dei peer in chat: renderChatListPanel scatta ad
+// ogni update di una qualsiasi chat (onSnapshot), rileggere ogni profilo da
+// zero ogni volta è inutile se non è cambiato negli ultimi secondi.
+const peerProfileCache = new Map(); // uid -> { ts, data }
+const PEER_PROFILE_TTL = 45000;
+
 async function renderChatListPanel() {
   const el = document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
@@ -5406,8 +5427,13 @@ async function renderChatListPanel() {
   let liveProfiles = {};
   if (fbDb) {
     try {
-      const docs = await Promise.all(peerUids.map(u => fbDb.collection('publicProfiles').doc(u).get()));
-      docs.forEach((d, i) => { if (d.exists) liveProfiles[peerUids[i]] = d.data(); });
+      const now = Date.now();
+      const stale = peerUids.filter(u => { const c = peerProfileCache.get(u); return !c || now - c.ts >= PEER_PROFILE_TTL; });
+      if (stale.length) {
+        const docs = await Promise.all(stale.map(u => fbDb.collection('publicProfiles').doc(u).get()));
+        docs.forEach((d, i) => { if (d.exists) peerProfileCache.set(stale[i], { ts: now, data: d.data() }); });
+      }
+      peerUids.forEach(u => { const c = peerProfileCache.get(u); if (c) liveProfiles[u] = c.data; });
     } catch(e) {}
   }
   const existing = chatListCache.map(c => {
@@ -6006,13 +6032,26 @@ function renderTimeLeft(show, episodes, watchedCount) {
   return `<span class="skpi skpi-v"><b>${h} ${h===1?'ora':'ore'}</b> per finirla</span>`;
 }
 
+// Cache leggera per i dati TMDb "di contorno" della scheda (provider, trailer,
+// cast): riaprire la stessa scheda a distanza di pochi minuti non li rifà da
+// zero (prima ogni apertura = 3-4 fetch TMDb completi anche a distanza di secondi).
+const tmdbSideCache = new Map(); // key -> { ts, data }
+const TMDB_SIDE_TTL = 5 * 60 * 1000;
+async function tmdbCachedJson(key, url) {
+  const cached = tmdbSideCache.get(key);
+  if (cached && Date.now() - cached.ts < TMDB_SIDE_TTL) return cached.data;
+  const r = await fetch(url);
+  const data = await r.json();
+  tmdbSideCache.set(key, { ts: Date.now(), data });
+  return data;
+}
+
 // Carica i provider di streaming (dati JustWatch via TMDb) per la regione IT.
 async function loadWatchProviders(type, id) {
   const box = document.getElementById('watchProviders');
   if (!box || !hasTmdbKeySilent()) return;
   try {
-    const r = await fetch(tmdbUrl(`/${type}/${id}/watch/providers`, {}));
-    const data = await r.json();
+    const data = await tmdbCachedJson(`wp:${type}:${id}`, tmdbUrl(`/${type}/${id}/watch/providers`, {}));
     const it = (data.results && data.results.IT) || null;
     const seen = new Set();
     const providers = [...((it && it.flatrate) || []), ...((it && it.free) || [])]
@@ -6033,12 +6072,9 @@ async function loadTrailer(type, id) {
   const btn = document.getElementById('heroPlayBtn');
   if (!btn || !hasTmdbKeySilent()) return;
   try {
-    let vids = [];
-    const r = await fetch(tmdbUrl(`/${type}/${id}/videos`, {}));
-    vids = ((await r.json()).results) || [];
+    let vids = (await tmdbCachedJson(`vid:${type}:${id}:it`, tmdbUrl(`/${type}/${id}/videos`, {}))).results || [];
     if (!vids.some(v => v.site === 'YouTube')) {
-      const r2 = await fetch(tmdbUrl(`/${type}/${id}/videos`, { language: 'en-US' }));
-      vids = ((await r2.json()).results) || [];
+      vids = (await tmdbCachedJson(`vid:${type}:${id}:en`, tmdbUrl(`/${type}/${id}/videos`, { language: 'en-US' }))).results || [];
     }
     const t = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer')
            || vids.find(v => v.site === 'YouTube' && v.type === 'Teaser')
@@ -6054,8 +6090,8 @@ async function loadCast(type, id) {
   const box = document.getElementById('castSec');
   if (!box || !hasTmdbKeySilent()) return;
   try {
-    const r = await fetch(tmdbUrl(`/${type}/${id}${type === 'tv' ? '/aggregate_credits' : '/credits'}`, {}));
-    const cast = (((await r.json()).cast) || []).slice(0, 12);
+    const data = await tmdbCachedJson(`cast:${type}:${id}`, tmdbUrl(`/${type}/${id}${type === 'tv' ? '/aggregate_credits' : '/credits'}`, {}));
+    const cast = (data.cast || []).slice(0, 12);
     if (!cast.length) { box.innerHTML = ''; return; }
     box.innerHTML = `<div class="cast-row">` + cast.map(c => {
       const role = type === 'tv' ? ((c.roles && c.roles[0] && c.roles[0].character) || '') : (c.character || '');
