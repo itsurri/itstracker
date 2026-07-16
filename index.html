@@ -147,6 +147,10 @@
   .topbar-logo {
     font-size: clamp(32px, 10vw, 44px); letter-spacing: -0.035em;
     overflow: hidden; text-overflow: ellipsis; max-width: min(270px, 62vw);
+    /* il testo tutto maiuscolo ha piu' spazio vuoto sopra che sotto nel
+       proprio riquadro (line-height): senza questa correzione il centraggio
+       matematico con i bottoni tondi risulta otticamente piu' basso */
+    margin-top: -0.06em;
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
