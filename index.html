@@ -106,7 +106,7 @@
      schede). Messaggi sta a destra, sempre visibile. Entrambi centrati nello
      spazio disponibile sul loro lato. */
   .topbar-back {
-    display: none; grid-column: 1; justify-self: center; position: relative;
+    display: none; grid-column: 1; justify-self: end; position: relative;
     width: 40px; height: 40px; border-radius: 50%; border: none;
     background: var(--accent); color: var(--accent-ink); align-items: center; justify-content: center; padding: 0;
   }
@@ -116,16 +116,17 @@
      tondo, la punta no), sembrando decentrata anche se la viewBox è simmetrica */
   .topbar-back svg { transform: translateX(-1px); }
   /* Messaggi e Notifiche: colorati del colore scelto, come il dado in
-     Ricerca, cosi' si notano di piu' nell'header. */
+     Ricerca, cosi' si notano di piu' nell'header. Vicini al titolo (non
+     centrati nel loro spazio 1fr): lo spazio vuoto resta verso i bordi. */
   .topbar-notif, .topbar-msg {
-    justify-self: center; position: relative;
+    position: relative;
     width: 40px; height: 40px; border-radius: 50%; border: none;
     background: var(--accent); color: var(--accent-ink);
     align-items: center; justify-content: center; padding: 0;
   }
-  .topbar-notif { grid-column: 1; display: none; }
+  .topbar-notif { grid-column: 1; justify-self: end; display: none; }
   .topbar-notif.show { display: flex; }
-  .topbar-msg { grid-column: 3; display: flex; }
+  .topbar-msg { grid-column: 3; justify-self: start; display: flex; }
   .topbar-notif svg, .topbar-msg svg { width: 18px; height: 18px; }
   /* badge bianco/nero (segue il tema chiaro/scuro) invece del colore scelto:
      contrasta sempre bene col bottone, qualunque sia il colore scelto, senza
