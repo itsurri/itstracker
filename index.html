@@ -21,7 +21,7 @@
   @supports (font: -apple-system-body) { :root { --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display"; } }
   :root {
     color-scheme: light dark;
-    --accent: #F7B538; --accent-ink: #000; --accent-rgb: 247,181,56;
+    --accent: #FF2200; --accent-ink: #000; --accent-rgb: 255,34,0;
     --bg: #000; --fg: #fff; --overlay-rgb: 255,255,255;
     --sheet-bg: #0b0b0d; --panel-bg: #1c1c1e;
     --topbar-bg: rgba(10,10,14,0.55);
@@ -7327,7 +7327,7 @@ const ACCENT_COLORS = [
   {n:'Corallo', c:'#FF5A36'}, {n:'Arancione', c:'#FF7A00'}, {n:'Ambra', c:'#FFAA00'}
 ];
 function currentAccent() {
-  try { return localStorage.getItem('itstracker_accent') || '#F7B538'; } catch(e) { return '#F7B538'; }
+  try { return localStorage.getItem('itstracker_accent') || '#FF2200'; } catch(e) { return '#FF2200'; }
 }
 // Nero o bianco a seconda di quanto è chiaro il colore scelto, così il testo
 // sui badge pieni resta leggibile (es. giallo -> testo nero, blu -> testo bianco).
@@ -7344,7 +7344,7 @@ function accentInk(hex) {
   return contrastWithBlack >= contrastWithWhite ? '#000' : '#fff';
 }
 function accentRgb(hex) {
-  const h = hex.replace('#',''); if (h.length < 6) return '247,181,56';
+  const h = hex.replace('#',''); if (h.length < 6) return '255,34,0';
   return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);
 }
 function applyAccent(c) {
