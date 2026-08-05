@@ -141,7 +141,11 @@
      bisogno di un anello per staccarlo */
   .topbar-notif .notif-badge, .topbar-msg .notif-badge { background: var(--fg); color: var(--bg); }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
+  /* Stessa altezza dei bottoni tondi (40px) e testo centrato dentro con
+     flexbox: cosi' il centraggio verticale non dipende piu' da correzioni a
+     occhio sulle metriche del font (che cambiano da font a font ed erano
+     impossibili da azzeccare una volta per tutte). */
+  .topbar-left { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 2px; height: 40px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   /* wordmark "ITSTRACKER": testo live maiuscolo, stessa logica colore di
      prima ("ITS" segue il tema, "TRACKER" il colore scelto). Condivisa da
@@ -157,13 +161,6 @@
   .topbar-logo {
     font-size: clamp(32px, 10vw, 44px); letter-spacing: -0.035em;
     overflow: hidden; text-overflow: ellipsis; max-width: min(270px, 62vw);
-    /* il testo tutto maiuscolo ha piu' spazio vuoto sopra che sotto nel
-       proprio riquadro (line-height): senza questa correzione il centraggio
-       matematico con i bottoni tondi risulta otticamente piu' basso. Ora che
-       il font e' lo stesso ovunque (Baloo 2, caricato esplicitamente) questo
-       valore vale sia per iPhone che per browser - punto di partenza, da
-       affinare con un solo giro di screenshot invece di uno per piattaforma. */
-    margin-top: -0.02em;
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
