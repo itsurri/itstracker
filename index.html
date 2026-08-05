@@ -2567,8 +2567,16 @@ async function refreshShowTotals(id) {
     if (realSeasons.length) {
       const lastAired = show.last_episode_to_air;
       if (lastAired && lastAired.season_number > 0) {
+        const airedSeason = realSeasons.find(se => se.season_number === lastAired.season_number);
         const priorTotal = realSeasons.filter(se => se.season_number < lastAired.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
-        newTotal = priorTotal + (lastAired.episode_number || 0);
+        // Alcune serie (tipicamente anime datati) numerano gli episodi in
+        // last_episode_to_air in modo ASSOLUTO su tutta la serie, non a partire
+        // da 1 dentro la stagione: se il numero supera gli episodi previsti della
+        // sua stessa stagione è già il totale assoluto, sommarci le stagioni
+        // precedenti lo raddoppierebbe (es. Naruto: episode_number 220 su una
+        // stagione da 62, sommato darebbe 378 invece di 220).
+        const epNum = lastAired.episode_number || 0;
+        newTotal = (airedSeason && airedSeason.episode_count && epNum > airedSeason.episode_count) ? epNum : priorTotal + epNum;
         latestAiredDate = lastAired.air_date || null;
       } else {
         // Nessun episodio ancora uscito (serie non ancora iniziata): 0, non il
