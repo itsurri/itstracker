@@ -151,10 +151,9 @@
     /* il testo tutto maiuscolo ha piu' spazio vuoto sopra che sotto nel
        proprio riquadro (line-height): senza questa correzione il centraggio
        matematico con i bottoni tondi risulta otticamente piu' basso.
-       Valore ridotto: calibrato guardando SF Pro Rounded vero (iPhone), non
-       il font di fallback usato in anteprima desktop - con -0.06em il logo
-       risultava tirato troppo in alto rispetto ai bottoni su iPhone. */
-    margin-top: -0.02em;
+       Calibrato su screenshot reali da iPhone (SF Pro Rounded vero, non il
+       font di fallback dell'anteprima desktop). */
+    margin-top: 0.02em;
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
@@ -1548,11 +1547,15 @@
 
   /* splash screen */
   #splash {
-    /* px fissi invece di vh: su iOS Safari 100vh cambia quando la barra degli
-       indirizzi si nasconde/mostra durante il caricamento, e con un'estensione
-       in vh lo splash (centrato in mezzo) si spostava verticalmente ad ogni
-       ricalcolo, dando la sensazione che "ballasse" su e giù. */
-    position: fixed; top: -100px; left: 0; right: 0; bottom: -100px; z-index: 500; background: var(--bg);
+    /* height fissa in "small viewport height" invece di top/bottom: su iOS
+       Safari l'altezza reale del viewport CAMBIA quando la barra degli
+       indirizzi si nasconde/mostra durante il caricamento, e con top/bottom
+       ancorati ai bordi (in px o in vh, uguale) il riquadro si allunga e il
+       contenuto centrato dentro si sposta verso il basso via via che la barra
+       scompare - dando la sensazione che scenda per tutta la durata del
+       caricamento. 100svh resta fissa alla dimensione "più piccola" (barra
+       visibile) e non cambia quando la barra si nasconde. */
+    position: fixed; top: 0; left: 0; right: 0; height: 100svh; z-index: 500; background: var(--bg);
     display: flex; align-items: center; justify-content: center;
     animation: splashOut 0.4s ease 2s forwards;
   }
