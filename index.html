@@ -1467,8 +1467,10 @@
   .rc-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,0.2); z-index: 3; }
   .rc-bar::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct,0); background: var(--art, var(--accent)); }
   /* Il tasto sta sempre su artwork scuro: colori fissi chiari, non legati al
-     tema (con --fg/--overlay-rgb in tema chiaro sarebbe nero su nero). */
-  .resume-card .ep-ring { color: #fff; background: rgba(0,0,0,0.34); border-radius: 50%; }
+     tema (con --fg/--overlay-rgb in tema chiaro sarebbe nero su nero).
+     Interno nero pieno: su locandine chiare o sgargianti la freccia e l'anello
+     restavano poco leggibili con il fondo semitrasparente. */
+  .resume-card .ep-ring { color: #fff; background: #000; border-radius: 50%; }
   .resume-card .ep-ring .epr-track { stroke: rgba(255,255,255,0.28); }
 
   /* ===== progress ring shared ===== */
