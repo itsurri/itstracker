@@ -6680,7 +6680,17 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     // Anche questi episodi vanno nel feed amici: senza questa riga la marcatura
     // in blocco degli episodi precedenti restava invisibile agli amici.
     const show = library[showId];
-    priorUnwatched.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
+    // L'episodio corrente era già stato registrato da applyToggleEpisode (che non
+    // poteva ancora sapere se la serie sarebbe risultata completa, visto che questi
+    // precedenti erano ancora da segnare): se marcandoli la serie risulta ora in
+    // pari, festeggia/registra il completamento invece dei singoli episodi.
+    if (categorizeShow(show) === 'inpari') {
+      celebrateShowComplete(show);
+      logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
+      refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
+    } else {
+      priorUnwatched.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
+    }
     okBtn.textContent = 'Elimina';
     closeConfirm();
   };
@@ -7188,8 +7198,11 @@ async function postComment(epKey, parentId) {
     const [showIdStr, seasonEp] = epKey.split('_');
     const [season, number] = seasonEp.split('x');
     if (mentionUids.length) {
+      const replyToUid = parentId && commentsCache[parentId] ? commentsCache[parentId].uid : null;
       mentionUids.forEach(uid => {
-        if (uid !== currentUser.uid) {
+        // Se menzioni proprio la persona a cui stai rispondendo, ha già ricevuto
+        // la notifica di risposta qui sopra: evita di avvisarla due volte.
+        if (uid !== currentUser.uid && uid !== replyToUid) {
           pushRemoteNotification(uid, {
             type: 'mention', text: `${myName} ti ha menzionato in un commento`,
             showId: Number(showIdStr), season: Number(season), number: Number(number), commentId: docRef.id
