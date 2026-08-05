@@ -9,6 +9,14 @@
   try { var t = localStorage.getItem('serietracker_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e){}
 })();
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Font unico per il logo "ITSTRACKER": prima usava un font di sistema
+     (SF Pro Rounded su iPhone, un font diverso su desktop), con metriche
+     diverse su ogni piattaforma che rendevano impossibile centrarlo rispetto
+     ai bottoni con un solo valore CSS. Caricandolo esplicitamente la resa è
+     identica ovunque. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap">
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="manifest" href="manifest.json">
@@ -135,12 +143,13 @@
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
   .topbar-left { flex-shrink: 0; display: flex; align-items: flex-end; gap: 2px; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
-  /* wordmark "ITSTRACKER": testo live maiuscolo (SF Rounded, peso 900), stessa
-     logica colore di prima ("ITS" segue il tema, "TRACKER" il colore scelto).
-     condivisa da header e splash, con dimensioni diverse per contesto. */
+  /* wordmark "ITSTRACKER": testo live maiuscolo, stessa logica colore di
+     prima ("ITS" segue il tema, "TRACKER" il colore scelto). Condivisa da
+     header e splash, con dimensioni diverse per contesto. Font caricato
+     esplicitamente (non di sistema): stessa resa su iPhone e su browser. */
   .topbar-logo, #splashLogo {
-    font-family: -apple-system, ui-rounded, "SF Pro Rounded", "Segoe UI", sans-serif;
-    font-weight: 900; line-height: 1; white-space: nowrap;
+    font-family: "Baloo 2", -apple-system, ui-rounded, "SF Pro Rounded", "Segoe UI", sans-serif;
+    font-weight: 800; line-height: 1; white-space: nowrap;
   }
   .topbar-logo .tw-its, #splashLogo .tw-its { color: var(--fg); }
   .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); }
@@ -150,10 +159,11 @@
     overflow: hidden; text-overflow: ellipsis; max-width: min(270px, 62vw);
     /* il testo tutto maiuscolo ha piu' spazio vuoto sopra che sotto nel
        proprio riquadro (line-height): senza questa correzione il centraggio
-       matematico con i bottoni tondi risulta otticamente piu' basso.
-       Calibrato su screenshot reali da iPhone (SF Pro Rounded vero, non il
-       font di fallback dell'anteprima desktop). */
-    margin-top: 0.02em;
+       matematico con i bottoni tondi risulta otticamente piu' basso. Ora che
+       il font e' lo stesso ovunque (Baloo 2, caricato esplicitamente) questo
+       valore vale sia per iPhone che per browser - punto di partenza, da
+       affinare con un solo giro di screenshot invece di uno per piattaforma. */
+    margin-top: -0.02em;
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
