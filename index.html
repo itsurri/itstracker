@@ -5026,6 +5026,8 @@ function epTag(a) { return (a && a.season != null && a.number != null) ? `S${a.s
 function feedActionText(a) {
   if (a.type === 'finished_show') return `ha finito <b>${escapeHtml(a.title||'una serie')}</b>`;
   if (a.type === 'watched_film') return `ha visto <b>${escapeHtml(a.title||'un film')}</b>`;
+  if (a.type === 'added_show') return `ha aggiunto <b>${escapeHtml(a.title||'una serie')}</b> alla libreria`;
+  if (a.type === 'added_film') return `ha aggiunto <b>${escapeHtml(a.title||'un film')}</b> da vedere`;
   if (a.type === 'commented') return `ha commentato <b>${escapeHtml(a.title||'un episodio')}</b>`;
   if (a.type === 'watched_episode') {
     const eps = a.episodes || [a];
@@ -5065,7 +5067,7 @@ function groupFeedItems(items) {
   return groups;
 }
 function feedItemHtml(a) {
-  const onclick = a.type === 'watched_film'
+  const onclick = (a.type === 'watched_film' || a.type === 'added_film')
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
   // per un gruppo di episodi l'orario è quello dell'ultimo (il più recente).
@@ -5928,6 +5930,7 @@ async function quickAdd(id) {
     const show = await res.json();
     library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), totalEpisodes: show.number_of_episodes || 0, nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null };
     saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
+    logActivity({ type: 'added_show', showId: Number(id), title: show.name || '', image: library[id].image || null });
     refreshShowTotals(id).then(ch => { if (ch) withoutBarAnim(renderLibrary); }); // conteggio preciso (solo episodi usciti)
     renderTvResultsFromCache();
     if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
@@ -5947,6 +5950,7 @@ async function quickAddFilm(id) {
     const f = await res.json();
     filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false, addedAt: Date.now() };
     saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
+    logActivity({ type: 'added_film', showId: Number(id), title: f.title || '', image: filmLibrary[id].image || null });
     renderFilmResultsFromCache();
     if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
   } catch(e) { showToast('Errore, riprova'); }
