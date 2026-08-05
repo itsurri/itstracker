@@ -1416,20 +1416,6 @@
     animation: checkRing 0.5s ease-out forwards;
   }
   @keyframes checkRing { from { transform: scale(0.75); opacity: 0.85; } to { transform: scale(2.1); opacity: 0; } }
-  /* timbro "visto": una spunta verde che compare sul bottone e svanisce */
-  .mark-stamp {
-    position: fixed; z-index: 600; pointer-events: none; color: #30D158;
-    transform: translate(-50%,-50%) scale(0.3); opacity: 0;
-    filter: drop-shadow(0 3px 10px rgba(48,209,88,0.55));
-  }
-  .mark-stamp svg { width: 46px; height: 46px; display: block; }
-  .mark-stamp.go { animation: markStamp 0.72s cubic-bezier(.3,1.5,.5,1) forwards; }
-  @keyframes markStamp {
-    0% { opacity: 0; transform: translate(-50%,-50%) scale(0.3) rotate(-14deg); }
-    28% { opacity: 1; transform: translate(-50%,-50%) scale(1.18) rotate(0); }
-    52% { transform: translate(-50%,-50%) scale(1) rotate(0); }
-    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.05); }
-  }
   /* lampo verde sulla copertina della card appena segnata */
   .mark-posterflash {
     position: fixed; z-index: 590; pointer-events: none; opacity: 0;
@@ -1440,7 +1426,7 @@
     0% { opacity: 0; } 22% { opacity: 1; } 100% { opacity: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .mark-stamp, .mark-posterflash { display: none; }
+    .mark-posterflash { display: none; }
   }
   /* pop del riquadro statistica quando il numero finisce di contare */
   .count-done { animation: countPop 0.42s cubic-bezier(.34,1.5,.6,1); }
@@ -6715,17 +6701,11 @@ async function ensureEpisodes(id) {
 }
 
 // Segna visto il "prossimo episodio" dalla schermata Continua, avanzando al successivo.
-// "Timbro visto": spunta verde animata sul bottone + lampo sulla copertina della
-// card. Usa overlay fixed su body cosi' sopravvivono al re-render della lista.
+// Lampo sulla copertina della card. Usa overlay fixed su body cosi' sopravvive
+// al re-render della lista. (Niente più spunta V: andava in sovrapposizione
+// con il pop+anello che il bottone già mostra da solo.)
 function celebrateMark(el) {
   if (!el || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-  const r = el.getBoundingClientRect();
-  const st = document.createElement('div');
-  st.className = 'mark-stamp';
-  st.style.left = (r.left + r.width/2) + 'px'; st.style.top = (r.top + r.height/2) + 'px';
-  st.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-  document.body.appendChild(st); void st.offsetWidth; st.classList.add('go');
-  setTimeout(() => st.remove(), 740);
   const card = el.closest('.gcard, .list-item, .resume-card, .person-item, .searchcard');
   const img = card && card.querySelector('img');
   if (img) {
