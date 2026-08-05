@@ -141,11 +141,14 @@
      bisogno di un anello per staccarlo */
   .topbar-notif .notif-badge, .topbar-msg .notif-badge { background: var(--fg); color: var(--bg); }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  /* Stessa altezza dei bottoni tondi (40px) e testo centrato dentro con
-     flexbox: cosi' il centraggio verticale non dipende piu' da correzioni a
-     occhio sulle metriche del font (che cambiano da font a font ed erano
-     impossibili da azzeccare una volta per tutte). */
-  .topbar-left { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 2px; height: 40px; }
+  /* Stessa altezza dei bottoni tondi (40px), CON overflow:hidden: senza
+     questo il testo (che a font grande supera i 40px) sporgeva comunque dal
+     riquadro e lo ingrandiva, vanificando l'altezza fissata qui sotto. Con
+     il ritaglio, qualunque font/dimensione venga usato la scritta risulta
+     tagliata in modo simmetrico sopra e sotto (perche' e' centrata), quindi
+     resta sempre alta esattamente come i bottoni, senza bisogno di calcolare
+     alcuna metrica del font. */
+  .topbar-left { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 2px; height: 40px; overflow: hidden; }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   /* wordmark "ITSTRACKER": testo live maiuscolo, stessa logica colore di
      prima ("ITS" segue il tema, "TRACKER" il colore scelto). Condivisa da
