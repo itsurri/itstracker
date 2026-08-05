@@ -476,14 +476,13 @@
   }
   /* Terza riga: il prossimo episodio da guardare. Sta da solo, non piu' in mezzo
      agli altri dati, perche' e' l'unica informazione per cui apri l'app.
-     L'etichetta e' piu' piccola del numero: e' la parte lunga della riga, e
-     tenendola compatta il numero dell'episodio non finisce nei puntini
-     (con tutto a 13px "Prossimo Episodio · S18 E787" veniva troncato). */
+     Etichetta e numero hanno lo stesso corpo: ci stanno perche' la riga si e'
+     allargata togliendo la × (prima, con la × presente, l'etichetta andava
+     rimpicciolita o "S18 E787" finiva nei puntini). */
   .li-next {
     font-size: 13px; font-weight: 800; margin-top: 4px; color: #0A84FF;
     font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .li-next-lbl { font-size: 11.5px; font-weight: 700; opacity: 0.75; }
   .li-next-done { color: #30D158; }
   .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* meta compatte (voto, stagioni, prossimo ep, stato): scritte colorate senza
@@ -545,14 +544,8 @@
   .list-item .li-prog i { display: block; height: 100%; border-radius: 2px; background: var(--accent); width: var(--pct,0); transform-origin: left; animation: barGrow 0.7s cubic-bezier(.4,0,.2,1); }
   .list-item .lib-actions .ep-check, .list-item .lib-actions .act-btn { width: 38px; height: 38px; }
   .list-item .lib-actions svg { width: 18px; height: 18px; }
-  /* La × resta (serve per togliere la serie) ma smette di gridare: senza
-     riempimento rosso e piu' piccola, cosi' l'azione principale e' l'anello.
-     Stretta anche per lasciare larghezza alla riga del prossimo episodio. */
-  .list-item .lib-actions { gap: 2px; }
-  .list-item .lib-actions .act-remove {
-    width: 26px; height: 26px; background: none; color: rgba(var(--overlay-rgb),0.3);
-  }
-  .list-item .lib-actions .act-remove svg { width: 14px; height: 14px; }
+  /* Nelle liste non c'e' piu' la ×: si toglie dalla scheda della serie/film.
+     Resta nelle griglie e nella ricerca. */
   .list-item .lib-actions .ep-ring svg { width: auto; height: auto; }
   .list-item .lib-actions .ep-ring .epr-ico svg { width: 17px; height: 17px; }
   @keyframes barGrow { from { transform: scaleX(0); } }
@@ -1520,11 +1513,21 @@
   @keyframes countPop { 0% { transform: scale(1); } 42% { transform: scale(1.06); } 100% { transform: scale(1); } }
 
   /* ===== upcoming (In arrivo) ===== */
-  .up-item { display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.08); }
-  .up-item img, .up-item .noimg-s { width: 42px; height: 58px; border-radius: 8px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
+  /* Stessa veste delle righe di libreria: poster grande, titolo forte e tinta
+     presa dall'artwork. Le informazioni mostrate restano quelle di prima. */
+  .up-item { display: flex; gap: 13px; align-items: center; padding: 10px; margin-bottom: 8px; border-radius: 20px; cursor: pointer; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.1); box-shadow: inset 0 1px 0 rgba(var(--overlay-rgb),0.05), 0 2px 6px rgba(0,0,0,0.25); }
+  .up-item.art {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--art) 30%, transparent), transparent 60%),
+      rgba(var(--overlay-rgb),0.05);
+    border-color: color-mix(in srgb, var(--art) 28%, rgba(var(--overlay-rgb),0.1));
+  }
+  .up-item img, .up-item .noimg-s { width: 56px; height: 80px; border-radius: 10px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
   .up-info { flex: 1; min-width: 0; }
-  .up-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .up-ep { font-size: 12px; color: rgba(var(--overlay-rgb),0.5); margin-top: 3px; }
+  .up-name { font-size: 16.5px; font-weight: 750; line-height: 1.25; letter-spacing: -0.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .up-ep { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* stesso blu degli episodi usato nelle righe di libreria */
+  .up-ep .up-ep-code { color: #0A84FF; font-weight: 800; font-variant-numeric: tabular-nums; }
   .up-date { flex-shrink: 0; text-align: center; min-width: 58px; background: rgba(var(--overlay-rgb),0.06); border-radius: 14px; padding: 7px 8px; }
   .up-date .ud-d { font-size: 15px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
   .up-date .ud-m { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; }
@@ -2601,7 +2604,7 @@ function applyCardGlows(container) {
   // Righe della lista: stesso colore dominante, ma messo in --art invece che in
   // --accent. Scrivere --accent qui ridefinirebbe il colore dell'app dentro la
   // riga, tingendo anche cose che devono restare del colore scelto dall'utente.
-  (container || document).querySelectorAll('.list-item[data-poster]:not(.art-done)').forEach(el => {
+  (container || document).querySelectorAll('.list-item[data-poster]:not(.art-done), .up-item[data-poster]:not(.art-done)').forEach(el => {
     el.classList.add('art-done');
     const url = el.getAttribute('data-poster');
     if (!url) return;
@@ -4583,11 +4586,11 @@ async function renderUpcoming(container) {
         <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</span><span class="ud-days-mini">${daysMini}</span></div>
       </div>`;
     }
-    return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)">
+    return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)"${u.image ? ` data-poster="${thumbImg(u.image,'w92')}"` : ''}>
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
-        <div class="up-ep">S${u.season}E${u.number} · ${escapeHtml(u.epname || ('Episodio ' + u.number))}</div>
+        <div class="up-ep"><span class="up-ep-code">S${u.season}E${u.number}</span> · ${escapeHtml(u.epname || ('Episodio ' + u.number))}</div>
       </div>
       <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
@@ -4595,6 +4598,9 @@ async function renderUpcoming(container) {
   container.innerHTML = viewMode === 'grid'
     ? `<div class="section" style="padding-top:0"><div class="grid">${rows}</div></div>`
     : `<div class="section" style="padding-top:0">${rows}</div>`;
+  // renderLibrary() esce prima di arrivare al suo applyCardGlows quando la
+  // categoria e' "in arrivo": la tinta dall'artwork va applicata qui.
+  applyCardGlows(container);
 }
 
 
@@ -4645,7 +4651,7 @@ function renderListTv(key, s) {
     s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
   ].filter(Boolean).join('');
   const nextLine = next
-    ? `<div class="li-next"><span class="li-next-lbl">Prossimo Episodio</span> · S${next.season} E${next.number}</div>`
+    ? `<div class="li-next">Prossimo Episodio · S${next.season} E${next.number}</div>`
     : (isDone ? `<div class="li-next li-next-done">Completata</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
@@ -4656,7 +4662,7 @@ function renderListTv(key, s) {
       <div class="li-chips">${chips}</div>
       ${nextLine}
     </div>
-    <div class="lib-actions">${isDone ? ringDoneBtn(id) : ringNextBtn(id, pct)}${removeBtnTv(id)}</div>
+    <div class="lib-actions">${isDone ? ringDoneBtn(id) : ringNextBtn(id, pct)}</div>
   </div>`;
 }
 
@@ -4916,7 +4922,7 @@ function renderListFilm(key, f) {
         f.year ? `<span class="chip chip-date">${f.year}</span>` : null
       ].filter(Boolean).join('')}</div>
     </div>
-    <div class="lib-actions">${filmCheckBtn(id)}${removeBtnFilm(id)}</div>
+    <div class="lib-actions">${filmCheckBtn(id)}</div>
   </div>`;
 }
 
@@ -8114,13 +8120,13 @@ function tutData(tab) {
     tv: { icon: TUT_SVG.tabTv, title: 'Le tue Serie', sub: 'La schermata iniziale: le serie che segui, divise per stato.', steps: [
       { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista, In arrivo. Toccane uno per filtrare.' },
       { vis: `<span class="act-btn act-next">${ICO_ARROW}</span>`, label: 'Segna visto', desc: 'Il cerchio verde segna come visto il prossimo episodio; a serie finita diventa una spunta.' },
-      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Il cerchio rosso toglie la serie dalla libreria.' },
+      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Nella vista a griglia il cerchio rosso toglie la serie. Dalla lista, aprila e usa "Rimuovi dalla libreria".' },
       { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca una serie per episodi, cast, trailer e statistiche.' }
     ]},
     film: { icon: TUT_SVG.tabFilm, title: 'I tuoi Film', sub: 'I film che segui, divisi tra Visti e Da vedere.', steps: [
       { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Visti e Da vedere. Toccane uno per filtrare.' },
       { vis: `<span class="ep-check done">${ICO_V}</span>`, label: 'Visto / Da vedere', desc: 'La spunta verde segna il film come visto, o lo riporta tra i da vedere.' },
-      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Il cerchio rosso toglie il film dalla libreria.' },
+      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Nella vista a griglia il cerchio rosso toglie il film. Dalla lista, aprilo e usa "Rimuovi dalla libreria".' },
       { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca un film per trama, cast e trailer.' }
     ]},
     search: { icon: TUT_SVG.tabSearch, title: 'Cerca e scopri', sub: 'Trova nuove serie e film e aggiungili alla tua libreria.', steps: [
