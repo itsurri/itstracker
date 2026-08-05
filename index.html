@@ -2558,30 +2558,22 @@ async function refreshShowTotals(id) {
     // per la stagione più recente (ancora in corso) va contato solo ciò che è già andato in
     // onda, altrimenti il totale resta sempre più alto del conteggio "visti" anche quando si
     // è perfettamente in pari (mancano solo episodi futuri).
+    // Niente fetch per-stagione (fragile con richieste in parallelo su tante serie
+    // e soggetto a fusi orari sulla data): TMDb stessa ci dice già qual è l'ultimo
+    // episodio REALMENTE uscito con last_episode_to_air, quindi basta sommare le
+    // stagioni precedenti (complete) al numero di episodio lì indicato.
     let newTotal = show.number_of_episodes || 0;
     let latestAiredDate = null; // data reale dell'episodio più recente uscito, per il pallino "nuovo ep"
     if (realSeasons.length) {
-      const latest = realSeasons.reduce((a,b) => b.season_number > a.season_number ? b : a);
-      const priorTotal = realSeasons.filter(se => se.season_number !== latest.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
-      try {
-        const latestEps = await fetchTvEpisodes(id, [latest.season_number]);
-        // fetchTvEpisodes ingoia i propri errori di rete e restituisce [] per la
-        // stagione fallita: senza questo controllo, un fallimento momentaneo
-        // veniva letto come "0 episodi usciti" e salvato come totale vero,
-        // per poi sembrare "sono usciti nuovi episodi" al refresh successivo
-        // (quando la rete torna a funzionare e il totale corretto è più alto) -
-        // anche su serie finite da anni.
-        if (!latestEps.length && latest.episode_count) throw new Error('fetch stagione fallito');
-        const airedEps = latestEps.filter(e => e.airdate && !isFutureDateStr(e.airdate));
-        newTotal = priorTotal + airedEps.length;
-        if (airedEps.length) latestAiredDate = airedEps.reduce((max,e) => (!max || e.airdate > max) ? e.airdate : max, null);
-      } catch(e) {
-        // Fetch della stagione corrente fallito (es. troppe richieste in parallelo
-        // all'apertura app): NON usare il totale grezzo di TMDb come fallback, perché
-        // include anche gli episodi futuri non ancora usciti e farebbe apparire come
-        // "da continuare" serie in realtà già in pari. Meglio lasciare il totale
-        // invariato e riprovare al prossimo refresh.
-        newTotal = library[id].totalEpisodes || 0;
+      const lastAired = show.last_episode_to_air;
+      if (lastAired && lastAired.season_number > 0) {
+        const priorTotal = realSeasons.filter(se => se.season_number < lastAired.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
+        newTotal = priorTotal + (lastAired.episode_number || 0);
+        latestAiredDate = lastAired.air_date || null;
+      } else {
+        // Nessun episodio ancora uscito (serie non ancora iniziata): 0, non il
+        // totale previsto, altrimenti risulterebbe "da continuare" anziché "da vedere".
+        newTotal = 0;
       }
     }
     const newSeasons = realSeasons.length || show.number_of_seasons || library[id].totalSeasons;
