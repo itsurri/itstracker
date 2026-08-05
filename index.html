@@ -6643,7 +6643,8 @@ function toggleMarkAll(showId) {
     showToast('Episodi rimossi');
   } else {
     let changed = false;
-    aired.forEach(e => { const k = `${e.season}x${e.number}`; if (!w[k]) { w[k] = Date.now(); changed = true; } });
+    var newlyMarked = [];
+    aired.forEach(e => { const k = `${e.season}x${e.number}`; if (!w[k]) { w[k] = Date.now(); changed = true; newlyMarked.push(e); } });
     if (!changed) { showToast('Già tutto segnato come visto'); return; }
     showToast('Episodi usciti segnati come visti');
   }
@@ -6663,6 +6664,11 @@ function toggleMarkAll(showId) {
     celebrateShowComplete(show);
     logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
     refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
+  } else if (!wasAll && newlyMarked && newlyMarked.length) {
+    // Marcatura in blocco che NON completa la serie (restano stagioni/episodi
+    // futuri): senza questo, gli episodi segnati così sparivano dal feed amici,
+    // che registrava un evento solo quando la serie veniva finita del tutto.
+    newlyMarked.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
   }
 }
 
@@ -6681,6 +6687,10 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     renderLibrary();
     checkAchievements();
     updateMarkAllBtn(showId);
+    // Anche questi episodi vanno nel feed amici: senza questa riga la marcatura
+    // in blocco degli episodi precedenti restava invisibile agli amici.
+    const show = library[showId];
+    priorUnwatched.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
     okBtn.textContent = 'Elimina';
     closeConfirm();
   };
