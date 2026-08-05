@@ -1525,9 +1525,7 @@
   .up-item img, .up-item .noimg-s { width: 56px; height: 80px; border-radius: 10px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
   .up-info { flex: 1; min-width: 0; }
   .up-name { font-size: 16.5px; font-weight: 750; line-height: 1.25; letter-spacing: -0.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .up-ep { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* stesso blu degli episodi usato nelle righe di libreria */
-  .up-ep .up-ep-code { color: #0A84FF; font-weight: 800; font-variant-numeric: tabular-nums; }
+  /* la riga dati usa .li-chips, gli stessi stili e colori delle altre liste */
   .up-date { flex-shrink: 0; text-align: center; min-width: 58px; background: rgba(var(--overlay-rgb),0.06); border-radius: 14px; padding: 7px 8px; }
   .up-date .ud-d { font-size: 15px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
   .up-date .ud-m { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; }
@@ -4559,6 +4557,19 @@ async function markAllNotificationsRead() {
   renderNotifPanel();
 }
 
+// Riga dati di "In arrivo": totale stagioni (viola) e totale episodi (blu),
+// come nelle altre liste. I numeri arrivano dalla libreria, non dalla cache
+// delle uscite, che porta solo i dati del prossimo episodio.
+function upMetaChips(u) {
+  const s = library[u.id] || {};
+  const seasons = s.totalSeasons || 0;
+  const eps = s.totalEpisodes || 0;
+  return [
+    seasons ? `<span class="chip chip-seasons">${seasons} ${seasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null,
+    eps ? `<span class="chip chip-episodes">${eps} ${eps === 1 ? 'Episodio' : 'Episodi'}</span>` : null
+  ].filter(Boolean).join('');
+}
+
 async function renderUpcoming(container) {
   if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = `<div class="section" style="padding-top:0"><div class="cat-empty">Aggiungi la tua API key TMDb in Impostazioni.</div></div>`; return; }
   if (!upcomingCache) container.innerHTML = `<div class="section" style="padding-top:0">${viewMode === 'grid' ? searchSkeletonGrid(6) : `<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(5)}</div>`}</div>`;
@@ -4590,7 +4601,7 @@ async function renderUpcoming(container) {
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
-        <div class="up-ep"><span class="up-ep-code">S${u.season}E${u.number}</span> · ${escapeHtml(u.epname || ('Episodio ' + u.number))}</div>
+        <div class="li-chips">${upMetaChips(u)}</div>
       </div>
       <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</div><div class="ud-days">${daysLabel}</div></div>
     </div>`;
