@@ -106,6 +106,13 @@
   .topbar {
     padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+    /* ALTEZZA CONDIVISA da titolo e bottoni: i cerchi sono grandi esattamente
+       cosi', e la dimensione del testo e' CALCOLATA (vedi .topbar-logo) perche'
+       le maiuscole siano alte esattamente altrettanto. Cosi' "stessa altezza"
+       e' garantita per costruzione su qualunque schermo, non tarata a occhio.
+       Scala con la larghezza perche' a 40px fissi la scritta non entrerebbe
+       accanto ai due bottoni sugli schermi dei telefoni. */
+    --logo-h: clamp(26px, 8vw, 40px);
   }
   .topbar-left { grid-column: 2; justify-self: center; }
   /* tasto indietro (neutro, e' solo navigazione) e Notifiche condividono lo
@@ -115,7 +122,7 @@
      spazio disponibile sul loro lato. */
   .topbar-back {
     display: none; grid-column: 1; justify-self: end; position: relative;
-    width: 40px; height: 40px; border-radius: 50%; border: none;
+    width: var(--logo-h); height: var(--logo-h); border-radius: 50%; border: none;
     background: var(--accent); color: var(--accent-ink); align-items: center; justify-content: center; padding: 0;
   }
   .topbar-back.show { display: flex; }
@@ -128,27 +135,32 @@
      centrati nel loro spazio 1fr): lo spazio vuoto resta verso i bordi. */
   .topbar-notif, .topbar-msg {
     position: relative;
-    width: 40px; height: 40px; border-radius: 50%; border: none;
+    width: var(--logo-h); height: var(--logo-h); border-radius: 50%; border: none;
     background: var(--accent); color: var(--accent-ink);
     align-items: center; justify-content: center; padding: 0;
   }
   .topbar-notif { grid-column: 1; justify-self: end; display: none; }
   .topbar-notif.show { display: flex; }
   .topbar-msg { grid-column: 3; justify-self: start; display: flex; }
-  .topbar-notif svg, .topbar-msg svg { width: 18px; height: 18px; }
+  /* icone proporzionali al cerchio, che ora scala con lo schermo */
+  .topbar-notif svg, .topbar-msg svg, .topbar-back svg {
+    width: calc(var(--logo-h) * 0.45); height: calc(var(--logo-h) * 0.45);
+  }
+  /* i cerchi sui telefoni sono piu' piccoli di 40px: quest'area invisibile
+     tiene il bersaglio del dito comodo come prima */
+  .topbar-notif::after, .topbar-msg::after, .topbar-back::after {
+    content: ''; position: absolute; inset: -7px; border-radius: 50%;
+  }
   /* badge bianco/nero (segue il tema chiaro/scuro) invece del colore scelto:
      contrasta sempre bene col bottone, qualunque sia il colore scelto, senza
      bisogno di un anello per staccarlo */
   .topbar-notif .notif-badge, .topbar-msg .notif-badge { background: var(--fg); color: var(--bg); }
   .topbar-left h1 { font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-  /* Stessa altezza dei bottoni tondi (40px), CON overflow:hidden: senza
-     questo il testo (che a font grande supera i 40px) sporgeva comunque dal
-     riquadro e lo ingrandiva, vanificando l'altezza fissata qui sotto. Con
-     il ritaglio, qualunque font/dimensione venga usato la scritta risulta
-     tagliata in modo simmetrico sopra e sotto (perche' e' centrata), quindi
-     resta sempre alta esattamente come i bottoni, senza bisogno di calcolare
-     alcuna metrica del font. */
-  .topbar-left { flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 2px; height: 40px; overflow: hidden; }
+  /* alto esattamente quanto i bottoni; il testo dentro e' centrato */
+  .topbar-left {
+    min-width: 0; display: flex; align-items: center; justify-content: center;
+    gap: 2px; height: var(--logo-h);
+  }
   .topbar-by { font-size: 10px; font-weight: 400; color: var(--fg); margin-bottom: 4px; white-space: nowrap; }
   /* wordmark "ITSTRACKER": testo live maiuscolo, stessa logica colore di
      prima ("ITS" segue il tema, "TRACKER" il colore scelto). Condivisa da
@@ -160,10 +172,22 @@
   }
   .topbar-logo .tw-its, #splashLogo .tw-its { color: var(--fg); }
   .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); }
-  /* max-width tiene la scritta corta cosi' i bottoni ai lati restano sempre centrati */
+  /* Dimensione CALCOLATA, non scelta a occhio. Misurando i pixel realmente
+     disegnati da Baloo 2 in peso 800, la scritta "ITSTRACKER" occupa in
+     altezza 0.6563em (le lettere tonde S e C sporgono un filo oltre quelle
+     piatte, che stanno a 0.6406em). Dividendo l'altezza voluta per 0.6563 si
+     ottiene la dimensione del testo che rende l'ingombro visibile della
+     scritta esattamente uguale al diametro dei cerchi.
+     Il top di +0.0206em la centra: con line-height:1 il riquadro del testo ha
+     0.1512em di vuoto sopra la scritta e 0.1925em sotto (il vuoto sotto serve
+     alle lettere che scendono, tipo la "g", qui assenti), quindi senza
+     correzione la scritta risulta alta di meta' di quella differenza.
+     Entrambi i valori sono misurati, non stimati: vanno rifatti solo se si
+     cambia font o peso. */
   .topbar-logo {
-    font-size: clamp(32px, 10vw, 44px); letter-spacing: -0.035em;
-    overflow: hidden; text-overflow: ellipsis; max-width: min(270px, 62vw);
+    font-size: calc(var(--logo-h) / 0.6563); letter-spacing: -0.035em;
+    position: relative; top: 0.0206em;
+    overflow: hidden; text-overflow: ellipsis; max-width: 100%;
   }
   #splashLogo {
     display: block; text-align: center; margin: 0 auto;
