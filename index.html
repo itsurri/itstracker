@@ -2728,7 +2728,17 @@ async function refreshShowTotals(id) {
     let newTotal = show.number_of_episodes || 0;
     let latestAiredDate = null; // data reale dell'episodio più recente uscito, per il pallino "nuovo ep"
     if (realSeasons.length) {
-      const lastAired = show.last_episode_to_air;
+      // IL GIORNO DELL'USCITA: TMDb sposta l'episodio da next_episode_to_air a
+      // last_episode_to_air solo quando la data e' passata secondo il suo fuso,
+      // quindi per tutto il giorno in cui esce lo tiene ancora fra i "prossimi".
+      // Aprendo la scheda invece contiamo uscito tutto cio' che ha data <= oggi.
+      // Due regole diverse = la serie rimbalzava fra "In arrivo" e "Continua"
+      // per tutto il giorno dell'uscita. Qui vale la stessa regola della scheda:
+      // se esce oggi, e' gia' uscito.
+      const nextUp = show.next_episode_to_air;
+      const lastAired = (nextUp && nextUp.air_date && nextUp.season_number > 0 && !isFutureDateStr(nextUp.air_date))
+        ? nextUp
+        : show.last_episode_to_air;
       if (lastAired && lastAired.season_number > 0) {
         const airedSeason = realSeasons.find(se => se.season_number === lastAired.season_number);
         const priorTotal = realSeasons.filter(se => se.season_number < lastAired.season_number).reduce((sum,se)=>sum+(se.episode_count||0),0);
