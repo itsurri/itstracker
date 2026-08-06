@@ -6,7 +6,14 @@
 <title>itstracker</title>
 <script>
 (function(){
-  try { var t = localStorage.getItem('serietracker_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e){}
+  // Tema scuro per tutti al primo avvio (non la preferenza di sistema): l'app
+  // e' pensata scura. Chi vuole il chiaro lo sceglie da Impostazioni e da quel
+  // momento vale la sua scelta.
+  try {
+    var t = localStorage.getItem('serietracker_theme');
+    if (!t) { t = 'dark'; localStorage.setItem('serietracker_theme', t); }
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1538,11 +1545,21 @@
   .up-info { flex: 1; min-width: 0; }
   .up-name { font-size: 16.5px; font-weight: 750; line-height: 1.25; letter-spacing: -0.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* la riga dati usa .li-chips, gli stessi stili e colori delle altre liste */
-  .up-date { flex-shrink: 0; text-align: center; min-width: 58px; background: rgba(var(--overlay-rgb),0.06); border-radius: 14px; padding: 7px 8px; }
-  .up-date .ud-d { font-size: 15px; font-weight: 800; line-height: 1.15; white-space: nowrap; }
-  .up-date .ud-m { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.5); margin-top: 1px; }
-  .up-date .ud-days { display: inline-block; min-width: 68px; text-align: center; box-sizing: border-box; font-size: 10px; color: #0A84FF; background: rgba(10,132,255,0.14); border-radius: 20px; padding: 2px 8px; font-weight: 700; margin-top: 6px; letter-spacing: 0.02em; }
-  .up-item.up-soon .up-date .ud-days { color: #FF9F0A; background: rgba(255,159,10,0.16); }
+  /* Quanto manca all'uscita: stesso ingombro dell'anello delle righe Continua
+     (44px), colore preso dall'artwork, numero centrato. */
+  .up-days {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    color: var(--art, var(--accent));
+    border: 2.5px solid color-mix(in srgb, var(--art, var(--accent)) 45%, transparent);
+    background: color-mix(in srgb, var(--art, var(--accent)) 12%, transparent);
+  }
+  .up-days.up-days-word { font-size: 11px; }
+  /* stacco identico sopra e sotto il titolo "In arrivo" */
+  #upcomingSection .section { padding-top: 0; }
+  #upcomingSection .cat-title { margin-top: 16px; margin-bottom: 16px; }
   .up-grid-card .badge.up-badge { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .up-grid-card .badge .ud-days-mini { color: #0A84FF; font-weight: 800; }
   .up-grid-card.up-soon .badge .ud-days-mini { color: #FF9F0A; }
@@ -2489,7 +2506,7 @@ function openFilmFromPerson(id) { sheetReturnPersonUid = currentPersonProfile ? 
 let episodesCache = {};
 let searchMode = 'tv';
 let currentTab = 'tv';
-let viewMode = 'grid'; // 'grid' | 'list' | 'wall'
+let viewMode = 'list'; // 'grid' | 'list' | 'wall' — lista per tutti al primo avvio
 let tvCategory = 'continua'; // 'continua' | 'inpari' | 'davedere'
 let filmCategory = 'visti'; // 'visti' | 'davedere'
 let tvSearchGenreFilter = null;
@@ -2537,7 +2554,7 @@ function formatDateIT(dateStr) {
 function loadLibrary() {
   try { library = JSON.parse(localStorage.getItem('serietracker_library') || '{}'); } catch(e) { library={}; }
   try { filmLibrary = JSON.parse(localStorage.getItem('serietracker_filmLibrary') || '{}'); } catch(e) { filmLibrary={}; }
-  try { viewMode = localStorage.getItem('serietracker_view') || 'grid'; } catch(e) {}
+  try { viewMode = localStorage.getItem('serietracker_view') || 'list'; } catch(e) {}
 }
 function saveLibrary() { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e){} scheduleCloudSync(); }
 function saveFilmLibrary() { try { localStorage.setItem('serietracker_filmLibrary', JSON.stringify(filmLibrary)); } catch(e){} scheduleCloudSync(); }
@@ -4381,10 +4398,12 @@ function upcomingWithin90Days() {
   const today = new Date(); today.setHours(0,0,0,0);
   const in90 = new Date(today.getTime() + 90 * 86400000);
   return upcomingCache.filter(u => {
-    // Una serie mai iniziata appartiene a "In lista", non alle prossime uscite:
-    // non stai aspettando il suo episodio, devi ancora cominciarla.
+    // "In arrivo" mostra solo le serie in pari: quelle che hai finito e di cui
+    // stai aspettando il prossimo episodio. Una mai iniziata sta in "In lista";
+    // una che stai ancora guardando e' gia' elencata sopra, in Continua, e
+    // ripeterla qui sarebbe la stessa serie due volte nella stessa schermata.
     const s = library[u.id];
-    if (!s || categorizeShow(s) === 'davedere') return false;
+    if (!s || categorizeShow(s) !== 'inpari') return false;
     const d = new Date(u.date + 'T00:00:00');
     return d >= today && d <= in90;
   });
@@ -4590,7 +4609,7 @@ function upMetaChips(u) {
 // Sotto-sezione di "Continua": se non c'e' nulla in arrivo non lascia buchi,
 // semplicemente non disegna niente (prima era una scheda a se' e mostrava uno
 // stato vuoto a tutta pagina).
-const UP_TITLE = `<div class="cat-title" style="margin-bottom:12px; justify-content:center"><span class="dot" style="background:var(--accent)"></span>In arrivo</div>`;
+const UP_TITLE = `<div class="cat-title" style="justify-content:center"><span class="dot" style="background:var(--accent)"></span>In arrivo</div>`;
 async function renderUpcoming(container) {
   if (!container) return;
   if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = ''; return; }
@@ -4614,13 +4633,14 @@ async function renderUpcoming(container) {
         <div class="badge up-badge"><span>${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</span><span class="ud-days-mini">${daysMini}</span></div>
       </div>`;
     }
-    return `<div class="up-item ${soon ? 'up-soon' : ''}" onclick="openShow(${u.id}, this)"${u.image ? ` data-poster="${thumbImg(u.image,'w92')}"` : ''}>
+    const isWord = daysLeft <= 0;
+    return `<div class="up-item" onclick="openShow(${u.id}, this)"${u.image ? ` data-poster="${thumbImg(u.image,'w92')}"` : ''}>
       ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
       <div class="up-info">
         <div class="up-name">${escapeHtml(u.name)}</div>
         <div class="li-chips">${upMetaChips(u)}</div>
       </div>
-      <div class="up-date"><div class="ud-d">${d.getDate()}</div><div class="ud-m">${MONTHS[d.getMonth()].slice(0,3).toUpperCase()}</div><div class="ud-days">${daysLabel}</div></div>
+      <div class="up-days${isWord ? ' up-days-word' : ''}" title="${daysLabel}">${isWord ? 'Oggi' : '-' + daysLeft}</div>
     </div>`;
   }).join('');
   container.innerHTML = viewMode === 'grid'
