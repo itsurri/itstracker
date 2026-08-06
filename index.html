@@ -531,7 +531,7 @@
   /* badge conteggio delle sezioni: bianco/nero di tema invece del colore
      scelto, ora che il bottone attivo usa il colore scelto come sfondo */
   #tvCount-continua, #tvCount-inpari, #tvCount-davedere,
-  #filmCount-visti, #filmCount-davedere,
+  #filmCount-visti, #filmCount-davedere { background: var(--fg); color: var(--bg); }
   /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
@@ -1645,15 +1645,16 @@
 
   /* splash screen */
   #splash {
-    /* height fissa in "small viewport height" invece di top/bottom: su iOS
-       Safari l'altezza reale del viewport CAMBIA quando la barra degli
-       indirizzi si nasconde/mostra durante il caricamento, e con top/bottom
-       ancorati ai bordi (in px o in vh, uguale) il riquadro si allunga e il
-       contenuto centrato dentro si sposta verso il basso via via che la barra
-       scompare - dando la sensazione che scenda per tutta la durata del
-       caricamento. 100svh resta fissa alla dimensione "più piccola" (barra
-       visibile) e non cambia quando la barra si nasconde. */
-    position: fixed; top: 0; left: 0; right: 0; height: 100svh; z-index: 500; background: var(--bg);
+    /* Due problemi da tenere insieme:
+       - se l'altezza segue il viewport (100%, 100vh, 100dvh), su iOS cambia
+         mentre la barra si nasconde e il contenuto centrato SCIVOLA in basso;
+       - con 100svh (la misura piu' piccola) resta fermo, ma quando la barra e'
+         nascosta lo schermo e' piu' alto del riquadro e sotto si vedeva l'app.
+       100lvh e' la misura PIU' GRANDE ed e' statica: non cambia mai durante il
+       caricamento e copre anche a barra nascosta. I 150px di sconfinamento
+       sopra e sotto coprono il rimbalzo elastico dello scroll. */
+    position: fixed; left: 0; right: 0; top: -150px; height: calc(100lvh + 300px);
+    z-index: 500; background: var(--bg);
     display: flex; align-items: center; justify-content: center;
     animation: splashOut 0.4s ease 2s forwards;
   }
@@ -4379,7 +4380,14 @@ function upcomingWithin90Days() {
   if (!upcomingCache) return [];
   const today = new Date(); today.setHours(0,0,0,0);
   const in90 = new Date(today.getTime() + 90 * 86400000);
-  return upcomingCache.filter(u => { const d = new Date(u.date + 'T00:00:00'); return d >= today && d <= in90; });
+  return upcomingCache.filter(u => {
+    // Una serie mai iniziata appartiene a "In lista", non alle prossime uscite:
+    // non stai aspettando il suo episodio, devi ancora cominciarla.
+    const s = library[u.id];
+    if (!s || categorizeShow(s) === 'davedere') return false;
+    const d = new Date(u.date + 'T00:00:00');
+    return d >= today && d <= in90;
+  });
 }
 
 // Il contatore di "Continua" comprende anche le uscite in arrivo, che ora
@@ -4582,7 +4590,7 @@ function upMetaChips(u) {
 // Sotto-sezione di "Continua": se non c'e' nulla in arrivo non lascia buchi,
 // semplicemente non disegna niente (prima era una scheda a se' e mostrava uno
 // stato vuoto a tutta pagina).
-const UP_TITLE = `<div class="cat-title" style="margin-bottom:12px"><span class="dot" style="background:#0A84FF"></span>In arrivo</div>`;
+const UP_TITLE = `<div class="cat-title" style="margin-bottom:12px; justify-content:center"><span class="dot" style="background:var(--accent)"></span>In arrivo</div>`;
 async function renderUpcoming(container) {
   if (!container) return;
   if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = ''; return; }
