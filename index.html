@@ -29,6 +29,10 @@
   @supports (font: -apple-system-body) { :root { --sf: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display"; } }
   :root {
     color-scheme: light dark;
+    /* Oro delle valutazioni. Un giallo pieno (#FFD60A) spariva sul fondo bianco
+       del tema chiaro; questo oro tiene un contrasto sufficiente su entrambi i
+       fondi (3.0:1 sul bianco, 6.9:1 sul nero) ed e' lo stesso nei due temi. */
+    --gold: #C08A00;
     --accent: #FF2200; --accent-ink: #000; --accent-rgb: 255,34,0;
     --bg: #000; --fg: #fff; --overlay-rgb: 255,255,255;
     --sheet-bg: #0b0b0d; --panel-bg: #1c1c1e;
@@ -500,7 +504,7 @@
   .chip-next, .chip-episodes { color: #0A84FF; }
   .chip-done { color: #30D158; }
   .chip-new  { color: #FF9F0A; }
-  .chip-star { color: #FFD60A; }
+  .chip-star { color: var(--gold); }
   .chip-seasons { color: #C77DFF; }
   .chip-date { color: #0A84FF; }
   /* KPI della scheda serie: visti, totali, % (a fasce), tempo rimanente */
@@ -515,7 +519,7 @@
   .skpi-v { background: rgba(94,92,230,0.16); color: #7D7AFF; }
   .skpi.tier-r { background: rgba(255,69,58,0.13); color: #FF453A; }
   .skpi.tier-o { background: rgba(255,159,10,0.15); color: #FF9F0A; }
-  .skpi.tier-y { background: rgba(255,214,10,0.15); color: #FFD60A; }
+  .skpi.tier-y { background: rgba(192,138,0,0.15); color: var(--gold); }
   .skpi.tier-g { background: rgba(48,209,88,0.13); color: #30D158; }
   /* contatori sulle tab categoria: badge in alto a destra, come "In Arrivo" */
   .tab-count {
@@ -528,7 +532,6 @@
      scelto, ora che il bottone attivo usa il colore scelto come sfondo */
   #tvCount-continua, #tvCount-inpari, #tvCount-davedere,
   #filmCount-visti, #filmCount-davedere,
-  #inarrivoBadge { background: var(--fg); color: var(--bg); }
   /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
@@ -680,7 +683,7 @@
   .sheetbody h2 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.02em; }
   .metarow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: rgba(var(--overlay-rgb),0.1); color: rgba(var(--overlay-rgb),0.75); }
-  .pill-rating { background: rgba(255,214,10,0.16); color: #FFD60A; font-weight: 800; }
+  .pill-rating { background: rgba(192,138,0,0.16); color: var(--gold); font-weight: 800; }
   .summary { font-size: 13.5px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.65); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .summary.expanded { -webkit-line-clamp: unset; overflow: visible; }
   .summary-more { display: none; font-size: 13px; font-weight: 700; color: var(--fg); margin: 0 0 16px; }
@@ -1451,7 +1454,10 @@
     background: rgba(var(--overlay-rgb),0.08); box-shadow: var(--shadow-card);
   }
   .resume-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .resume-card .rc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 16%, rgba(0,0,0,0) 27%, rgba(0,0,0,0.06) 33%, rgba(0,0,0,0.22) 52%, rgba(0,0,0,0.55) 76%, rgba(0,0,0,0.9) 100%); }
+  /* Solo la sfumatura in basso, sotto il testo. Quella in alto serviva a
+     leggere "Riprendi" e la percentuale, che non ci sono piu': il tasto ha
+     gia' il suo tondo nero. */
+  .resume-card .rc-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.08) 42%, rgba(0,0,0,0.26) 58%, rgba(0,0,0,0.6) 78%, rgba(0,0,0,0.92) 100%); }
   /* Niente piu' scritta "Riprendi" ne' percentuale: la card sta gia' in cima a
      "Continua", dirlo era ripetersi. Resta solo il tasto per segnare visto, in
      alto a destra, con attorno l'anello di progresso. */
@@ -1836,7 +1842,6 @@
         <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')"><span class="cat-tab-label">Continua</span><span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')"><span class="cat-tab-label">In Pari</span><span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')"><span class="cat-tab-label">In Lista</span><span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inarrivo" onclick="setTvCategory('inarrivo')"><span class="cat-tab-label">In Arrivo</span><span class="notif-badge cat-corner-badge" id="inarrivoBadge"></span></button>
       </div>
     </div>
     <div id="tvContent"></div>
@@ -2208,13 +2213,18 @@ let lastLocalUpdatedAt = 0;
 // così altri utenti possono trovarti e vedere cosa hai visto senza accedere ai tuoi dati privati.
 function syncPublicProfile() {
   if (!fbDb || !currentUser) return;
+  // lastWatchedAt/watchedAt servono a chi guarda il tuo profilo per ordinare
+  // serie e film dal piu' recente: senza, l'ordine sarebbe quello casuale
+  // con cui sono finiti nella libreria.
   const shows = Object.values(library).map(s => ({
     id: s.id, name: s.name || '', image: s.image || null,
     watched: Object.keys(s.watched || {}).length, total: s.totalEpisodes || 0,
-    next: s.next ? { season: s.next.season, number: s.next.number } : null
+    next: s.next ? { season: s.next.season, number: s.next.number } : null,
+    lastWatchedAt: s.lastWatchedAt || 0
   }));
   const films = Object.values(filmLibrary).map(f => ({
-    id: f.id, title: f.title || '', image: f.image || null, watched: !!f.watched
+    id: f.id, title: f.title || '', image: f.image || null, watched: !!f.watched,
+    watchedAt: f.watchedAt || f.addedAt || 0
   }));
   fbDb.collection('publicProfiles').doc(currentUser.uid).set({
     uid: currentUser.uid,
@@ -4221,14 +4231,6 @@ function renderLibrary() {
   // barra di avanzamento verde solo nella categoria "Pari" (serie in pari)
   container.classList.toggle('cat-inpari', tvCategory === 'inpari');
 
-  if (tvCategory === 'inarrivo') {
-    emptyEl.style.display = 'none';
-    tvCategoryIds = [];
-    if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
-    renderUpcoming(container);
-    return;
-  }
-
   if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; tvCategoryIds = []; return; }
   emptyEl.style.display = 'none';
 
@@ -4244,14 +4246,19 @@ function renderLibrary() {
           ? `<div class="grid wall-grid">${items.map(([k,s]) => wallCardTv(k,s)).join('')}</div>`
           : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
     }
-  </div>`;
+  </div>${tvCategory === 'continua' ? '<div id="upcomingSection"></div>' : ''}`;
   applyCardGlows(container);
+  // "In arrivo" non e' piu' una scheda a se': le prossime uscite stanno sotto
+  // le serie che stai guardando, cosi' in Continua c'e' tutto.
+  if (tvCategory === 'continua') renderUpcoming(document.getElementById('upcomingSection'));
 }
 
 // Contatori sulle tab categoria (serie e film).
 function updateCategoryCounts() {
   const counts = { continua: 0, inpari: 0, davedere: 0 };
   Object.values(library).forEach(s => { const c = categorizeShow(s); if (c in counts) counts[c]++; });
+  // Le prossime uscite stanno dentro "Continua": il suo contatore le somma.
+  counts.continua += upcomingWithin90Days().length;
   ['continua','inpari','davedere'].forEach(c => { const el = document.getElementById('tvCount-' + c); if (el) el.textContent = counts[c]; });
   let visti = 0, dav = 0;
   Object.values(filmLibrary).forEach(f => { if (f.watched) visti++; else dav++; });
@@ -4375,13 +4382,10 @@ function upcomingWithin90Days() {
   return upcomingCache.filter(u => { const d = new Date(u.date + 'T00:00:00'); return d >= today && d <= in90; });
 }
 
-function updateUpcomingBadge() {
-  const badge = document.getElementById('inarrivoBadge');
-  if (!badge) return;
-  const count = upcomingWithin90Days().length;
-  badge.textContent = count > 9 ? '9+' : count;
-  badge.classList.toggle('show', count > 0);
-}
+// Il contatore di "Continua" comprende anche le uscite in arrivo, che ora
+// vivono dentro quella scheda: va riaggiornato appena la cache delle uscite
+// e' pronta (arriva dalla rete, dopo il primo disegno della libreria).
+function updateUpcomingBadge() { updateCategoryCounts(); }
 
 async function ensureUpcomingCache() {
   const now = Date.now();
@@ -4575,18 +4579,18 @@ function upMetaChips(u) {
   ].filter(Boolean).join('');
 }
 
+// Sotto-sezione di "Continua": se non c'e' nulla in arrivo non lascia buchi,
+// semplicemente non disegna niente (prima era una scheda a se' e mostrava uno
+// stato vuoto a tutta pagina).
+const UP_TITLE = `<div class="cat-title" style="margin-bottom:12px"><span class="dot" style="background:#0A84FF"></span>In arrivo</div>`;
 async function renderUpcoming(container) {
-  if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = `<div class="section" style="padding-top:0"><div class="cat-empty">Aggiungi la tua API key TMDb in Impostazioni.</div></div>`; return; }
-  if (!upcomingCache) container.innerHTML = `<div class="section" style="padding-top:0">${viewMode === 'grid' ? searchSkeletonGrid(6) : `<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(5)}</div>`}</div>`;
+  if (!container) return;
+  if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = ''; return; }
+  if (!upcomingCache) container.innerHTML = `<div class="section">${UP_TITLE}<div class="up-skel-list">${'<div class="skel up-skel-row"></div>'.repeat(3)}</div></div>`;
   await ensureUpcomingCache();
   const upcoming90 = upcomingWithin90Days();
 
-  if (!upcoming90.length) {
-    container.innerHTML = `<div class="section" style="padding-top:0"><div class="empty" style="padding:34px 20px">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <div>Nessuna uscita nei prossimi 90 giorni<br>per le serie che segui.</div></div></div>`;
-    return;
-  }
+  if (!upcoming90.length) { container.innerHTML = ''; return; }
   const MONTHS = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
   const today = new Date(); today.setHours(0,0,0,0);
   const rows = upcoming90.map(u => {
@@ -4612,10 +4616,10 @@ async function renderUpcoming(container) {
     </div>`;
   }).join('');
   container.innerHTML = viewMode === 'grid'
-    ? `<div class="section" style="padding-top:0"><div class="grid">${rows}</div></div>`
-    : `<div class="section" style="padding-top:0">${rows}</div>`;
-  // renderLibrary() esce prima di arrivare al suo applyCardGlows quando la
-  // categoria e' "in arrivo": la tinta dall'artwork va applicata qui.
+    ? `<div class="section">${UP_TITLE}<div class="grid">${rows}</div></div>`
+    : `<div class="section">${UP_TITLE}${rows}</div>`;
+  // la tinta dall'artwork va applicata qui: questa sezione viene disegnata
+  // dopo l'applyCardGlows di renderLibrary()
   applyCardGlows(container);
 }
 
@@ -4666,9 +4670,13 @@ function renderListTv(key, s) {
     s.rating ? `<span class="chip chip-star">★ ${fmtRating(s.rating)}</span>` : null,
     s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
   ].filter(Boolean).join('');
-  const nextLine = next
-    ? `<div class="li-next">Prossimo Episodio · S${next.season} E${next.number}</div>`
-    : (isDone ? `<div class="li-next li-next-done">Completata</div>` : '');
+  // Serie che stai guardando: dove sei arrivato, con davanti il codice
+  // dell'episodio. Serie in pari o mai iniziate: non c'e' un "dove sei", quindi
+  // si mostra il totale episodi come in "In arrivo".
+  const cat = categorizeShow(s);
+  const nextLine = (cat === 'continua' && next)
+    ? `<div class="li-next">S${next.season}E${next.number} · Episodio ${watched}/${total}</div>`
+    : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
   return `<div class="list-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
@@ -5341,8 +5349,12 @@ async function openPerson(uid) {
 
 function renderPersonSheet(p) {
   const sheet = document.getElementById('personSheet');
-  const shows = (p.shows||[]).slice().sort((a,b) => (b.watched||0) - (a.watched||0));
-  const films = (p.films||[]).slice();
+  // Ordine cronologico: in cima quello guardato piu' di recente. I profili
+  // sincronizzati prima che salvassimo la data non hanno il campo: quelli
+  // finiscono in fondo, ordinati come prima (per episodi visti).
+  const shows = (p.shows||[]).slice().sort((a,b) =>
+    (b.lastWatchedAt||0) - (a.lastWatchedAt||0) || (b.watched||0) - (a.watched||0));
+  const films = (p.films||[]).slice().sort((a,b) => (b.watchedAt||0) - (a.watchedAt||0));
   const canMessage = currentUser && currentUser.uid !== p.uid;
   const episodes = shows.reduce((s,x) => s + (x.watched||0), 0);
   const filmsWatched = films.filter(f => f.watched).length;
@@ -8134,7 +8146,7 @@ function tutNeutral(svg) { return `<span class="tut-c-neutral">${svg}</span>`; }
 function tutData(tab) {
   const T = {
     tv: { icon: TUT_SVG.tabTv, title: 'Le tue Serie', sub: 'La schermata iniziale: le serie che segui, divise per stato.', steps: [
-      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista, In arrivo. Toccane uno per filtrare.' },
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista. Toccane uno per filtrare. Le prossime uscite stanno in fondo a Continua.' },
       { vis: `<span class="act-btn act-next">${ICO_ARROW}</span>`, label: 'Segna visto', desc: 'Il cerchio verde segna come visto il prossimo episodio; a serie finita diventa una spunta.' },
       { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Nella vista a griglia il cerchio rosso toglie la serie. Dalla lista, aprila e usa "Rimuovi dalla libreria".' },
       { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca una serie per episodi, cast, trailer e statistiche.' }
