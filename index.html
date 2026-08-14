@@ -4725,10 +4725,10 @@ function renderCardTv(key, s) {
   const topCenter = hasNewEp(s) ? `<span class="airing-dot" title="Nuovo episodio"></span>` : '';
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
-  // Serie in pari: "Terminata" solo se davvero conclusa (Ended/Canceled su
-  // TMDB), altrimenti "In pari" — sei aggiornato ma ne usciranno altri.
+  // Serie in pari: "Terminata" (rosso) solo se davvero conclusa (Ended/Canceled
+  // su TMDB), altrimenti "Continua" (verde) — sei aggiornato ma ne usciranno altri.
   const bottomRight = next ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>`
-    : (done ? (isShowEnded(s) ? `<span class="grating" style="color:#30D158">Terminata</span>` : `<span class="grating" style="color:#0A84FF">In pari</span>`) : '');
+    : (done ? (isShowEnded(s) ? `<span class="grating" style="color:#C0453D">Terminata</span>` : `<span class="grating" style="color:#3AA05A">Continua</span>`) : '');
   return gridCard({
     onclick: `openShow(${id}, this)`,
     poster: s.image ? thumbImg(s.image,'w342') : '',
@@ -4769,7 +4769,7 @@ function renderListTv(key, s) {
   // In pari: distingui se e' davvero finita (Ended/Canceled) o se tornera'
   // con nuovi episodi (Returning Series e affini), anche se al momento sei
   // aggiornato con tutto quello che e' uscito finora.
-  const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? ' · Terminata' : ' · In pari') : '';
+  const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? ' · Terminata' : ' · Continua') : '';
   const nextLine = (cat === 'continua' && next)
     ? `<div class="li-next">S${next.season}E${next.number} · Episodio ${watched}/${total}</div>`
     : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
