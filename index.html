@@ -494,7 +494,8 @@
     font-size: 13px; font-weight: 800; margin-top: 4px; color: #0A84FF;
     font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .li-next-done { color: #30D158; }
+  .li-next-done { color: #3AA05A; }
+  .li-next-ended { color: #C0453D; }
   .list-item .li-meta { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* meta compatte (voto, stagioni, prossimo ep, stato): scritte colorate senza
      badge, separate da un punto neutro — piu' pulito dei riquadri pieni */
@@ -4721,13 +4722,17 @@ function renderCardTv(key, s) {
   const done = total > 0 && watched >= total;
   // Stessa struttura per tutte: le serie mai iniziate mostrano S1 E1.
   const next = s.next || (watched === 0 ? { season: 1, number: 1 } : null);
+  // s.next puo' puntare a un episodio futuro/non ancora annunciato con data (di
+  // una stagione gia' su TMDB ma non ancora uscita): in quel caso non e' "il
+  // prossimo da vedere adesso", quindi non deve mascherare il badge Terminata/Continua.
+  const nextIsAired = !s.next || (s.next.airdate && !isFutureDateStr(s.next.airdate));
   const topLeft = s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '';
   const topCenter = hasNewEp(s) ? `<span class="airing-dot" title="Nuovo episodio"></span>` : '';
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
   // Serie in pari: "Terminata" (rosso) solo se davvero conclusa (Ended/Canceled
   // su TMDB), altrimenti "Continua" (verde) — sei aggiornato ma ne usciranno altri.
-  const bottomRight = next ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>`
+  const bottomRight = (next && nextIsAired) ? `<span class="grating" style="color:#0A84FF">S${next.season} E${next.number}</span>`
     : (done ? (isShowEnded(s) ? `<span class="grating" style="color:#C0453D">Terminata</span>` : `<span class="grating" style="color:#3AA05A">Continua</span>`) : '');
   return gridCard({
     onclick: `openShow(${id}, this)`,
@@ -4769,10 +4774,11 @@ function renderListTv(key, s) {
   // In pari: distingui se e' davvero finita (Ended/Canceled) o se tornera'
   // con nuovi episodi (Returning Series e affini), anche se al momento sei
   // aggiornato con tutto quello che e' uscito finora.
+  const inPariClass = cat === 'inpari' ? (isShowEnded(s) ? ' li-next-ended' : ' li-next-done') : '';
   const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? ' · Terminata' : ' · Continua') : '';
   const nextLine = (cat === 'continua' && next)
     ? `<div class="li-next">S${next.season}E${next.number} · Episodio ${watched}/${total}</div>`
-    : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
+    : (total ? `<div class="li-next${inPariClass}">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
   return `<div class="list-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
