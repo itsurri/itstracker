@@ -4774,11 +4774,10 @@ function renderListTv(key, s) {
   // In pari: distingui se e' davvero finita (Ended/Canceled) o se tornera'
   // con nuovi episodi (Returning Series e affini), anche se al momento sei
   // aggiornato con tutto quello che e' uscito finora.
-  const inPariClass = cat === 'inpari' ? (isShowEnded(s) ? ' li-next-ended' : ' li-next-done') : '';
-  const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? ' · Terminata' : ' · Continua') : '';
+  const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? `<span class="li-next-ended"> · Terminata</span>` : `<span class="li-next-done"> · Continua</span>`) : '';
   const nextLine = (cat === 'continua' && next)
     ? `<div class="li-next">S${next.season}E${next.number} · Episodio ${watched}/${total}</div>`
-    : (total ? `<div class="li-next${inPariClass}">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
+    : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
   return `<div class="list-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
