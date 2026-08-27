@@ -1702,6 +1702,32 @@
   }
   .ib-close { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: rgba(var(--overlay-rgb),0.4); }
 
+  /* Avviso "non hai fatto l'accesso": stessa forma del banner Installa, ma in
+     ambra perché segnala un rischio (roba salvata solo qui). Il colore è fisso
+     e non usa --accent: l'avviso deve restare riconoscibile come tale anche se
+     l'utente sceglie un colore app giallo o arancione. */
+  .authBanner {
+    display: none; align-items: center; gap: 10px; position: relative; z-index: 61;
+    padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top));
+    background: rgba(255,159,10,0.13); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 0.5px solid rgba(255,159,10,0.3);
+  }
+  .authBanner.show { display: flex; }
+  /* se compare questo, il banner Installa scende sotto senza doppio safe-area */
+  .authBanner.show ~ .installBanner { padding-top: 10px; }
+  .ab-ico {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,159,10,0.18); color: #FF9F0A;
+  }
+  .ab-text { flex: 1; min-width: 0; }
+  .ab-title { font-size: 12.5px; font-weight: 700; }
+  .ab-sub { font-size: 11px; color: rgba(var(--overlay-rgb),0.55); margin-top: 1px; line-height: 1.35; }
+  .ab-action {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 14px; background: #FF9F0A; color: #1A1200;
+    font-size: 12.5px; font-weight: 800; font-family: inherit;
+  }
+
   /* notifiche */
   .notif-badge {
     display: none; position: absolute; top: -3px; right: -3px; min-width: 15px; height: 15px; padding: 0 3px;
@@ -1785,6 +1811,23 @@
     <div id="splashLogo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
     <div class="splash-by">di Andrea Dellerba</div>
   </div>
+</div>
+<div class="authBanner" id="authBanner">
+  <div class="ab-ico">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3l18 18"/>
+      <path d="M8.3 6.2A5 5 0 0 1 17 9.5a4.2 4.2 0 0 1 3.2 6.4"/>
+      <path d="M17.5 18H7a4 4 0 0 1-1.2-7.8"/>
+    </svg>
+  </div>
+  <div class="ab-text">
+    <div class="ab-title">Non hai fatto l'accesso</div>
+    <div class="ab-sub" id="authBannerSub"></div>
+  </div>
+  <button class="ab-action" id="authBannerAction" onclick="signInGoogle()">Entra</button>
+  <button class="ib-close" onclick="dismissAuthBanner()" aria-label="Chiudi">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
 </div>
 <div class="installBanner" id="installBanner">
   <img src="logo.png" alt="">
@@ -2366,6 +2409,10 @@ if (fbAuth) {
   }).catch(err => { showToast(`Accesso non riuscito${err && err.code ? ' ('+err.code+')' : ''}`); });
   fbAuth.onAuthStateChanged((user) => {
     currentUser = user;
+    // qui lo stato è certo: prima non si mostra niente, così chi è loggato non
+    // vede l'avviso comparire e sparire a ogni apertura
+    authResolved = true;
+    updateAuthBanner();
     if (unsubscribeCloud) { unsubscribeCloud(); unsubscribeCloud = null; }
     if (unsubscribeNotifications) { unsubscribeNotifications(); unsubscribeNotifications = null; }
     if (unsubscribePublicProfile) { unsubscribePublicProfile(); unsubscribePublicProfile = null; }
@@ -2563,8 +2610,14 @@ function loadLibrary() {
   try { filmLibrary = JSON.parse(localStorage.getItem('serietracker_filmLibrary') || '{}'); } catch(e) { filmLibrary={}; }
   try { viewMode = localStorage.getItem('serietracker_view') || 'list'; } catch(e) {}
 }
-function saveLibrary() { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e){} scheduleCloudSync(); }
-function saveFilmLibrary() { try { localStorage.setItem('serietracker_filmLibrary', JSON.stringify(filmLibrary)); } catch(e){} scheduleCloudSync(); }
+function saveLibrary() { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e){} scheduleCloudSync(); refreshAuthBannerCount(); }
+function saveFilmLibrary() { try { localStorage.setItem('serietracker_filmLibrary', JSON.stringify(filmLibrary)); } catch(e){} scheduleCloudSync(); refreshAuthBannerCount(); }
+// Se l'avviso è sotto gli occhi mentre si aggiunge roba, il numero deve salire:
+// vedere "3 serie" diventare "4 serie" dice più di qualsiasi frase.
+function refreshAuthBannerCount() {
+  const b = document.getElementById('authBanner');
+  if (b && b.classList.contains('show')) updateAuthBanner();
+}
 
 // ---------- normalize ----------
 function normalizeLibrary() {
@@ -8178,6 +8231,59 @@ function dismissInstallBanner() {
   if (banner) banner.classList.remove('show');
 }
 
+/* ---------- avviso "non hai fatto l'accesso" ----------
+   Senza accesso scheduleCloudSync() esce subito e tutto quello che segni resta
+   solo su questo dispositivo. Il banner lo ricorda ad ogni apertura: la chiusura
+   vale solo per questa sessione (è una variabile, non finisce in localStorage),
+   quindi riaprendo l'app ricompare. */
+let authBannerDismissed = false;
+// finché Firebase non ha detto la sua, currentUser è null anche per chi è
+// loggato: senza questa guardia l'avviso lampeggerebbe a ogni apertura
+let authResolved = false;
+
+function updateAuthBanner() {
+  const banner = document.getElementById('authBanner');
+  if (!banner || !authResolved) return;
+
+  if (currentUser || authBannerDismissed) {
+    banner.classList.remove('show');
+    return;
+  }
+
+  // Dire quanto c'è in ballo è più convincente di un avviso generico
+  const serie = Object.keys(library || {}).length;
+  const film  = Object.keys(filmLibrary || {}).length;
+  const pezzi = [];
+  if (serie) pezzi.push(serie + (serie === 1 ? ' serie' : ' serie'));
+  if (film)  pezzi.push(film  + (film  === 1 ? ' film'  : ' film'));
+
+  const sub = document.getElementById('authBannerSub');
+  if (sub) {
+    sub.textContent = pezzi.length
+      ? pezzi.join(' e ') + ' solo su questo dispositivo. Entra per non perderli.'
+      : 'Quello che segni resta solo su questo dispositivo.';
+  }
+  // senza Firebase il tasto non porterebbe da nessuna parte: resta solo l'avviso
+  const action = document.getElementById('authBannerAction');
+  if (action) action.style.display = fbAuth ? '' : 'none';
+
+  banner.classList.add('show');
+  dismissInstallBanner();   // un avviso alla volta: questo conta di più
+}
+
+function dismissAuthBanner() {
+  authBannerDismissed = true;
+  const banner = document.getElementById('authBanner');
+  if (banner) banner.classList.remove('show');
+  initInstallBanner();      // liberato lo spazio, l'invito a installare può tornare
+}
+
+function initAuthBanner() {
+  // Se Firebase non parte, onAuthStateChanged non scatta mai: l'avviso è
+  // comunque vero (i dati restano locali), quindi lo mostriamo lo stesso.
+  if (!fbAuth) { authResolved = true; updateAuthBanner(); }
+}
+
 // ---------- tasto "indietro" Android (chiude gli overlay invece dell'app) ----------
 // Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
 // il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
@@ -8335,6 +8441,7 @@ ensureUpcomingCache();
 initPullToRefresh();
 initSheetSwipe();
 initInstallBanner();
+initAuthBanner();
 renderNotifPanel();
 moveTabIndicator(document.querySelector('.tabbtn.active'));
 initSheetParallax();
