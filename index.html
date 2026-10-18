@@ -2039,19 +2039,7 @@
   }
   @media (prefers-reduced-motion: reduce) { .tab-badge-pulse.pulse { animation: none; } }
 
-  /* Bottone + fisso sopra la barra, allineato alla pillola del profilo */
-  .fab-add {
-    position: fixed; z-index: 49;
-    right: max(14px, calc((100vw - 452px) / 2)); bottom: calc(86px + env(safe-area-inset-bottom));
-    width: 52px; height: 52px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--accent); color: var(--accent-ink);
-    box-shadow: 0 10px 26px rgba(var(--accent-rgb),0.42), inset 0 1px 0 rgba(255,255,255,0.35);
-    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s ease;
-  }
-  .fab-add.hide { opacity: 0; transform: scale(0.5); pointer-events: none; }
-  body.splash-active .fab-add { visibility: hidden; }
-  #app { padding-bottom: 175px; }
+  #app { padding-bottom: 120px; }
 
   /* Social: tab con il contatore dentro, non sull'angolo */
   .cat-count {
@@ -2104,7 +2092,6 @@
     .pill-main .tabbtn svg { width: 19px; height: 19px; }
     .tab-lbl { display: inline; font-size: 14px; }
     .tab-badge-pulse { top: 3px; left: auto; right: 4px; }
-    .fab-add { display: none; }
     #app { padding-bottom: 60px; }
     body.splash-active .tabbar-wrap { visibility: hidden; }
   }
@@ -2384,10 +2371,6 @@
     </button>
   </div>
 </div>
-<!-- bottone + fisso: aggiunge subito una serie o un film (apre la ricerca) -->
-<button class="fab-add" id="fabAdd" onclick="goToSearch()" title="Aggiungi" aria-label="Aggiungi una serie o un film">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-</button>
 
 <div class="sheetbg" id="sheetBg">
   <div class="sheet" id="sheet"></div>
@@ -3230,8 +3213,6 @@ function switchTab(tab) {
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
   document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
-  const fab = document.getElementById('fabAdd');
-  if (fab) fab.classList.toggle('hide', tab !== 'tv' && tab !== 'film');
   if (tab === 'profile') renderProfile();
   if (tab === 'social') renderSocial();
   if (tab === 'search') {
@@ -7220,12 +7201,10 @@ function initCardTilt() {
 function initHeaderShrink() {
   const wrap = document.getElementById('topbarWrap');
   if (!wrap) return;
-  let ticking = false;
-  window.addEventListener('scroll', () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(() => { wrap.classList.toggle('scrolled', window.scrollY > 24); ticking = false; });
-  }, { passive: true });
+  // toggle diretto (costa pochissimo; classList non riscrive se non cambia)
+  const update = () => wrap.classList.toggle('scrolled', window.scrollY > 24);
+  window.addEventListener('scroll', update, { passive: true });
+  update();
 }
 // Swipe orizzontale sul contenuto: passa alla scheda accanto (Serie, Film,
 // Cerca, Social, Profilo). Non scatta partendo da righe che si scorrono di
@@ -7270,10 +7249,10 @@ function initTopMenu() {
   const mq = window.matchMedia('(min-width: 900px)');
   const bar = document.querySelector('.tabbar-wrap');
   const topbar = document.querySelector('.topbar');
-  const fab = document.getElementById('fabAdd');
+  const anchor = document.getElementById('sheetBg');
   const place = () => {
     if (mq.matches) { if (bar.parentElement !== topbar) topbar.appendChild(bar); }
-    else if (bar.parentElement !== document.body) document.body.insertBefore(bar, fab);
+    else if (bar.parentElement !== document.body) document.body.insertBefore(bar, anchor);
     moveTabIndicator(document.querySelector('.tabbtn.active'));
   };
   mq.addEventListener('change', place);
