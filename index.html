@@ -891,7 +891,10 @@
   .cat-tab-corner { position: relative; overflow: visible; }
   .seasontab .cat-corner-badge { top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; font-size: 11.5px; line-height: 20px; }
 
-  .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; }
+  .epitem { padding: 12px; border-radius: 20px; margin-bottom: 8px; background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.09);
+    /* niente vetro e niente disegno per gli episodi fuori schermo: con centinaia
+       di episodi in lista (es. Bleach) il telefono finiva la memoria e si chiudeva */
+    content-visibility: auto; contain-intrinsic-size: auto 96px; }
   .epitop { display: flex; gap: 12px; align-items: center; cursor: pointer; }
   .epitem img { width: 76px; height: 48px; border-radius: 10px; object-fit: cover; background: rgba(var(--overlay-rgb),0.08); flex-shrink: 0; }
   .epitem .noimg { width: 76px; height: 48px; border-radius: 10px; background: rgba(var(--overlay-rgb),0.06); flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
@@ -7110,6 +7113,17 @@ function showPersonFollowList(which) {
   else showPeopleList(currentPersonProfile._seguitiUids || currentPersonProfile.following || [], 'Seguiti');
 }
 
+// Tanti episodi segnati insieme (stagione intera, "segna anche i precedenti",
+// serie vista): UNA sola attivita' nel feed invece di una per episodio. Con
+// centinaia di episodi (es. Bleach) partivano centinaia di scritture insieme.
+function logEpisodesBulk(showId, show, eps) {
+  if (!eps || !eps.length) return;
+  const base = { showId: Number(showId), title: (show && show.name) || '', image: (show && show.image) || null };
+  if (eps.length <= 3) { eps.forEach(e => logActivity(Object.assign({ type: 'watched_episode', season: e.season, number: e.number }, base))); return; }
+  const sorted = eps.slice().sort((a, b) => a.season - b.season || a.number - b.number);
+  const a = sorted[0], b = sorted[sorted.length - 1];
+  logActivity(Object.assign({ type: 'watched_bulk', count: eps.length, from: { season: a.season, number: a.number }, season: b.season, number: b.number }, base));
+}
 async function logActivity(payload) {
   if (!fbDb || !currentUser) return;
   try {
@@ -7147,6 +7161,7 @@ function feedActionText(a) {
   if (a.type === 'added_show') return `ha aggiunto <b>${escapeHtml(a.title||'una serie')}</b> alla libreria`;
   if (a.type === 'added_film') return `ha aggiunto <b>${escapeHtml(a.title||'un film')}</b> da vedere`;
   if (a.type === 'commented') return `ha commentato <b>${escapeHtml(a.title||'un episodio')}</b>`;
+  if (a.type === 'watched_bulk') return `ha visto ${a.count} episodi di <b>${escapeHtml(a.title||'una serie')}</b> <span class="fi-range">${epTag(a.from)} → ${epTag(a)}</span>`;
   if (a.type === 'watched_episode') {
     const eps = a.episodes || [a];
     const title = `<b>${escapeHtml(a.title||'una serie')}</b>`;
@@ -7357,7 +7372,7 @@ function renderSocial() {
 
 
 // ---------- feed come registro, con reazioni ----------
-const FEED_KIND_COLORS = { watched_episode: '#0A84FF', finished_show: '#30D158', watched_film: '#FF9F0A', added_show: '#BF5AF2', added_film: '#BF5AF2', commented: '#FF375F' };
+const FEED_KIND_COLORS = { watched_episode: '#0A84FF', watched_bulk: '#0A84FF', finished_show: '#30D158', watched_film: '#FF9F0A', added_show: '#BF5AF2', added_film: '#BF5AF2', commented: '#FF375F' };
 function agoLabel(ms) {
   if (!ms) return '';
   const m = Math.round((Date.now() - ms) / 60000);
@@ -8384,7 +8399,7 @@ async function toggleSeriesWatchedQuick(id) {
       celebrateShowComplete(s);
       logActivity({ type: 'finished_show', showId: Number(id), title: s.name||'', image: s.image||null });
     } else {
-      newlyMarked.forEach(e => logActivity({ type: 'watched_episode', showId: Number(id), title: s.name||'', image: s.image||null, season: e.season, number: e.number }));
+      logEpisodesBulk(id, s, newlyMarked);
     }
   }
 }
@@ -9155,7 +9170,7 @@ function applySeasonWatched(showId, season, wasAll) {
       celebrateShowComplete(show);
       logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
     } else {
-      aired.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
+      logEpisodesBulk(showId, show, aired);
     }
     refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
   }
@@ -9199,7 +9214,7 @@ function renderEpisodeList(showId, episodes, season) {
     const notAired = !isW && isFutureEpisode(ep);
     const epKey = epCommentKey(showId,ep.season,ep.number);
     const live = isAiringToday(ep);
-    return `<div class="epitem glass" id="ep-${key}">
+    return `<div class="epitem" id="ep-${key}">
       <div class="epitop" onclick="toggleDesc('${key}')">
         ${thumb?`<img src="${thumb}" alt="">`:`<div class="noimg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
         <div class="et">
@@ -9222,24 +9237,6 @@ function renderEpisodeList(showId, episodes, season) {
       <div class="ep-reactions" id="epr-${epKey}">${renderReactionBar(epKey)}</div>
       <div class="epdesc" id="epdesc-${key}">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
       <div class="epcomments" id="epc-${epKey}">
-        <div class="epc-shield">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>
-          <div class="es-t">Contiene spoiler</div>
-          <div class="es-s">Segna l'episodio come visto per leggere i commenti in sicurezza</div>
-          <button onclick="revealSpoiler('${epKey}')">Mostra comunque</button>
-        </div>
-        ${currentUser ? `
-          <div class="commentForm">
-            <textarea id="epcInput-${epKey}" placeholder="Scrivi un commento..." maxlength="500"></textarea>
-            <button class="commentSendBtn" onclick="postComment('${epKey}')">Pubblica</button>
-          </div>
-        ` : `
-          <div class="commentLoginPrompt">
-            <span>Accedi per lasciare un commento</span>
-            <button class="filebtn" onclick="signInGoogle()">Accedi con Google</button>
-          </div>
-        `}
-        <div id="epcList-${epKey}" class="commentsList"></div>
       </div>
     </div>`;
   }).join('');
@@ -9570,7 +9567,7 @@ function toggleMarkAll(showId) {
     // Marcatura in blocco che NON completa la serie (restano stagioni/episodi
     // futuri): senza questo, gli episodi segnati così sparivano dal feed amici,
     // che registrava un evento solo quando la serie veniva finita del tutto.
-    newlyMarked.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
+    logEpisodesBulk(showId, show, newlyMarked);
   }
 }
 
@@ -9589,6 +9586,7 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
     renderLibrary();
     checkAchievements();
     updateMarkAllBtn(showId);
+    refreshSheetLive(showId);
     // Anche questi episodi vanno nel feed amici: senza questa riga la marcatura
     // in blocco degli episodi precedenti restava invisibile agli amici.
     const show = library[showId];
@@ -9601,7 +9599,7 @@ function askMarkPrevious(showId, priorUnwatched, season, number) {
       logActivity({ type: 'finished_show', showId: Number(showId), title: show.name || '', image: show.image || null });
       refreshShowTotals(showId).then(ch => { if (ch) withoutBarAnim(renderLibrary); });
     } else {
-      priorUnwatched.forEach(e => logActivity({ type: 'watched_episode', showId: Number(showId), title: show.name || '', image: show.image || null, season: e.season, number: e.number }));
+      logEpisodesBulk(showId, show, priorUnwatched);
     }
     okBtn.textContent = 'Elimina';
     closeConfirm();
@@ -9910,10 +9908,36 @@ async function loadSeasonCommentCounts(showId, season) {
   } catch(e) {}
 }
 
+// Contenuto della sezione commenti di un episodio: si crea solo quando la
+// apri (prima ogni episodio della lista lo aveva gia' pronto, con centinaia
+// di episodi era troppo pesante per il telefono).
+function epCommentsInnerHtml(epKey) {
+  return `
+        <div class="epc-shield">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>
+          <div class="es-t">Contiene spoiler</div>
+          <div class="es-s">Segna l'episodio come visto per leggere i commenti in sicurezza</div>
+          <button onclick="revealSpoiler('${epKey}')">Mostra comunque</button>
+        </div>
+        ${currentUser ? `
+          <div class="commentForm">
+            <textarea id="epcInput-${epKey}" placeholder="Scrivi un commento..." maxlength="500"></textarea>
+            <button class="commentSendBtn" onclick="postComment('${epKey}')">Pubblica</button>
+          </div>
+        ` : `
+          <div class="commentLoginPrompt">
+            <span>Accedi per lasciare un commento</span>
+            <button class="filebtn" onclick="signInGoogle()">Accedi con Google</button>
+          </div>
+        `}
+        <div id="epcList-${epKey}" class="commentsList"></div>
+  `;
+}
 function toggleEpisodeComments(showId, season, number) {
   const key = epCommentKey(showId, season, number);
   const el = document.getElementById(`epc-${key}`);
   if (!el) return;
+  if (!el.firstElementChild) el.innerHTML = epCommentsInnerHtml(key);
   const wasOpen = el.classList.contains('open');
   if (unsubscribeComments) { unsubscribeComments(); unsubscribeComments = null; }
   document.querySelectorAll('.epcomments.open').forEach(x => x.classList.remove('open'));
