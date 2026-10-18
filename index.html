@@ -2334,6 +2334,57 @@
   .af-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .af-sub { font-size: 11px; color: rgba(var(--overlay-rgb),0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* --- film: durata, voto personale, saghe --- */
+  .kpi-row-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .film-time .nc-top { align-items: center; }
+  .ft-end { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+  .ft-end span { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.6); }
+  .ft-end b { font-size: 26px; font-weight: 700; line-height: 1.05; color: var(--fg); }
+  .ft-end b.late { color: #FF9F0A; }
+  .film-watch-btn { width: 100%; margin: 0 0 12px; }
+  .my-rating { padding: 12px 13px; border-radius: 18px; margin-bottom: 12px; background: rgba(192,138,0,0.1); border: 0.5px solid rgba(192,138,0,0.35); }
+  .my-rating .nc-lbl { color: var(--gold); }
+  .mr-top { display: flex; align-items: center; justify-content: space-between; }
+  .mr-val { font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.75); }
+  .mr-stars { display: flex; gap: 6px; margin: 8px 0 10px; }
+  .mr-star { position: relative; width: 38px; height: 38px; display: block; }
+  .mr-star svg { width: 100%; height: 100%; display: block; fill: rgba(var(--overlay-rgb),0.14); }
+  .mr-star::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: var(--gold); width: var(--fill);
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.5l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg>') left center / 38px 38px no-repeat;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.5l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg>') left center / 38px 38px no-repeat;
+  }
+  .mr-star button { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 1; }
+  .mr-star button:first-of-type { left: 0; } .mr-star button:last-of-type { right: 0; }
+  .mr-note { width: 100%; padding: 10px 13px; border-radius: 13px; font: inherit; font-size: 13.5px; color: var(--fg); background: rgba(var(--overlay-rgb),0.07); border: 0.5px solid rgba(var(--overlay-rgb),0.14); outline: none; }
+  .chip-my { color: var(--gold); }
+  .li-dur { color: rgba(var(--overlay-rgb),0.55); font-weight: 700; }
+  .li-saga { color: #C77DFF; }
+  .pi-stars { color: var(--gold); font-weight: 700; }
+  .pi-note { font-size: 11.5px; font-style: italic; color: rgba(var(--overlay-rgb),0.6); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .saga-count { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .saga-bar { display: block; height: 5px; border-radius: 3px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; margin-bottom: 10px; }
+  .saga-bar i { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+  .saga-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .saga-row::-webkit-scrollbar { display: none; }
+  .saga-item { position: relative; flex-shrink: 0; width: 76px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .saga-item img, .saga-noimg { width: 76px; aspect-ratio: 2/3; border-radius: 10px; object-fit: cover; display: block; background: rgba(var(--overlay-rgb),0.08); opacity: 0.7; }
+  .saga-item.done img, .saga-item.lib img, .saga-item.current img { opacity: 1; }
+  .saga-item.current img { box-shadow: 0 0 0 2px var(--accent); }
+  .saga-year { font-size: 12px; font-weight: 700; color: rgba(var(--overlay-rgb),0.55); }
+  .saga-rail { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 8px; }
+  .saga-rail::-webkit-scrollbar { display: none; }
+  .saga-card { flex-shrink: 0; width: 168px; padding: 10px; border-radius: 20px; text-align: left; display: flex; flex-direction: column; gap: 6px;
+    background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.1); }
+  .sc-posters { position: relative; height: 92px; display: block; }
+  .sc-posters img { position: absolute; top: 0; left: calc(var(--i) * 30px); width: 60px; height: 90px; object-fit: cover; border-radius: 9px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); opacity: 0.55; z-index: calc(10 - var(--i)); }
+  .sc-posters img.seen { opacity: 1; }
+  .sc-name { font-family: var(--font-title); font-weight: var(--title-weight); font-size: calc(14px * var(--title-scale)); letter-spacing: var(--title-ls); line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sc-prog { font-size: 12px; color: rgba(var(--overlay-rgb),0.6); }
+  .sc-prog b { color: var(--accent); font-size: 15px; }
+  .saga-card .saga-bar { margin: 0; height: 4px; }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2865,6 +2916,7 @@ function syncPublicProfile() {
   }));
   const films = Object.values(filmLibrary).map(f => ({
     id: f.id, title: f.title || '', image: f.image || null, watched: !!f.watched,
+    myRating: f.myRating || 0, myNote: f.myNote || '',
     watchedAt: f.watchedAt || f.addedAt || 0
   }));
   fbDb.collection('publicProfiles').doc(currentUser.uid).set({
@@ -5923,7 +5975,7 @@ function renderFilmLibrary() {
     : entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
   sortFilmItems(items);
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
-  container.innerHTML = `<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
+  container.innerHTML = `${q ? '' : '<div id="sagaRail"></div>'}<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
     ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg><span>Nessun film in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
@@ -5933,6 +5985,7 @@ function renderFilmLibrary() {
     }
   </div>`;
   applyCardGlows(container);
+  if (!q) renderSagaRail();
 }
 
 function renderCardFilm(key, f) {
@@ -5956,10 +6009,11 @@ function renderListFilm(key, f) {
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
       <div class="li-chips">${[
-        f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null,
+        f.myRating ? `<span class="chip chip-my">★ ${f.myRating.toFixed(1).replace('.0','')} tuo</span>` : (f.rating ? `<span class="chip chip-star">★ ${fmtRating(f.rating)}</span>` : null),
         f.genre ? genreChip(f.genre) : null,
         f.year ? `<span class="chip chip-date">${f.year}</span>` : null
       ].filter(Boolean).join('')}</div>
+      ${f.runtime ? `<div class="li-next li-dur">${fmtHM(f.runtime)}${f.collectionName ? ` · <span class="li-saga">${escapeHtml(sagaName(f.collectionName))}</span>` : ''}</div>` : ''}
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}</div>
   </div>`;
@@ -6479,7 +6533,8 @@ function renderPersonSheet(p) {
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
         <div class="pi-info">
           <div class="pi-name">${escapeHtml(f.title)}</div>
-          <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}</div>
+          <div class="pi-meta">${f.watched ? 'Visto' : 'Da vedere'}${f.myRating ? ` · <span class="pi-stars">★ ${Number(f.myRating).toFixed(1).replace('.0','')}</span>` : ''}</div>
+          ${f.myNote ? `<div class="pi-note">«${escapeHtml(f.myNote)}»</div>` : ''}
         </div>
         ${searchActionsFilm(f.id)}
       </div>`;
@@ -8910,31 +8965,41 @@ async function openFilm(id, originEl) {
 async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
   const rawDesc = f.description||'';
+  const genres = (f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : []));
+  sheetCtx = null;
   clearSheetAccent(sheet);
+  // Stesso ordine della scheda serie: copertina con trailer, logo, dove
+  // guardarlo, numeri in riga, durata ("se inizi ora finisce alle..."), il tuo
+  // voto, la saga, la trama e il cast.
   sheet.innerHTML = `
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt=""><div class="hero-sheen"></div>`:''}
+      <div class="hero-trailer" id="heroTrailer"></div>
       <a class="hero-play" id="heroPlayBtn" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:none" title="Guarda il trailer">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
       </a>
+      <button class="hero-sound" id="heroSound" hidden onclick="toggleTrailerSound()" aria-label="Audio del trailer"></button>
       <div class="fade"></div>
     </div>
     <div class="sheet-tint" id="sheetTint"></div>
     <div class="sheetbody">
-      <h2>${escapeHtml(f.title)}<span class="watch-providers" id="watchProviders" aria-label="Dove si guarda"></span></h2>
-      <div class="metarow">
-        ${f.rating?`<span class="pill pill-rating">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount)?` · ${formatVotes(f.voteCount)}`:''}</span>`:''}
-        ${(f.genres && f.genres.length ? f.genres.slice(0,3) : (f.genre ? [f.genre] : [])).map(g=>genrePill(g)).join('')}
-        <span class="pill">${f.year||'—'}</span>
-      </div>
-      <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
-      <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
-      ${f.runtime?`<div class="time-left">Durata ~${Math.max(1, Math.round(f.runtime/60))} ${Math.max(1, Math.round(f.runtime/60))===1?'ora':'ore'}</div>`:''}
-      <div id="castSec"></div>
+      <div class="sheet-title" id="sheetTitle"><h2>${escapeHtml(f.title)}</h2></div>
+      <div class="sheet-sub">${escapeHtml([f.year, genres.join(', ')].filter(Boolean).join(' · '))}${f.rating ? ` <span class="sheet-rate">★ ${fmtRating(f.rating)}${formatVotes(f.voteCount) ? ` <small>· ${formatVotes(f.voteCount)}</small>` : ''}</span>` : ''}</div>
+      <a class="providers-row" id="watchProviders" target="_blank" rel="noopener" hidden></a>
+      <div class="kpi-row kpi-row-4">${filmKpisHtml(f)}</div>
+      ${f.runtime ? `<div class="next-card film-time" id="filmTime">${filmTimeHtml(f)}</div>` : ''}
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">+ Aggiungi alla libreria</button>`
-        : `<div class="btnrow"><button class="${f.watched?'removebtn':'addlibbtn'}" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'Segna come visto'}</button>
-           <button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button></div>`}
+        : `<button class="${f.watched?'markallbtn danger':'addlibbtn'} film-watch-btn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'✓ Segna come visto'}</button>`}
+      ${inLib && f.watched ? `<div id="myRating">${myRatingHtml(f)}</div>` : ''}
+      <div id="filmSaga"></div>
+      <div class="sec-head"><span class="sec-title">Trama</span></div>
+      <div class="summary" id="filmSummary">${rawDesc?escapeHtml(rawDesc):'Nessuna descrizione disponibile.'}</div>
+      <button class="summary-more" id="filmSummaryMore" onclick="toggleSummaryClamp('filmSummary')">Mostra altro</button>
+      <div id="sheetSocialExtra"></div>
+      <div class="sec-head"><span class="sec-title">Cast</span></div>
+      <div id="castSec"><div class="spinner"></div></div>
+      ${inLib ? `<button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button>` : ''}
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => {
     if (!col) return;
@@ -8944,7 +9009,135 @@ async function renderFilmSheet(f, inLib) {
   loadWatchProviders('movie', f.id);
   loadTrailer('movie', f.id);
   loadCast('movie', f.id);
+  loadShowLogo('movie', f.id);
+  loadFilmSaga(f.id);
+  if (typeof renderSheetSocialExtra === 'function') renderSheetSocialExtra(f.id, 'movie');
   initSummaryClamp('filmSummary');
+  // l'orario di fine resta giusto anche se la scheda resta aperta a lungo
+  clearInterval(renderFilmSheet._t);
+  if (f.runtime) renderFilmSheet._t = setInterval(() => { const el = document.getElementById('filmTime'); if (!el) { clearInterval(renderFilmSheet._t); return; } el.innerHTML = filmTimeHtml(f); }, 30000);
+}
+function filmKpisHtml(f) {
+  const tile = (lbl, val) => `<div class="kt"><div class="kt-l">${lbl}</div><div class="kt-v num">${val}</div></div>`;
+  const dur = f.runtime ? `${Math.floor(f.runtime/60)}h${String(f.runtime%60).padStart(2,'0')}` : '—';
+  return tile('Durata', dur) + tile('Anno', f.year || '—') + tile('Voto', f.rating ? fmtRating(f.rating) : '—') + tile('Il tuo', f.myRating ? f.myRating.toFixed(1).replace('.0','') : '—');
+}
+// "1 h 52 min, se inizi ora finisce alle 23:10": per scegliere il film in base all'ora.
+function filmTimeHtml(f) {
+  const end = new Date(Date.now() + f.runtime * 60000);
+  const hh = String(end.getHours()).padStart(2,'0'), mm = String(end.getMinutes()).padStart(2,'0');
+  const late = end.getHours() >= 0 && end.getHours() < 5 && new Date().getHours() >= 18;
+  return `<div class="nc-top"><div class="nc-info"><span class="nc-lbl">Durata</span><span class="nc-ep">${fmtHM(f.runtime)}</span></div>
+    <div class="ft-end"><span>Se inizi ora finisce alle</span><b class="num${late ? ' late' : ''}">${hh}:${mm}</b></div></div>`;
+}
+// Il tuo voto a mezze stelle (ogni stella ha due meta' toccabili) e una frase.
+function myRatingHtml(f) {
+  const r = f.myRating || 0;
+  const stars = [1,2,3,4,5].map(i => {
+    const fill = r >= i ? 100 : r >= i - 0.5 ? 50 : 0;
+    return `<span class="mr-star" style="--fill:${fill}%">
+      <svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.5l-6 3.3 1.3-6.7-5-4.6 6.8-.8z"/></svg>
+      <button aria-label="${i - 0.5} stelle" onclick="setMyRating(${f.id}, ${i - 0.5})"></button><button aria-label="${i} stelle" onclick="setMyRating(${f.id}, ${i})"></button>
+    </span>`;
+  }).join('');
+  return `<div class="my-rating">
+    <div class="mr-top"><span class="nc-lbl">Il tuo voto</span><span class="mr-val num">${r ? r.toFixed(1).replace('.0','') + ' / 5' : 'tocca le stelle'}</span></div>
+    <div class="mr-stars">${stars}</div>
+    <input class="mr-note" id="myRatingNote" maxlength="140" placeholder="Una frase sul film (la vedono i tuoi amici)" value="${escapeHtml(f.myNote || '')}" onchange="setMyNote(${f.id}, this.value)">
+  </div>`;
+}
+function setMyRating(id, v) {
+  const f = filmLibrary[id]; if (!f) return;
+  f.myRating = f.myRating === v ? 0 : v; // toccare di nuovo lo stesso voto lo toglie
+  saveFilmLibrary(); haptic();
+  const box = document.getElementById('myRating'); if (box) box.innerHTML = myRatingHtml(f);
+  const k = document.querySelector('#sheet .kpi-row-4'); if (k) k.innerHTML = filmKpisHtml(f);
+  renderFilmLibrary();
+}
+function setMyNote(id, v) {
+  const f = filmLibrary[id]; if (!f) return;
+  f.myNote = (v || '').trim().slice(0, 140);
+  saveFilmLibrary();
+  showToast(f.myNote ? 'Frase salvata' : 'Frase tolta');
+}
+// Saghe: se il film fa parte di una collezione TMDb, mostra tutti i capitoli
+// in ordine di uscita con "2 di 3 visti".
+// "Il Signore degli Anelli - Collezione" -> "Il Signore degli Anelli"
+function sagaName(n) { return (n || '').replace(/\s*[-–:]\s*(Collezione|Collection|La saga|Saga)\s*$/i, '').trim(); }
+async function filmCollectionInfo(id) {
+  const d = await tmdbCachedJson(`movie:${id}`, tmdbUrl(`/movie/${id}`, {}));
+  return d && d.belongs_to_collection ? d.belongs_to_collection : null;
+}
+async function loadFilmSaga(id) {
+  const box = document.getElementById('filmSaga');
+  if (!box || !hasTmdbKeySilent()) return;
+  try {
+    const col = await filmCollectionInfo(id);
+    if (filmLibrary[id] && (filmLibrary[id].collection || null) !== (col ? col.id : null)) {
+      filmLibrary[id].collection = col ? col.id : null; filmLibrary[id].collectionName = col ? col.name : null; filmLibrary[id].collectionChecked = true;
+      saveFilmLibrary();
+    }
+    if (!col) return;
+    const data = await tmdbCachedJson(`coll:${col.id}`, tmdbUrl(`/collection/${col.id}`, {}));
+    const parts = (data.parts || []).filter(p => p.release_date).sort((a,b) => a.release_date.localeCompare(b.release_date));
+    if (parts.length < 2 || document.getElementById('filmSaga') !== box) return;
+    const seen = parts.filter(p => filmLibrary[p.id] && filmLibrary[p.id].watched).length;
+    box.innerHTML = `<div class="sec-head"><span class="sec-title">${escapeHtml(sagaName(data.name || col.name))}</span><span class="saga-count num">${seen} di ${parts.length}</span></div>
+      <div class="saga-bar"><i style="width:${Math.round(seen/parts.length*100)}%"></i></div>
+      <div class="saga-row">${parts.map(p => {
+        const lib = filmLibrary[p.id];
+        const st = lib ? (lib.watched ? 'done' : 'lib') : '';
+        return `<button class="saga-item${p.id == id ? ' current' : ''}${st ? ' ' + st : ''}" onclick="openFilm(${p.id})">
+          ${p.poster_path ? `<img src="${tmdbImg(p.poster_path, 'w185')}" alt="" loading="lazy">` : '<span class="saga-noimg"></span>'}
+          ${st === 'done' ? '<span class="af-badge done">✓</span>' : ''}
+          <span class="saga-year num">${p.release_date.slice(0,4)}</span>
+        </button>`;
+      }).join('')}</div>`;
+  } catch(e) {}
+}
+
+// Striscia "Le tue saghe" in cima ai Film: ogni saga con quanti capitoli hai visto.
+async function renderSagaRail() {
+  const box = document.getElementById('sagaRail');
+  if (!box || !hasTmdbKeySilent()) return;
+  const ids = [...new Set(Object.values(filmLibrary).map(f => f.collection).filter(Boolean))];
+  if (!ids.length) { box.innerHTML = ''; return; }
+  try {
+    const cols = await Promise.all(ids.map(cid => tmdbCachedJson(`coll:${cid}`, tmdbUrl(`/collection/${cid}`, {})).catch(() => null)));
+    if (document.getElementById('sagaRail') !== box) return;
+    const cards = cols.filter(Boolean).map(c => {
+      const parts = (c.parts || []).filter(p => p.release_date).sort((a,b) => a.release_date.localeCompare(b.release_date));
+      if (parts.length < 2) return '';
+      const seen = parts.filter(p => filmLibrary[p.id] && filmLibrary[p.id].watched).length;
+      const next = parts.find(p => !(filmLibrary[p.id] && filmLibrary[p.id].watched)) || parts[0];
+      return `<button class="saga-card" onclick="openFilm(${next.id})">
+        <span class="sc-posters">${parts.slice(0, 4).map((p, i) => p.poster_path ? `<img src="${tmdbImg(p.poster_path, 'w154')}" alt="" style="--i:${i}" class="${filmLibrary[p.id] && filmLibrary[p.id].watched ? 'seen' : ''}">` : '').join('')}</span>
+        <span class="sc-name">${escapeHtml(sagaName(c.name))}</span>
+        <span class="sc-prog"><b class="num">${seen}</b>/<span class="num">${parts.length}</span> visti</span>
+        <span class="saga-bar"><i style="width:${Math.round(seen/parts.length*100)}%"></i></span>
+      </button>`;
+    }).filter(Boolean);
+    box.innerHTML = cards.length ? `<div class="section" style="padding-top:0"><div class="sec-head" style="margin-top:0"><span class="sec-title">Le tue saghe</span></div><div class="saga-rail">${cards.join('')}</div></div>` : '';
+  } catch(e) {}
+}
+// I film salvati prima di questa versione non sanno a quale saga appartengono:
+// lo chiediamo a TMDb una volta sola, pochi alla volta.
+async function enrichFilmCollections() {
+  if (!hasTmdbKeySilent()) return;
+  const todo = Object.values(filmLibrary).filter(f => !f.collectionChecked).slice(0, 25);
+  if (!todo.length) return;
+  let changed = false;
+  for (const f of todo) {
+    try {
+      const col = await filmCollectionInfo(f.id);
+      if (!filmLibrary[f.id]) continue;
+      filmLibrary[f.id].collection = col ? col.id : null;
+      filmLibrary[f.id].collectionName = col ? col.name : null;
+      filmLibrary[f.id].collectionChecked = true;
+      changed = true;
+    } catch(e) {}
+  }
+  if (changed) { saveFilmLibrary(); renderFilmLibrary(); }
 }
 
 async function addFilmFromSheet(id) { await quickAddFilm(id); openFilm(id); }
@@ -9870,6 +10063,7 @@ initTabSwipe();
 initSheetDock();
 initTopMenu();
 initRowSwipe();
+setTimeout(enrichFilmCollections, 4000);
 // tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
 setTimeout(() => maybeShowTutorial('tv'), 2600);
 </script>
