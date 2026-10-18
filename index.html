@@ -14,6 +14,18 @@
     if (!t) { t = 'dark'; localStorage.setItem('serietracker_theme', t); }
     document.documentElement.setAttribute('data-theme', t);
   } catch(e){ document.documentElement.setAttribute('data-theme', 'dark'); }
+  // Aspetto scelto in Impostazioni, applicato prima del primo disegno (niente
+  // lampo dell'aspetto vecchio). I valori di partenza sono il nuovo aspetto
+  // per tutti: scuro Blu notte, angoli molto tondi, lista compatta, titoli in
+  // Anton, logo neon.
+  var root = document.documentElement;
+  function pref(k, d) { try { return localStorage.getItem(k) || d; } catch(e) { return d; } }
+  root.setAttribute('data-dark', pref('itstracker_theme_variant', 'blu'));
+  root.setAttribute('data-radius', pref('itstracker_radius', 'round'));
+  root.setAttribute('data-density', pref('itstracker_density', 'compact'));
+  root.setAttribute('data-font', pref('itstracker_font', 'anton'));
+  root.setAttribute('data-logo', pref('itstracker_logo', 'neon'));
+  root.setAttribute('data-textsize', pref('itstracker_textsize', 'm'));
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +35,9 @@
      diverse su ogni piattaforma che rendevano impossibile centrarlo rispetto
      ai bottoni con un solo valore CSS. Caricandolo esplicitamente la resa è
      identica ovunque. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Anton&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<!-- Gli altri caratteri per i titoli (Bebas Neue, Oswald, Unbounded, Fraunces)
+     si caricano solo se scelti in Impostazioni: vedi loadTitleFont(). -->
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="manifest" href="manifest.json">
@@ -1441,10 +1455,10 @@
     position: absolute; left: 0; right: 0; top: 150px; height: 780px; z-index: 0; pointer-events: none;
     background: linear-gradient(180deg,
       transparent 0%,
-      color-mix(in srgb, var(--accent, transparent) 34%, transparent) 12%,
-      color-mix(in srgb, var(--accent, transparent) 20%, transparent) 30%,
-      color-mix(in srgb, var(--accent, transparent) 9%, transparent) 55%,
-      color-mix(in srgb, var(--accent, transparent) 3%, transparent) 78%,
+      color-mix(in srgb, var(--tint, var(--accent, transparent)) 34%, transparent) 12%,
+      color-mix(in srgb, var(--tint, var(--accent, transparent)) 20%, transparent) 30%,
+      color-mix(in srgb, var(--tint, var(--accent, transparent)) 9%, transparent) 55%,
+      color-mix(in srgb, var(--tint, var(--accent, transparent)) 3%, transparent) 78%,
       transparent 100%);
     opacity: 0; transition: opacity 0.55s ease;
   }
@@ -1784,6 +1798,180 @@
   .notifText { font-size: 13px; line-height: 1.4; }
   .notifTime { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); margin-top: 3px; }
 
+  /* =====================================================================
+     RESTYLING 2026 - ASPETTO
+     Tutto quello che segue si regola dagli attributi messi su <html> dallo
+     script in testa (data-dark, data-radius, data-density, data-font,
+     data-logo, data-textsize), cosi' ogni scelta di Impostazioni cambia
+     l'aspetto senza ridisegnare niente.
+     ===================================================================== */
+
+  /* --- scuri alternativi (il nero puro resta "Scuro") --- */
+  :root[data-theme="dark"][data-dark="blu"] {
+    --bg: #060c1a; --sheet-bg: #0a1427; --panel-bg: #121d36;
+    --topbar-bg: rgba(10,18,38,0.55);
+  }
+  :root[data-theme="dark"][data-dark="grafite"] {
+    --bg: #13161b; --sheet-bg: #181c22; --panel-bg: #22272f;
+    --topbar-bg: rgba(24,28,34,0.6);
+  }
+
+  /* --- caratteri: titoli e numeri ---
+     --font-title: titoli (nomi delle serie, sezioni, schede)
+     --font-num: numeri "da tabellone" (statistiche, contatori, percentuali) */
+  :root {
+    --font-title: "Anton", "Arial Narrow", sans-serif; --title-weight: 400; --title-ls: 0.01em; --title-scale: 1;
+    --font-num: "Barlow Semi Condensed", "Arial Narrow", sans-serif;
+  }
+  :root[data-font="baloo"] { --font-title: "Baloo 2", -apple-system, sans-serif; --title-weight: 800; --title-ls: -0.01em; --title-scale: 1; }
+  :root[data-font="bebas"] { --font-title: "Bebas Neue", "Arial Narrow", sans-serif; --title-weight: 400; --title-ls: 0.03em; --title-scale: 1.14; }
+  :root[data-font="oswald"] { --font-title: "Oswald", "Arial Narrow", sans-serif; --title-weight: 600; --title-ls: 0; --title-scale: 1; }
+  :root[data-font="unbounded"] { --font-title: "Unbounded", sans-serif; --title-weight: 600; --title-ls: -0.02em; --title-scale: 0.86; }
+  :root[data-font="fraunces"] { --font-title: "Fraunces", Georgia, serif; --title-weight: 700; --title-ls: -0.01em; --title-scale: 1.04; }
+  :root[data-font="system"] { --font-title: var(--sf, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif); --title-weight: 750; --title-ls: -0.015em; --title-scale: 1; }
+  .li-name, .up-name, .rc-name, .sheetbody h2, .profile-name, .ph-name, .quiz-title, .quiz-result-title,
+  .celebrate-name, .cinema-title, .w-mid, .tut-title, .confirmbox h3, .notifPanel-title, .ts-name,
+  .chat-head-name, .season-title, .coverPicker h3, .sec-title, .view-title {
+    font-family: var(--font-title); font-weight: var(--title-weight); letter-spacing: var(--title-ls);
+  }
+  .li-name, .up-name { font-size: calc(16.5px * var(--title-scale)); }
+  .rc-name { font-size: calc(19px * var(--title-scale)); }
+  .sheetbody h2 { font-size: calc(26px * var(--title-scale)); line-height: 1.1; }
+  /* titoletti di sezione e tab di categoria: maiuscolo stretto, come le
+     pagine di Laurera */
+  .cat-title, .wrap-sec-title, .lb-title, .hm-title, .settings-h2, .ach-summary-title,
+  .cat-tabs .seasontab, .mode-btn, .chat-newsection {
+    font-family: var(--font-title); font-weight: var(--title-weight); letter-spacing: 0.05em;
+  }
+  .cat-tabs .seasontab { font-size: calc(12.5px * var(--title-scale)); }
+  .cat-title, .wrap-sec-title, .lb-title, .hm-title { font-size: calc(14px * var(--title-scale)); }
+  /* Bebas non ha minuscole: i nomi restano leggibili solo un filo piu' larghi */
+  :root[data-font="bebas"] .li-name, :root[data-font="bebas"] .up-name { letter-spacing: 0.04em; }
+
+  .kpi .v, .stat .v, .li-pct, .up-days, .tab-count, .skpi b, .lb-hours, .lb-rank, .w-big, .wh-num,
+  .hm-cell, .follow-inline b, .epc-num, .grating, .notif-badge, .ach-summary-count, .bar-lbl,
+  .num, .big-num {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  }
+  .kpi .v, .stat .v { font-weight: 700; font-size: 26px; letter-spacing: 0; }
+  .profile-stats-inline .v { font-size: 24px; }
+  .tab-count, .notif-badge { font-weight: 700; }
+
+  /* --- logo: piena / contorno / neon --- */
+  :root[data-logo="neon"] .topbar-logo, :root[data-logo="neon"] #splashLogo { overflow: visible; }
+  :root[data-logo="neon"] .topbar-logo .tw-its, :root[data-logo="neon"] #splashLogo .tw-its {
+    color: #fff;
+    text-shadow: 0 0 3px rgba(var(--accent-rgb),0.9), 0 0 10px rgba(var(--accent-rgb),0.75), 0 0 22px rgba(var(--accent-rgb),0.45);
+  }
+  :root[data-logo="neon"] .topbar-logo .tw-tracker, :root[data-logo="neon"] #splashLogo .tw-tracker {
+    color: color-mix(in srgb, var(--accent) 38%, #fff);
+    text-shadow: 0 0 3px rgba(var(--accent-rgb),1), 0 0 10px rgba(var(--accent-rgb),0.85), 0 0 24px rgba(var(--accent-rgb),0.55);
+  }
+  /* sul tema chiaro il bianco sparirebbe: "ITS" resta del colore del testo */
+  :root[data-theme="light"][data-logo="neon"] .topbar-logo .tw-its, :root[data-theme="light"][data-logo="neon"] #splashLogo .tw-its {
+    color: var(--fg); text-shadow: 0 0 8px rgba(var(--accent-rgb),0.35);
+  }
+  :root[data-theme="light"][data-logo="neon"] .topbar-logo .tw-tracker, :root[data-theme="light"][data-logo="neon"] #splashLogo .tw-tracker {
+    color: var(--accent); text-shadow: 0 0 10px rgba(var(--accent-rgb),0.45);
+  }
+  :root[data-logo="outline"] .topbar-logo .tw-its, :root[data-logo="outline"] #splashLogo .tw-its {
+    color: transparent; -webkit-text-stroke: 1.4px var(--fg);
+  }
+  :root[data-logo="outline"] .topbar-logo .tw-tracker, :root[data-logo="outline"] #splashLogo .tw-tracker {
+    color: transparent; -webkit-text-stroke: 1.4px var(--accent);
+  }
+
+  /* --- splash: titoli di testa in dissolvenza --- */
+  #splashLogo { animation: none; }
+  #splashLogo .tw-its, #splashLogo .tw-tracker, .splash-by { display: inline-block; opacity: 0; animation: splashFade 0.7s ease forwards; }
+  #splashLogo .tw-its { animation-delay: 0.05s; }
+  #splashLogo .tw-tracker { animation-delay: 0.32s; }
+  .splash-by { display: block; animation-delay: 0.7s; }
+  @keyframes splashFade { from { opacity: 0; filter: blur(6px); transform: translateY(6px); } to { opacity: 1; filter: blur(0); transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    #splashLogo .tw-its, #splashLogo .tw-tracker, .splash-by { animation: none; opacity: 1; }
+  }
+
+  /* --- arrotondamento: molto tondo (predefinito) / medio (com'era) / squadrato --- */
+  :root[data-radius="round"] .list-item, :root[data-radius="round"] .up-item { border-radius: 26px; }
+  :root[data-radius="round"] .list-item img, :root[data-radius="round"] .list-item .noimg-s,
+  :root[data-radius="round"] .up-item img, :root[data-radius="round"] .up-item .noimg-s { border-radius: 14px; }
+  :root[data-radius="round"] .resume-card { border-radius: 26px; }
+  :root[data-radius="round"] .card { border-radius: 22px; }
+  :root[data-radius="round"] .gcard { border-radius: 22px; }
+  :root[data-radius="round"] .gcard .card { border-radius: 0; }
+  :root[data-radius="round"] .season-block { border-radius: 22px; }
+  :root[data-radius="round"] .epitem { border-radius: 24px; }
+  :root[data-radius="round"] .epitem img, :root[data-radius="round"] .epitem .noimg { border-radius: 12px; }
+  :root[data-radius="round"] .personcard { border-radius: 24px; }
+  :root[data-radius="round"] .kpi { border-radius: 22px; }
+  :root[data-radius="round"] .glass { border-radius: 30px; }
+  :root[data-radius="square"] .list-item, :root[data-radius="square"] .up-item,
+  :root[data-radius="square"] .resume-card, :root[data-radius="square"] .card, :root[data-radius="square"] .gcard,
+  :root[data-radius="square"] .season-block, :root[data-radius="square"] .epitem, :root[data-radius="square"] .personcard,
+  :root[data-radius="square"] .kpi, :root[data-radius="square"] .glass, :root[data-radius="square"] .quiz-card,
+  :root[data-radius="square"] .confirmbox, :root[data-radius="square"] .tut-card { border-radius: 8px; }
+  :root[data-radius="square"] .gcard .card { border-radius: 0; }
+  :root[data-radius="square"] .list-item img, :root[data-radius="square"] .list-item .noimg-s,
+  :root[data-radius="square"] .up-item img, :root[data-radius="square"] .up-item .noimg-s,
+  :root[data-radius="square"] .epitem img, :root[data-radius="square"] .epitem .noimg { border-radius: 4px; }
+  :root[data-radius="square"] .seasontab, :root[data-radius="square"] .mode-btn, :root[data-radius="square"] .searchbar,
+  :root[data-radius="square"] .add-wide, :root[data-radius="square"] .watch-pill, :root[data-radius="square"] .filebtn,
+  :root[data-radius="square"] .redbtn, :root[data-radius="square"] .emptybtn, :root[data-radius="square"] .settings-select,
+  :root[data-radius="square"] .skpi, :root[data-radius="square"] .pill, :root[data-radius="square"] .addlibbtn,
+  :root[data-radius="square"] .markallbtn, :root[data-radius="square"] .removebtn { border-radius: 6px; }
+  :root[data-radius="square"] .tabbar { border-radius: 12px; }
+  :root[data-radius="square"] .tabbtn, :root[data-radius="square"] .tabbtn.active::before { border-radius: 10px; }
+
+  /* --- densita' della lista: compatta (predefinita) / normale / ariosa --- */
+  :root[data-density="compact"] .list-item, :root[data-density="compact"] .up-item { padding: 7px 9px; gap: 11px; margin-bottom: 6px; }
+  :root[data-density="compact"] .list-item img, :root[data-density="compact"] .list-item .noimg-s,
+  :root[data-density="compact"] .up-item img, :root[data-density="compact"] .up-item .noimg-s { width: 46px; height: 66px; }
+  :root[data-density="compact"] .li-name, :root[data-density="compact"] .up-name { font-size: calc(15.5px * var(--title-scale)); }
+  :root[data-density="compact"] .li-chips { margin-top: 2px; }
+  :root[data-density="compact"] .li-chips .chip { font-size: 12px; }
+  :root[data-density="compact"] .li-next { font-size: 12.5px; margin-top: 2px; }
+  :root[data-density="airy"] .list-item, :root[data-density="airy"] .up-item { padding: 13px; gap: 15px; margin-bottom: 11px; }
+  :root[data-density="airy"] .list-item img, :root[data-density="airy"] .list-item .noimg-s,
+  :root[data-density="airy"] .up-item img, :root[data-density="airy"] .up-item .noimg-s { width: 68px; height: 98px; }
+  :root[data-density="airy"] .li-name, :root[data-density="airy"] .up-name { font-size: calc(18px * var(--title-scale)); }
+
+  /* --- dimensione del testo: tutto cresce insieme (come uno zoom) --- */
+  :root[data-textsize="l"] body { zoom: 1.08; }
+  :root[data-textsize="xl"] body { zoom: 1.16; }
+
+  /* --- locandine con alone del loro colore --- */
+  .list-item.art img, .up-item.art img {
+    box-shadow: 0 6px 18px -5px var(--art-hot), 0 0 0 0.5px rgba(var(--overlay-rgb),0.08);
+  }
+  .card.glow { box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 12px 30px -8px var(--accent, transparent); }
+
+  /* --- tab di categoria nei colori della categoria ---
+     Continua (e Visti dei film) restano del colore scelto; In Pari verde,
+     In Lista / Da Vedere blu. */
+  .cat-tab-corner.active[data-cat="inpari"] { background: #30D158; color: #000; }
+  .cat-tab-corner.active[data-cat="davedere"] { background: #0A84FF; color: #fff; }
+  #filmCatTabs .cat-tab-corner.active[data-cat="visti"] { background: #30D158; color: #000; }
+
+  /* --- vetro un filo piu' marcato su barra in basso e intestazione --- */
+  .tabbar {
+    box-shadow: var(--shadow-tabbar),
+      inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(0,0,0,0.25),
+      0 0 0 0.5px rgba(255,255,255,0.05);
+  }
+  :root[data-theme="light"] .tabbar { box-shadow: var(--shadow-tabbar), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.06); }
+
+  /* --- Impostazioni: iconcina colorata per ogni voce --- */
+  .set-ico {
+    width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .set-ico svg { width: 17px; height: 17px; }
+  :root[data-radius="square"] .set-ico { border-radius: 5px; }
+  .settingsrow .st { min-width: 0; }
+  .settingsrow .sn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -1972,36 +2160,7 @@
   <div class="view" id="view-settings">
     <div class="section" style="padding-top:14px">
       <h2 class="settings-h2">Aspetto</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Tema</div></div>
-          <div class="accent-select-wrap">
-            <select id="themeSelect" class="settings-select" onchange="setTheme(this.value)">
-              <option value="light">Chiaro</option>
-              <option value="dark">Scuro</option>
-            </select>
-            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </div>
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Visualizzazione</div></div>
-          <div class="accent-select-wrap">
-            <select id="viewSelect" class="settings-select" onchange="setView(this.value)">
-              <option value="grid">Griglia</option>
-              <option value="list">Lista</option>
-              <option value="wall">Muro</option>
-            </select>
-            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </div>
-        </div>
-        <div class="settingsrow">
-          <div class="st"><div class="sn">Colore</div></div>
-          <div class="accent-select-wrap">
-            <select id="accentSelect" class="settings-select" onchange="setAccent(this.value)"></select>
-            <svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </div>
-        </div>
-      </div>
+      <div class="glass settings-group" id="appearanceGroup"></div>
     </div>
     <div class="section" style="margin-top:16px">
       <h2 class="settings-h2">Account</h2>
@@ -6384,7 +6543,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
   const votes = formatVotes(show.vote_count);
   const rawSummary = show.overview ? show.overview.replace(/<[^>]+>/g,'') : '';
 
-  sheet.style.removeProperty('--accent');
+  clearSheetAccent(sheet);
   sheet.innerHTML = `
     <div class="hero">
       ${poster?`<img src="${poster}" alt=""><div class="hero-sheen"></div>`:''}
@@ -6421,7 +6580,7 @@ async function renderSheet(show, episodes, seasons, inLib) {
 
   if (poster) posterAccent(poster).then(col => {
     if (!col) return;
-    sheet.style.setProperty('--accent', col);
+    applySheetAccent(sheet, col);
     const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
   });
   loadWatchProviders('tv', show.id);
@@ -7584,7 +7743,7 @@ async function openFilm(id, originEl) {
 async function renderFilmSheet(f, inLib) {
   const sheet = document.getElementById('sheet');
   const rawDesc = f.description||'';
-  sheet.style.removeProperty('--accent');
+  clearSheetAccent(sheet);
   sheet.innerHTML = `
     <div class="hero">
       ${f.backdrop||f.image?`<img src="${f.backdrop||f.image}" alt=""><div class="hero-sheen"></div>`:''}
@@ -7612,7 +7771,7 @@ async function renderFilmSheet(f, inLib) {
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => {
     if (!col) return;
-    sheet.style.setProperty('--accent', col);
+    applySheetAccent(sheet, col);
     const t = document.getElementById('sheetTint'); if (t) t.classList.add('show');
   });
   loadWatchProviders('movie', f.id);
@@ -7791,7 +7950,85 @@ function updateLogo() {
 // anche a tema scuro attivo, lasciando una striscia bianca fissa in basso.
 function updateThemeColorMeta() {
   const meta = document.getElementById('metaThemeColor');
-  if (meta) meta.setAttribute('content', isDarkActive() ? '#000000' : '#ffffff');
+  if (!meta) return;
+  // il colore vero dello sfondo (Blu notte / Grafite non sono nero puro)
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  meta.setAttribute('content', bg || (isDarkActive() ? '#000000' : '#ffffff'));
+}
+
+// ---------- preferenze di aspetto (attributi su <html>, vedi CSS "RESTYLING") ----------
+const PREF_DEFAULTS = { radius: 'round', density: 'compact', font: 'anton', logo: 'neon', textsize: 'm' };
+function getPref(name) { try { return localStorage.getItem('itstracker_' + name) || PREF_DEFAULTS[name]; } catch(e) { return PREF_DEFAULTS[name]; } }
+function setPref(name, value) {
+  document.documentElement.setAttribute('data-' + name, value);
+  try { localStorage.setItem('itstracker_' + name, value); } catch(e) {}
+  if (name === 'font') loadTitleFont(value);
+  if (typeof haptic === 'function') haptic();
+}
+// I caratteri non predefiniti si scaricano solo quando servono.
+const TITLE_FONT_URLS = {
+  bebas: 'Bebas+Neue', oswald: 'Oswald:wght@600', unbounded: 'Unbounded:wght@600', fraunces: 'Fraunces:opsz,wght@9..144,700'
+};
+function loadTitleFont(key) {
+  const fam = TITLE_FONT_URLS[key];
+  if (!fam) return;
+  let link = document.getElementById('titleFontLink');
+  if (!link) { link = document.createElement('link'); link.rel = 'stylesheet'; link.id = 'titleFontLink'; document.head.appendChild(link); }
+  const href = `https://fonts.googleapis.com/css2?family=${fam}&display=swap`;
+  if (link.href !== href) link.href = href;
+}
+// Colore della scheda preso dalla locandina: diventa il colore principale
+// DENTRO la scheda (bottoni, anelli, tab), mentre la sfumatura di sfondo usa
+// il colore originale, piu' morbido.
+function applySheetAccent(el, col) {
+  if (!el || !col) return;
+  const v = vividColor(col);
+  const m = /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/.exec(v);
+  if (!m) return;
+  const hex = '#' + [m[1], m[2], m[3]].map(n => Number(n).toString(16).padStart(2, '0')).join('');
+  el.style.setProperty('--accent', v);
+  el.style.setProperty('--accent-rgb', `${m[1]},${m[2]},${m[3]}`);
+  el.style.setProperty('--accent-ink', accentInk(hex));
+  el.style.setProperty('--tint', col);
+}
+// Voci di Impostazioni > Aspetto: ogni riga ha la sua iconcina colorata.
+const SET_ICONS = {
+  theme: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  color: '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>',
+  font: '<path d="M4 20l6-16h1l6 16M6.5 14h8"/><path d="M17 20v-6a2.5 2.5 0 0 1 5 0v6M17 17h5"/>',
+  logo: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
+  radius: '<rect x="3.5" y="3.5" width="17" height="17" rx="6"/>',
+  density: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
+  textsize: '<path d="M3 19l4.5-12h1L13 19M4.6 15h6.8"/><path d="M15 19l3-8h1l3 8M15.9 16.5h5.2"/>',
+  view: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>'
+};
+function setIco(name, color) {
+  return `<span class="set-ico" style="background:${color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SET_ICONS[name]}</svg></span>`;
+}
+const SET_CARET = '<svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function settingSelectRow(icon, color, label, id, onchange, options, current) {
+  const opts = options.map(([v, t]) => `<option value="${v}"${v === current ? ' selected' : ''}>${t}</option>`).join('');
+  return `<div class="settingsrow">${setIco(icon, color)}<div class="st"><div class="sn">${label}</div></div>
+    <div class="accent-select-wrap"><select id="${id}" class="settings-select" onchange="${onchange}">${opts}</select>${SET_CARET}</div></div>`;
+}
+function renderAppearanceSettings() {
+  const box = document.getElementById('appearanceGroup');
+  if (!box) return;
+  box.innerHTML = [
+    settingSelectRow('theme', '#5E5CE6', 'Tema', 'themeSelect', 'setTheme(this.value)', [['light','Chiaro'],['dark','Scuro'],['grafite','Grafite'],['blu','Blu notte']], ''),
+    settingSelectRow('color', '#FF375F', 'Colore', 'accentSelect', 'setAccent(this.value)', [], ''),
+    settingSelectRow('font', '#FF9F0A', 'Carattere titoli', 'fontSelect', "setPref('font', this.value)", [['anton','Anton'],['baloo','Baloo'],['bebas','Bebas Neue'],['oswald','Oswald'],['unbounded','Unbounded'],['fraunces','Fraunces'],['system','Sistema']], getPref('font')),
+    settingSelectRow('logo', '#E5B300', 'Logo', 'logoSelect', "setPref('logo', this.value)", [['neon','Neon'],['solid','Pieno'],['outline','Contorno']], getPref('logo')),
+    settingSelectRow('radius', '#30D158', 'Angoli', 'radiusSelect', "setPref('radius', this.value)", [['round','Molto tondi'],['medium','Medi'],['square','Squadrati']], getPref('radius')),
+    settingSelectRow('density', '#32ADE6', 'Densità lista', 'densitySelect', "setPref('density', this.value)", [['compact','Compatta'],['normal','Normale'],['airy','Ariosa']], getPref('density')),
+    settingSelectRow('textsize', '#BF5AF2', 'Testo', 'textsizeSelect', "setPref('textsize', this.value)", [['m','Normale'],['l','Grande'],['xl','Molto grande']], getPref('textsize')),
+    settingSelectRow('view', '#0A84FF', 'Visualizzazione', 'viewSelect', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)
+  ].join('');
+  renderAccentControl();
+  updateThemeButtons();
+}
+function clearSheetAccent(el) {
+  ['--accent', '--accent-rgb', '--accent-ink', '--tint'].forEach(p => el.style.removeProperty(p));
 }
 darkModeQuery.addEventListener('change', () => { updateLogo(); updateThemeButtons(); updateThemeColorMeta(); });
 
@@ -7847,9 +8084,17 @@ function renderAccentControl() {
 }
 
 // ---------- tema (override manuale su quello di sistema) ----------
+// La tendina Tema ha quattro voci: Chiaro, Scuro (nero puro), Grafite, Blu notte.
+// Le tre scure sono tutte data-theme="dark", distinte da data-dark.
 function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  try { localStorage.setItem('serietracker_theme', theme); } catch(e) {}
+  const isLight = theme === 'light';
+  const variant = isLight ? null : (theme === 'dark' ? 'nero' : theme);
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  if (variant) document.documentElement.setAttribute('data-dark', variant);
+  try {
+    localStorage.setItem('serietracker_theme', isLight ? 'light' : 'dark');
+    if (variant) localStorage.setItem('itstracker_theme_variant', variant);
+  } catch(e) {}
   updateThemeButtons();
   updateLogo();
   updateThemeColorMeta();
@@ -7861,7 +8106,9 @@ function updateThemeButtons() {
   // e' il tema davvero visibile, altrimenti la tendina non risultava
   // impostata su nessuno dei due pur essendo uno dei due chiaramente attivo.
   const sel = document.getElementById('themeSelect');
-  if (sel) sel.value = isDarkActive() ? 'dark' : 'light';
+  if (!sel) return;
+  const variant = document.documentElement.getAttribute('data-dark') || 'blu';
+  sel.value = isDarkActive() ? (variant === 'nero' ? 'dark' : variant) : 'light';
 }
 
 // ---------- nickname ----------
@@ -8419,7 +8666,8 @@ loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
 applyAccent(currentAccent());
-renderAccentControl();
+loadTitleFont(getPref('font'));
+renderAppearanceSettings();
 updateLogo();
 updateThemeColorMeta();
 (function(){
