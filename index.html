@@ -2697,7 +2697,10 @@
   .offline-bar[hidden] { display: none; }
   @keyframes offIn { from { transform: translateY(-20px); opacity: 0; } }
   /* novita' dell'app */
-  .news-box { max-width: 360px; text-align: left; max-height: 84vh; display: flex; flex-direction: column; }
+  #newsBg { z-index: 450; }
+  .news-box { max-width: 360px; text-align: left; max-height: 80vh; max-height: 80dvh; display: flex; flex-direction: column; position: relative; }
+  .news-x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; border: 0; display: grid; place-items: center;
+    background: rgba(var(--overlay-rgb),0.1); color: var(--fg); font-size: 14px; cursor: pointer; }
   .news-box h3 { text-align: left; font-size: calc(22px * var(--title-scale)); }
   .news-eyebrow { font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
   .news-list { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 16px; overflow-y: auto; min-height: 0; flex: 1; }
@@ -5951,6 +5954,15 @@ function tickerItems() {
       if (miss && miss < parts.length) tk(`openFilm(${f.id})`, `<b>${escapeHtml(sagaName(c.data.name))}</b><s>ti ${miss === 1 ? 'manca 1 film' : `mancano ${miss} film`}</s>`);
     });
   }
+  // Niente per oggi/domani: meglio le prossime uscite con la data che un ticker vuoto.
+  if (!out.length && upcomingCache) {
+    upcomingCache.filter(u => library[u.id] && new Date(u.date + 'T00:00:00') >= today).slice(0, 4).forEach(u => {
+      const d = new Date(u.date + 'T00:00:00');
+      const when = d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+      tk(`openShow(${u.id})`, `<em>${escapeHtml(when)}</em><b>${escapeHtml(library[u.id].name || u.name || '')} ${u.season}x${String(u.number).padStart(2,'0')}</b>`);
+    });
+  }
+  if (!out.length && Object.keys(library).length) tk(`switchTab('search')`, `<s>Nessuna uscita in vista ·</s><b>cerca qualcosa di nuovo</b>`);
   return out;
 }
 // Cosa guardano gli amici, per il ticker: si carica una volta all'accesso.
@@ -11502,35 +11514,49 @@ const APP_VERSION = '2026.10';
 const APP_NEWS = [
   ['Nuovo aspetto', 'Blu notte, titoli in Anton, logo nuovo e angoli tondi. In Impostazioni > Aspetto scegli tema, sfondo, colore principale, carattere, angoli e notizie del ticker.'],
   ['Menu nuovo', 'Una pillola sola in basso: Serie, Film, Ricerca, Profilo e la nuova scheda Social. Puoi anche passare da una scheda all\'altra scorrendo col dito.'],
-  ['Serie più veloci', 'Scorri una riga verso destra per segnare l\'episodio, verso sinistra per toglierla. In cima scorrono le frasi delle tue serie e le serie ferme da tempo hanno il loro gruppo.'],
-  ['Schede rifatte', 'Logo della serie, trailer muto, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
+  ['Serie più veloci', 'Scorri una riga verso destra per segnare l\'episodio, verso sinistra per toglierla. In alto il ticker con uscite, episodi nuovi e rinnovi; le serie ferme da tempo hanno il loro gruppo.'],
+  ['Schede rifatte', 'Logo della serie, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
   ['Film', 'Il tuo voto a mezze stelle, le saghe con i capitoli visti, l\'ora in cui finisce il film se inizi adesso.'],
   ['Ricerca', 'Serie e film insieme, Top 10 della settimana, consigli in base a cosa guardi e novità per piattaforma.'],
   ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e pronostici sul voto del prossimo episodio.'],
   ['Profilo', 'Livelli con barra esperienza, record personali, giorni di fila, statistiche nuove e bacheca dei trofei.']
 ];
-function hideNewsForever() {
-  try { localStorage.setItem('itstracker_news_hidden', APP_VERSION); } catch(e) {}
-  document.getElementById('newsBg').classList.remove('open');
+function closeNews(forever) {
+  try {
+    if (forever) localStorage.setItem('itstracker_news_hidden', APP_VERSION);
+    sessionStorage.setItem('itstracker_news_closed', '1'); // se l'app si ricarica subito, non riappare
+  } catch(e) {}
+  const bg = document.getElementById('newsBg');
+  if (bg) bg.classList.remove('open');
 }
+function hideNewsForever() { closeNews(true); }
 function maybeShowNews() {
   // Esce a ogni apertura finche' non tocchi "Non mostrare piu'".
-  let hidden = null;
-  try { hidden = localStorage.getItem('itstracker_news_hidden'); } catch(e) {}
-  if (hidden === APP_VERSION) return;
+  let hidden = null, closed = null;
+  try { hidden = localStorage.getItem('itstracker_news_hidden'); closed = sessionStorage.getItem('itstracker_news_closed'); } catch(e) {}
+  if (hidden === APP_VERSION || closed) return;
   let bg = document.getElementById('newsBg');
   if (!bg) {
     bg = document.createElement('div');
     bg.className = 'confirmbg'; bg.id = 'newsBg';
     observeOverlay(bg);
-    bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+    // tocco ovunque fuori dal riquadro, o sui pulsanti: chiude (pointerup oltre
+    // al click, perche' su iPhone il click a volte si perde)
+    const onTap = e => {
+      if (e.target === bg) return closeNews(false);
+      const b = e.target.closest('[data-news]');
+      if (b) { e.preventDefault(); closeNews(b.dataset.news === 'forever'); }
+    };
+    bg.addEventListener('click', onTap);
+    bg.addEventListener('pointerup', onTap);
     document.body.appendChild(bg);
   }
   bg.innerHTML = `<div class="confirmbox news-box">
+    <button class="news-x" data-news="close" aria-label="Chiudi">✕</button>
     <div class="news-eyebrow">Novità</div>
     <h3>itstracker si è rifatto il look</h3>
     <div class="news-list">${APP_NEWS.map(([t, d]) => `<div class="news-item"><b>${t}</b><span>${d}</span></div>`).join('')}</div>
-    <div class="cbrow"><button class="cb-cancel" onclick="hideNewsForever()">Non mostrare più</button><button class="cb-confirm news-ok" onclick="document.getElementById('newsBg').classList.remove('open')">Chiudi</button></div>
+    <div class="cbrow"><button class="cb-cancel" data-news="forever">Non mostrare più</button><button class="cb-confirm news-ok" data-news="close">Chiudi</button></div>
   </div>`;
   setTimeout(() => bg.classList.add('open'), 2800);
 }
