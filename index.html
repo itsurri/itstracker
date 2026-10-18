@@ -2521,6 +2521,170 @@
   .ic-diff { font-weight: 700; }
   .ic-diff.me { color: #30D158; } .ic-diff.them { color: var(--accent); }
 
+  /* =====================================================================
+     RESTYLING 2026 - PROFILO
+     ===================================================================== */
+  .profile-card { padding: 0; overflow: hidden; margin-bottom: 14px; text-align: left; }
+  .profile-cover { aspect-ratio: auto; height: 132px; }
+  .fig-tools { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; gap: 6px; }
+  .fig-tools .profile-settings-btn { background: rgba(0,0,0,0.45); color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .cover-edit { left: 10px; right: auto; top: 10px; bottom: auto; }
+  /* figurina: avatar grande a sinistra, a destra nome, livello, esperienza */
+  .fig { display: flex; gap: 14px; align-items: flex-start; padding: 0 16px 12px; }
+  .fig-av { margin-top: -38px; position: relative; z-index: 2; cursor: pointer; }
+  .fig-av .profile-avatar { width: 84px; height: 84px; border: 3px solid var(--sheet-bg); }
+  .fig-info { flex: 1; min-width: 0; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .fig-info .profile-name { font-size: calc(22px * var(--title-scale)); line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fig-level {
+    align-self: flex-start; position: relative; overflow: hidden; padding: 3px 9px; border-radius: 8px;
+    font-family: var(--font-num); font-weight: 700; font-size: 12.5px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--lc); background: color-mix(in srgb, var(--lc) 16%, transparent); border: 1px solid color-mix(in srgb, var(--lc) 45%, transparent);
+  }
+  .fig-level.gold { color: #1a1200; background: linear-gradient(135deg, #8a6200, #f0c040 45%, #fff1b0 55%, #c99a20); border-color: transparent; }
+  /* riflesso che passa sui badge oro e sui trofei vinti */
+  .fig-level.gold::after, .shine::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%);
+    background-size: 300% 100%; animation: shineSweep 3.2s ease-in-out infinite;
+  }
+  @keyframes shineSweep { 0% { background-position: 150% 0; } 60%, 100% { background-position: -150% 0; } }
+  @media (prefers-reduced-motion: reduce) { .fig-level.gold::after, .shine::after { animation: none; } }
+  .xp { display: flex; flex-direction: column; gap: 3px; }
+  .xp-bar { height: 8px; border-radius: 4px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; }
+  .xp-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #c99a20, #f7d36a); box-shadow: 0 0 10px rgba(247,181,56,0.5); }
+  .xp-txt { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.6); }
+  .xp-txt b { color: var(--fg); }
+  .fig .follow-inline { justify-content: flex-start; gap: 14px; margin-top: 2px; }
+  .profile-stats-inline { margin: 0 12px; gap: 6px !important; }
+  .profile-stats-inline .kpi { padding: 10px 2px 9px; }
+  .kpi-note { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.4); text-align: center; padding: 6px 12px 12px; }
+  /* pillola di variazione sotto i numeri (verde su, rossa giu') */
+  .dpill { display: inline-block; margin-top: 4px; padding: 1px 6px; border-radius: 7px; font-family: var(--font-num); font-weight: 700; font-size: 11px; }
+  .dpill.up { background: rgba(48,209,88,0.16); color: #30D158; }
+  .dpill.down { background: rgba(255,69,58,0.16); color: #FF453A; }
+  .dpill.flat { background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.5); }
+  /* numeri a palette */
+  .flap { display: inline-flex; justify-content: center; gap: 1px; perspective: 200px; }
+  .flap .fd { display: inline-block; min-width: 0.62em; transform-origin: 50% 50%; }
+  .flap .fd.flip { animation: flapFlip 0.11s ease-out; }
+  @keyframes flapFlip { from { transform: rotateX(80deg); opacity: 0.4; } to { transform: rotateX(0); opacity: 1; } }
+  .profile-tabs { margin: 2px 0 6px; }
+  .profile-tabs .cat-tab-corner { flex: 1 1 0; }
+  #profileBody .wrap-card { margin-bottom: 14px; }
+  #profileBody .wrap-card > .sec-head { margin-bottom: 10px; }
+  /* serie di giorni */
+  .streak-card { padding: 16px; }
+  .sk-main { display: flex; align-items: baseline; gap: 8px; }
+  .sk-fire { font-size: 30px; filter: grayscale(1); opacity: 0.5; }
+  .sk-fire.lit { filter: none; opacity: 1; animation: fireBeat 1.6s ease-in-out infinite; display: inline-block; }
+  @keyframes fireBeat { 50% { transform: scale(1.12); } }
+  .big-num { font-size: 46px; font-weight: 700; line-height: 1; }
+  .sk-lbl { font-family: var(--font-title); font-weight: var(--title-weight); font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.7); }
+  .sk-days { display: flex; justify-content: space-between; margin: 12px 0 8px; }
+  .sk-day { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); }
+  .sk-day i { width: 28px; height: 28px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.08); display: block; }
+  .sk-day.on i { background: linear-gradient(135deg, #FF9F0A, var(--accent)); box-shadow: 0 0 10px rgba(var(--accent-rgb),0.45); }
+  .sk-day.today { color: var(--fg); }
+  .sk-best { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.6); }
+  .sk-best b { color: var(--fg); font-size: 14px; }
+  .sk-new { color: #FF9F0A; font-weight: 700; }
+  /* record personali */
+  .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .rec-tile { position: relative; padding: 12px; border-radius: 18px; display: flex; flex-direction: column; gap: 1px; min-width: 0;
+    background: rgba(var(--overlay-rgb),0.05); border: 0.5px solid rgba(var(--overlay-rgb),0.1); overflow: hidden; }
+  .rec-tile b { font-size: 28px; line-height: 1.05; }
+  .rec-lbl { font-family: var(--font-title); font-weight: var(--title-weight); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.55); }
+  .rec-sub { font-size: 11.5px; color: rgba(var(--overlay-rgb),0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec-tile.new { border-color: #F7B538; background: rgba(247,181,56,0.1); animation: recFlash 1.1s ease-in-out 3; }
+  @keyframes recFlash { 50% { box-shadow: 0 0 0 3px rgba(247,181,56,0.6), 0 0 24px rgba(247,181,56,0.5); } }
+  .rec-new { position: absolute; top: 8px; right: 8px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 6px; background: #F7B538; color: #1a1200; }
+  /* classifica amici con podio */
+  .lb-card { padding: 16px; }
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin: 4px 0 10px; }
+  .pod { flex: 1; max-width: 110px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .pod-av { position: relative; width: 56px; height: 56px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.1); box-shadow: 0 0 0 3px var(--pc, #b7bec9); }
+  .pod-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .pod-1 .pod-av { width: 70px; height: 70px; }
+  .pod-1 { --pc: #F7B538; } .pod-2 { --pc: #C0C7D2; } .pod-3 { --pc: #CD7F3F; }
+  .pod-medal { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--pc); color: #111; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--sheet-bg); }
+  .pod-name { font-size: 12.5px; font-weight: 700; margin-top: 6px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pod.me .pod-name { color: var(--accent); }
+  .pod-h { font-size: 13px; font-weight: 700; color: rgba(var(--overlay-rgb),0.7); }
+  .pod-step { width: 100%; border-radius: 10px 10px 4px 4px; margin-top: 4px; background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 55%, transparent), color-mix(in srgb, var(--pc) 12%, transparent)); animation: podUp 0.7s cubic-bezier(.2,.9,.3,1.2) both; transform-origin: bottom; }
+  .pod-1 .pod-step { height: 58px; } .pod-2 .pod-step { height: 40px; animation-delay: 0.1s; } .pod-3 .pod-step { height: 28px; animation-delay: 0.2s; }
+  @keyframes podUp { from { transform: scaleY(0); } }
+  /* andamento ore */
+  .mh-scroll { overflow-x: auto; scrollbar-width: none; margin: 0 -4px; }
+  .mh-scroll::-webkit-scrollbar { display: none; }
+  .mh-bars { display: flex; align-items: flex-end; gap: 6px; min-width: 100%; height: 160px; padding: 0 4px; }
+  .mh-col { flex: 1 0 22px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+  .mh-v { font-size: 11.5px; font-weight: 700; color: rgba(var(--overlay-rgb),0.6); }
+  .mh-bar { width: 100%; max-width: 26px; border-radius: 7px 7px 3px 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 55%, #5E5CE6), color-mix(in srgb, var(--accent) 25%, #5E5CE6)); }
+  .mh-col.now .mh-bar { background: var(--accent); box-shadow: 0 0 12px rgba(var(--accent-rgb),0.5); }
+  .mh-col.now .mh-v { color: var(--accent); }
+  .mh-l { font-size: 10.5px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); }
+  /* ciambella dei generi e orologio */
+  .dn-big { font-family: var(--font-num); font-weight: 700; font-size: 22px; fill: var(--fg); }
+  .dn-small { font-size: 10.5px; font-weight: 700; fill: rgba(var(--overlay-rgb),0.6); }
+  .clock-wrap { display: flex; justify-content: center; }
+  .ck-l { font-size: 10px; font-weight: 700; fill: rgba(var(--overlay-rgb),0.45); }
+  .ck-big { font-family: var(--font-num); font-weight: 700; font-size: 22px; fill: var(--fg); }
+  .ck-small { font-size: 9.5px; fill: rgba(var(--overlay-rgb),0.55); }
+  .ck-tag { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 9px; background: rgba(var(--accent-rgb),0.16); color: var(--accent); }
+  /* attori piu' visti */
+  .actors-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 6px; }
+  .ta { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  .ta img, .ta-noimg { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.1); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .ta img.first { box-shadow: 0 0 0 2.5px #F7B538; }
+  .ta-name { font-size: 11px; font-weight: 700; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ta-n { font-size: 11px; color: var(--accent); font-weight: 700; }
+  /* confronto con un amico: barre specchiate */
+  .cmp-pick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; }
+  .cmp-pick::-webkit-scrollbar { display: none; }
+  .cmp-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 16px; font-size: 12.5px; font-weight: 700; background: rgba(var(--overlay-rgb),0.07); }
+  .cmp-chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+  .cmp-chip.active { background: #0A84FF; color: #fff; }
+  .mirror-head { display: flex; justify-content: space-between; font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+  .mirror-head span:first-child { color: var(--accent); } .mirror-head span:last-child { color: #0A84FF; }
+  .mirror-row { display: grid; grid-template-columns: 44px 1fr 62px 1fr 44px; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .mr-v { font-size: 15px; font-weight: 700; color: rgba(var(--overlay-rgb),0.6); }
+  .mr-v:last-child { text-align: right; }
+  .mr-v.win { color: var(--fg); }
+  .mr-l, .mr-r { height: 12px; display: flex; border-radius: 6px; background: rgba(var(--overlay-rgb),0.06); overflow: hidden; }
+  .mr-l { justify-content: flex-end; }
+  .mr-l i { display: block; height: 100%; background: var(--accent); border-radius: 6px 0 0 6px; }
+  .mr-r i { display: block; height: 100%; background: #0A84FF; border-radius: 0 6px 6px 0; }
+  .mr-lbl { text-align: center; font-size: 11.5px; font-weight: 700; color: rgba(var(--overlay-rgb),0.6); }
+  .wrapped-years { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* bacheca trofei */
+  .trophy-head { padding: 16px; }
+  .th-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+  .th-top span { font-size: 13px; color: rgba(var(--overlay-rgb),0.6); }
+  .th-next { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .th-next-lbl { font-family: var(--font-title); font-weight: var(--title-weight); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.5); }
+  .tn-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .tn-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tn-p { font-weight: 700; color: var(--accent); }
+  .trophy-seg { margin: 0 0 12px; justify-content: stretch; }
+  .trophy-seg button { flex: 1; }
+  .trophy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+  .trophy { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px 10px; border-radius: 18px; text-align: center;
+    background: rgba(var(--overlay-rgb),0.04); border: 0.5px solid rgba(var(--overlay-rgb),0.08); opacity: 0.55; }
+  .trophy.won { opacity: 1; background: radial-gradient(120% 90% at 50% 0%, rgba(247,181,56,0.22), rgba(var(--overlay-rgb),0.04) 70%); border-color: rgba(247,181,56,0.4); }
+  .tr-cup { position: relative; width: 46px; height: 46px; color: rgba(var(--overlay-rgb),0.35); }
+  .tr-cup svg { width: 100%; height: 100%; display: block; }
+  .trophy.won .tr-cup { color: #F7B538; filter: drop-shadow(0 4px 10px rgba(247,181,56,0.45)); animation: cupFloat 3s ease-in-out infinite; }
+  @keyframes cupFloat { 50% { transform: translateY(-3px); } }
+  .tr-emoji { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); font-size: 14px; filter: grayscale(1); }
+  .trophy.won .tr-emoji { filter: none; }
+  .tr-name { font-size: 11px; font-weight: 700; line-height: 1.2; }
+  .tr-prog { width: 80%; height: 3px; border-radius: 2px; background: rgba(var(--overlay-rgb),0.12); overflow: hidden; }
+  .tr-prog i { display: block; height: 100%; background: var(--accent); }
+  .trophy.shine::after { background: linear-gradient(110deg, transparent 44%, rgba(255,255,255,0.22) 50%, transparent 56%); background-size: 300% 100%; animation-duration: 5s; }
+  .trophy.shine:nth-child(3n+2)::after { animation-delay: 1.6s; }
+  .trophy.shine:nth-child(3n)::after { animation-delay: 3.2s; }
+  @media (prefers-reduced-motion: reduce) { .trophy.won .tr-cup, .sk-fire.lit, .pod-step { animation: none; } }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2739,7 +2903,7 @@
   <!-- PROFILO -->
   <div class="view" id="view-profile">
     <div class="section" style="padding-top:14px">
-      <div class="glass" id="profileShareTarget" style="padding:0; overflow:hidden; text-align:center; margin-bottom:18px">
+      <div class="glass profile-card" id="profileShareTarget">
         <div id="profileAuthCard">
           <div style="padding:16px; font-size:12px; color:rgba(var(--overlay-rgb),0.5)">Il tuo profilo</div>
         </div>
@@ -3117,57 +3281,6 @@ function libraryPosterUrls() {
   return [...shows, ...films];
 }
 
-function renderProfileAuth() {
-  const c = document.getElementById('profileAuthCard');
-  if (!c) return;
-  if (currentUser) {
-    const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
-    const displayHandle = getNickname() || firstName;
-    const avatarUrl = getAvatarUrl();
-    const cover = getCoverImage();
-    c.innerHTML = `
-      <div class="profile-cover" style="${cover?`background-image:url('${cover}')`:''}">
-        ${cover ? '' : mosaicCoverHtml(libraryPosterUrls())}
-        <button class="cover-edit" onclick="openCoverPicker()">📸 Copertina</button>
-      </div>
-      <div class="profile-inner">
-        <div class="profile-top">
-          <div class="avatar-wrap" onclick="tapAvatarEdit()">
-            ${avatarUrl ? `<img class="profile-avatar cover-lift" style="${levelRing(computeWrapped().hours, 3)}" src="${avatarUrl}" alt="">` : `<div class="profile-avatar cover-lift" style="${levelRing(computeWrapped().hours, 3)}"></div>`}
-          </div>
-          <div style="min-width:0; flex:1; align-self:flex-start; margin-top:-10px">
-            <div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>
-            <div class="profile-level-line">Livello: ${getUserLevel(computeWrapped().hours).label}</div>
-          </div>
-          <div style="display:flex; gap:6px">
-            <button class="profile-settings-btn" onclick="switchTab('settings')" title="Impostazioni">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-            <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="follow-inline">
-          <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
-          <span onclick="toggleFollowList('following')"><b>${followingList.length}</b> Seguiti</span>
-        </div>
-        <div class="statrow profile-stats-inline" id="profileStatsRow" style="margin-top:12px;margin-bottom:0"></div>
-      </div>
-    `;
-  } else {
-    c.innerHTML = `
-      <div class="profile-inner">
-        <div style="font-size:12px;color:rgba(var(--overlay-rgb),0.5);margin-bottom:14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
-        <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
-        <div class="statrow" id="profileStatsRow" style="margin-top:18px;margin-bottom:0"></div>
-      </div>
-    `;
-  }
-}
 
 if (fbAuth) {
   // Completa un eventuale accesso avviato via redirect (PWA/iOS).
@@ -4525,7 +4638,7 @@ async function renderLeaderboard() {
   const totalEl = document.getElementById('leaderboardTotalBody');
   const monthEl = document.getElementById('leaderboardBody');
   const weekEl = document.getElementById('leaderboardWeekBody');
-  if ((!totalEl && !monthEl && !weekEl) || !fbDb || !currentUser || !followingList.length) return;
+  if ((!totalEl && !monthEl && !weekEl && !document.getElementById('lbCard')) || !fbDb || !currentUser || !followingList.length) return;
   const mk = currentMonthKey();
   const wk = currentWeekKey();
   const myName = getNickname() || (currentUser.displayName || '').split(' ')[0] || 'Tu';
@@ -4557,6 +4670,7 @@ async function renderLeaderboard() {
   if (totalEl) totalEl.innerHTML = leaderboardRowsHtml(totalRows, lbTotalShown, 'Total');
   if (monthEl) monthEl.innerHTML = leaderboardRowsHtml(monthRows, lbMonthShown, 'Month');
   if (weekEl) weekEl.innerHTML = leaderboardRowsHtml(weekRows, lbWeekShown, 'Week');
+  renderLbCard();
 }
 
 function animateCountUp(el) {
@@ -5060,47 +5174,476 @@ function renderWeekCard() {
 }
 
 // Card "Il tuo ritmo": media ep/giorno attivo, mese top, giorno preferito.
+// =====================================================================
+// PROFILO (restyling 2026): figurina, numeri con variazione, tre tab
+// =====================================================================
+let profileTab = 'overview'; // 'overview' | 'stats' | 'trophies'
+
+// Livello come in un videogioco: barra che si riempie verso il prossimo.
+function levelProgress(hours) {
+  let idx = 0;
+  USER_LEVELS.forEach((l, i) => { if (hours >= l.min) idx = i; });
+  const cur = USER_LEVELS[idx], next = USER_LEVELS[idx + 1];
+  if (!next) return { idx, cur, next: null, pct: 100, missing: 0 };
+  const pct = Math.min(100, Math.round((hours - cur.min) / (next.min - cur.min) * 100));
+  return { idx, cur, next, pct, missing: Math.max(1, Math.ceil(next.min - hours)) };
+}
+function xpHtml(hours) {
+  const lp = levelProgress(hours);
+  return `<div class="xp">
+    <div class="xp-bar"><i style="width:${lp.pct}%"></i></div>
+    <div class="xp-txt">${lp.next ? `Mancano <b class="num">${lp.missing} h</b> a <b>${lp.next.label}</b>` : 'Livello massimo raggiunto'}</div>
+  </div>`;
+}
+function levelBadgeHtml(hours) {
+  const lp = levelProgress(hours);
+  return `<span class="fig-level${lp.idx >= 8 ? ' gold' : ''}" style="--lc:${levelColor(hours)}">Liv. ${lp.idx + 1} · ${lp.cur.label}</span>`;
+}
+
+// Numeri del mese: questo mese contro il mese scorso, per le pillole +/-%.
+function monthStats(offset) {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - offset, 1).getTime();
+  const end = new Date(now.getFullYear(), now.getMonth() - offset + 1, 1).getTime();
+  let eps = 0, films = 0, mins = 0; const shows = new Set();
+  Object.values(library).forEach(s => Object.values(s.watched || {}).forEach(v => {
+    if (typeof v === 'number' && v >= start && v < end) { eps++; mins += s.runtime || 42; shows.add(s.id); }
+  }));
+  Object.values(filmLibrary).forEach(f => { if (f.watched && typeof f.watchedAt === 'number' && f.watchedAt >= start && f.watchedAt < end) { films++; mins += f.runtime || 110; } });
+  return { eps, films, hours: Math.round(mins / 60), shows: shows.size };
+}
+function deltaPill(cur, prev) {
+  if (!cur && !prev) return '<span class="dpill flat">—</span>';
+  if (!prev) return `<span class="dpill up">+${cur}</span>`;
+  const d = Math.round((cur - prev) / prev * 100);
+  return `<span class="dpill ${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d)}%</span>`;
+}
+function profileKpisHtml(w) {
+  const a = monthStats(0), b = monthStats(1);
+  const tile = (cls, v, lbl, pill) => `<div class="stat kpi ${cls}"><div class="v flap" data-count="${v}">0</div><div class="l">${lbl}</div>${pill}</div>`;
+  return tile('kpi-b', w.totalShows, 'serie', deltaPill(a.shows, b.shows))
+    + tile('kpi-g', w.episodesWatched, 'episodi', deltaPill(a.eps, b.eps))
+    + tile('kpi-p', w.filmsWatched, 'film', deltaPill(a.films, b.films))
+    + tile('kpi-o', w.hours, 'ore', deltaPill(a.hours, b.hours));
+}
+
+// Numeri "a palette": ogni cifra gira come un tabellone di stazione prima di
+// fermarsi sul valore giusto.
+function animateFlap(el) {
+  const target = Number(el.getAttribute('data-count')) || 0;
+  const txt = target.toLocaleString('it-IT');
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = txt; return; }
+  el.innerHTML = txt.split('').map((ch, i) => /\d/.test(ch) ? `<span class="fd" data-d="${ch}" style="--d:${i * 70}ms">0</span>` : `<span class="fs">${ch}</span>`).join('');
+  el.querySelectorAll('.fd').forEach((d, i) => {
+    let n = 0;
+    const final = d.dataset.d;
+    const steps = 6 + i * 2;
+    const tick = () => {
+      n++;
+      d.textContent = n >= steps ? final : String(Math.floor(Math.random() * 10));
+      d.classList.remove('flip'); void d.offsetWidth; d.classList.add('flip');
+      if (n < steps) setTimeout(tick, 55);
+      else { const tile = el.closest('.kpi'); if (tile && i === el.querySelectorAll('.fd').length - 1) { tile.classList.remove('count-done'); void tile.offsetWidth; tile.classList.add('count-done'); } }
+    };
+    setTimeout(tick, i * 70);
+  });
+}
+
+function renderProfileAuth() {
+  const c = document.getElementById('profileAuthCard');
+  if (!c) return;
+  if (currentUser) {
+    const firstName = (currentUser.displayName||'').split(' ')[0] || currentUser.displayName || '';
+    const displayHandle = getNickname() || firstName;
+    const avatarUrl = getAvatarUrl();
+    const cover = getCoverImage();
+    const hours = computeWrapped().hours;
+    // Figurina orizzontale (come la card giocatore di Laurera): avatar grande,
+    // nome, livello, barra esperienza, follower.
+    c.innerHTML = `
+      <div class="profile-cover" style="${cover?`background-image:url('${cover}')`:''}">
+        ${cover ? '' : mosaicCoverHtml(libraryPosterUrls())}
+        <button class="cover-edit" onclick="openCoverPicker()">📸 Copertina</button>
+        <div class="fig-tools">
+          <button class="profile-settings-btn" onclick="shareProfileCard()" title="Condividi la figurina" aria-label="Condividi la figurina">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          </button>
+          <button class="profile-settings-btn" onclick="switchTab('settings')" title="Impostazioni" aria-label="Impostazioni">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button class="profile-signout-x" onclick="signOutGoogle()" title="Esci" aria-label="Esci">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="fig">
+        <div class="avatar-wrap fig-av" onclick="tapAvatarEdit()">
+          ${avatarUrl ? `<img class="profile-avatar" style="${levelRing(hours, 3)}" src="${avatarUrl}" alt="">` : `<div class="profile-avatar" style="${levelRing(hours, 3)}"></div>`}
+        </div>
+        <div class="fig-info">
+          <div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>
+          ${levelBadgeHtml(hours)}
+          ${xpHtml(hours)}
+          <div class="follow-inline">
+            <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
+            <span onclick="toggleFollowList('following')"><b>${followingList.length}</b> Seguiti</span>
+          </div>
+        </div>
+      </div>
+      <div class="statrow profile-stats-inline" id="profileStatsRow"></div>
+      <div class="kpi-note">Le pillole confrontano questo mese con il mese scorso</div>
+    `;
+  } else {
+    c.innerHTML = `
+      <div class="profile-inner" style="text-align:center">
+        <div class="sl-title">Il tuo profilo</div>
+        <div style="font-size:12.5px;color:rgba(var(--overlay-rgb),0.55);margin:6px 0 14px">Accedi per sincronizzare la libreria tra i tuoi dispositivi</div>
+        <button class="emptybtn" style="margin-top:0" onclick="signInGoogle()">Accedi con Google</button>
+      </div>
+      <div class="statrow profile-stats-inline" id="profileStatsRow"></div>
+      <div class="kpi-note">Le pillole confrontano questo mese con il mese scorso</div>
+    `;
+  }
+}
+
+function setProfileTab(tab) {
+  profileTab = tab;
+  document.querySelectorAll('#profileTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
+  renderProfileBody();
+}
+
 function renderProfile() {
   renderProfileAuth();
   const statsRow = document.getElementById('profileStatsRow');
+  const w = computeWrapped();
+  statsRow.innerHTML = profileKpisHtml(w);
+  statsRow.querySelectorAll('.v[data-count]').forEach(animateFlap);
+  renderProfileBody();
+}
+
+function renderProfileBody() {
   const c = document.getElementById('profileBody');
   const w = computeWrapped();
-
-  statsRow.innerHTML = `
-    <div class="stat kpi kpi-b"><div class="v" data-count="${w.totalShows}">0</div><div class="l">serie</div></div>
-    <div class="stat kpi kpi-g"><div class="v" data-count="${w.episodesWatched}">0</div><div class="l">episodi</div></div>
-    <div class="stat kpi kpi-p"><div class="v" data-count="${w.filmsWatched}">0</div><div class="l">film</div></div>
-    <div class="stat kpi kpi-o"><div class="v" data-count="${w.hours}">0</div><div class="l">ore</div></div>
-  `;
-  statsRow.querySelectorAll('.v[data-count]').forEach(animateCountUp);
-
   if (!w.episodesWatched && !w.filmsWatched) {
-    c.innerHTML = currentUser ? '' : `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
+    c.innerHTML = `<div class="wrap-note" style="text-align:center;padding:30px 20px">Inizia a guardare qualcosa per vedere qui le tue statistiche.</div>`;
     return;
   }
-
-  let html = renderWeekCard();
-  if (currentUser && followingList.length) {
-    html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · di sempre</div><div id="leaderboardTotalBody"></div></div>`;
-    html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
-    html += `<div class="wrap-card glass" style="padding:14px 16px 8px"><div class="lb-title">Classifica · questa settimana</div><div id="leaderboardWeekBody"></div></div>`;
-  }
-  html += `<div style="display:flex; gap:10px; align-items:flex-start">
-    <div style="flex:1; min-width:0">${renderWrappedTeaser()}</div>
-    <div style="flex:1; min-width:0">${renderAchievementsTeaser(w)}</div>
-  </div>
-  <div class="wrap-card glass ach-full" id="wrappedFull" style="display:none; margin-top:10px"></div>
-  <div class="wrap-card glass ach-full" id="achievementsFull" style="display:none; margin-top:10px"></div>`;
-
-  if (w.hasActivity) {
-    heatmapMonthOffset = 0;
-    html += `<div class="wrap-card glass" style="margin-top:22px; padding:16px" id="heatmapCard">${renderHeatmap()}</div>`;
+  const tabs = `<div class="seasontabs cat-tabs profile-tabs" id="profileTabs">
+    ${[['overview','Panoramica'],['stats','Statistiche'],['trophies','Trofei']].map(([k, t]) => `<button class="seasontab cat-tab-corner${profileTab === k ? ' active' : ''}" data-ptab="${k}" onclick="setProfileTab('${k}')"><span class="cat-tab-label">${t}</span></button>`).join('')}
+  </div>`;
+  let html = tabs;
+  if (profileTab === 'overview') {
+    html += streakCardHtml();
+    html += renderWeekCard();
+    html += recordsHtml(w);
+    if (currentUser && followingList.length) html += `<div class="wrap-card glass lb-card" id="lbCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Classifica amici</span>
+      <div class="mini-seg" id="lbSeg">${[['week','Settimana'],['month','Mese'],['total','Sempre']].map(([k, t]) => `<button data-k="${k}" class="${lbPeriod === k ? 'active' : ''}" onclick="lbPeriod='${k}';renderLbCard()">${t}</button>`).join('')}</div></div>
+      <div id="lbCardBody"><div class="spinner"></div></div></div>`;
+    if (w.hasActivity) { heatmapMonthOffset = 0; html += `<div class="wrap-card glass" style="padding:16px" id="heatmapCard">${renderHeatmap()}</div>`; }
+  } else if (profileTab === 'stats') {
+    html += monthlyHoursHtml();
+    html += genreDonutHtml(w);
+    html += watchClockHtml();
+    html += `<div class="wrap-card glass" id="actorsCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Attori più visti</span></div><div id="actorsBody"><div class="spinner"></div></div></div>`;
+    if (currentUser && followingList.length) html += `<div class="wrap-card glass" id="compareCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Confronto con un amico</span></div><div id="compareBody"><div class="spinner"></div></div></div>`;
+    html += `<div class="wrap-card glass"><div class="sec-head" style="margin-top:0"><span class="sec-title">Wrapped</span></div>
+      <div class="wrapped-years">${getWrappedYears().map(y => `<button class="filebtn" onclick="openWrapped(${y})">${y}</button>`).join('')}</div></div>`;
   } else {
-    html += `<div class="wrap-note">Segna gli episodi come visti per costruire il grafico di attività e la tua streak.</div>`;
+    html += trophyBoardHtml(w);
   }
-
   c.innerHTML = html;
-  renderLeaderboard();
+  if (profileTab === 'overview') { renderLeaderboard(); markRecordsSeen(); }
+  if (profileTab === 'stats') { loadTopActors(); renderCompare(); }
+}
+
+// ---- serie di giorni ----
+function activeDaySet() {
+  const set = new Set();
+  watchEventsAll().forEach(e => { const d = new Date(e.t); d.setHours(0,0,0,0); set.add(d.getTime()); });
+  return set;
+}
+function currentStreak() {
+  const days = activeDaySet();
+  const d = new Date(); d.setHours(0,0,0,0);
+  if (!days.has(d.getTime())) d.setDate(d.getDate() - 1); // oggi ancora niente: conta fino a ieri
+  let n = 0;
+  while (days.has(d.getTime())) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function streakCardHtml() {
+  const days = activeDaySet();
+  const cur = currentStreak();
+  const best = computeWrapped().streak;
+  const DOW = ['D','L','M','M','G','V','S'];
+  const dots = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+    dots.push(`<span class="sk-day${days.has(d.getTime()) ? ' on' : ''}${i === 0 ? ' today' : ''}"><i></i>${DOW[d.getDay()]}</span>`);
+  }
+  return `<div class="wrap-card glass streak-card">
+    <div class="sk-main"><span class="sk-fire${cur ? ' lit' : ''}">🔥</span><b class="big-num num">${cur}</b><span class="sk-lbl">${cur === 1 ? 'giorno' : 'giorni'} di fila</span></div>
+    <div class="sk-days">${dots.join('')}</div>
+    <div class="sk-best">Record: <b class="num">${best}</b> ${best === 1 ? 'giorno' : 'giorni'}${cur && cur >= best ? ' · <span class="sk-new">stai battendo il record!</span>' : ''}</div>
+  </div>`;
+}
+
+// ---- record personali ----
+function computeRecords(w) {
+  const byDay = {}, byMonth = {};
+  watchEventsAll().forEach(e => {
+    const d = new Date(e.t); d.setHours(0,0,0,0);
+    if (e.ep) byDay[d.getTime()] = (byDay[d.getTime()] || 0) + 1;
+    const mk = `${d.getFullYear()}-${d.getMonth()}`;
+    byMonth[mk] = (byMonth[mk] || 0) + e.mins;
+  });
+  let marathon = { n: 0, t: 0 };
+  Object.entries(byDay).forEach(([t, n]) => { if (n > marathon.n) marathon = { n, t: Number(t) }; });
+  let month = { h: 0, k: '' };
+  Object.entries(byMonth).forEach(([k, m]) => { const h = Math.round(m / 60); if (h > month.h) month = { h, k }; });
+  let fast = null;
+  Object.values(library).forEach(s => {
+    if (categorizeShow(s) !== 'inpari') return;
+    const ts = Object.values(s.watched || {}).filter(v => typeof v === 'number');
+    if (ts.length < 4) return;
+    const days = Math.max(1, Math.round((Math.max(...ts) - Math.min(...ts)) / 86400000) + 1);
+    if (!fast || days < fast.days) fast = { days, name: s.name };
+  });
+  return { marathon, month, fast, streak: w.streak };
+}
+let recordFlags = {};
+function recordsHtml(w) {
+  const r = computeRecords(w);
+  let prev = null;
+  try { prev = JSON.parse(localStorage.getItem('itstracker_records') || 'null'); } catch(e) {}
+  recordFlags = prev ? {
+    marathon: r.marathon.n > (prev.marathon || 0),
+    month: r.month.h > (prev.month || 0),
+    fast: r.fast && prev.fast && r.fast.days < prev.fast,
+    streak: r.streak > (prev.streak || 0)
+  } : {};
+  const [y, m] = (r.month.k || '').split('-').map(Number);
+  const card = (key, lbl, val, sub) => `<div class="rec-tile${recordFlags[key] ? ' new' : ''}">${recordFlags[key] ? '<span class="rec-new">Nuovo record</span>' : ''}<span class="rec-lbl">${lbl}</span><b class="num">${val}</b><span class="rec-sub">${sub}</span></div>`;
+  return `<div class="sec-head"><span class="sec-title">Record personali</span></div><div class="rec-grid">
+    ${card('marathon', 'Maratona', `${r.marathon.n} ep.`, r.marathon.t ? `in un giorno · ${formatDateIT(new Date(r.marathon.t).toISOString().slice(0,10))}` : 'in un giorno')}
+    ${card('month', 'Mese record', `${r.month.h} h`, r.month.k ? `${WRAP_MONTHS[m]} ${y}` : '—')}
+    ${card('fast', 'La più veloce', r.fast ? `${r.fast.days} gg` : '—', r.fast ? escapeHtml(r.fast.name || '') : 'finisci una serie')}
+    ${card('streak', 'Giorni di fila', `${r.streak}`, 'il tuo massimo')}
+  </div>`;
+}
+function markRecordsSeen() {
+  const r = computeRecords(computeWrapped());
+  try { localStorage.setItem('itstracker_records', JSON.stringify({ marathon: r.marathon.n, month: r.month.h, fast: r.fast ? r.fast.days : null, streak: r.streak })); } catch(e) {}
+}
+
+// ---- classifica amici con podio ----
+let lbPeriod = 'week';
+function renderLbCard() {
+  const body = document.getElementById('lbCardBody');
+  if (!body) return;
+  document.querySelectorAll('#lbSeg button').forEach(b => b.classList.toggle('active', b.dataset.k === lbPeriod));
+  const rows = lbPeriod === 'week' ? lbWeekRowsCache : lbPeriod === 'month' ? lbMonthRowsCache : lbTotalRowsCache;
+  if (!rows.length) { body.innerHTML = '<div class="spinner"></div>'; return; }
+  const top = rows.slice(0, 3);
+  const order = [top[1], top[0], top[2]].filter(Boolean);
+  const pod = order.map(r => {
+    const pos = rows.indexOf(r) + 1;
+    return `<button class="pod pod-${pos}${r.me ? ' me' : ''}" onclick="openPerson('${r.uid}')">
+      <span class="pod-av">${r.photo ? `<img src="${r.photo}" alt="">` : ''}<span class="pod-medal num">${pos}</span></span>
+      <span class="pod-name">${escapeHtml(r.name)}</span><span class="pod-h num">${r.hours} h</span>
+      <span class="pod-step"></span></button>`;
+  }).join('');
+  const rest = rows.slice(3, 10).map((r, i) => `<div class="lb-row${r.me ? ' me' : ''}" onclick="openPerson('${r.uid}')">
+    <div class="lb-rank">${i + 4}</div>
+    <div class="avatar-wrap">${r.photo ? `<img class="lb-avatar" style="${levelRing(r.lvlHours||r.hours||0, 2)}" src="${r.photo}" alt="">` : `<div class="lb-avatar"></div>`}</div>
+    <div class="lb-name">${escapeHtml(r.name)}</div><div class="lb-hours">${r.hours} h</div></div>`).join('');
+  body.innerHTML = `<div class="podium">${pod}</div>${rest}`;
+}
+
+// ---- andamento ore, mese per mese (ultimi 12) ----
+function monthlyHoursHtml() {
+  const now = new Date();
+  const months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({ y: d.getFullYear(), m: d.getMonth(), mins: 0 }); }
+  watchEventsAll().forEach(e => { const d = new Date(e.t); const mo = months.find(x => x.y === d.getFullYear() && x.m === d.getMonth()); if (mo) mo.mins += e.mins; });
+  const max = Math.max(1, ...months.map(m => m.mins));
+  const MON = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const tot = Math.round(months.reduce((a, m) => a + m.mins, 0) / 60);
+  return `<div class="wrap-card glass"><div class="sec-head" style="margin-top:0"><span class="sec-title">Andamento ore</span><span class="sec-count num">${tot} h in 12 mesi</span></div>
+    <div class="mh-scroll"><div class="mh-bars">${months.map((m, i) => {
+      const h = Math.round(m.mins / 60);
+      return `<div class="mh-col${i === 11 ? ' now' : ''}"><span class="mh-v num">${h || ''}</span><span class="mh-bar" style="height:${Math.max(3, Math.round(m.mins / max * 110))}px"></span><span class="mh-l">${MON[m.m]}</span></div>`;
+    }).join('')}</div></div></div>`;
+}
+
+// ---- generi a ciambella ----
+function genreDonutHtml(w) {
+  const entries = Object.entries(w.genreHours || {}).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return '';
+  const top = entries.slice(0, 6);
+  const others = entries.slice(6).reduce((a, [, h]) => a + h, 0);
+  if (others > 0) top.push(['Altri', others]);
+  const total = top.reduce((a, [, h]) => a + h, 0) || 1;
+  const R = 52, C = 2 * Math.PI * R;
+  let off = 0;
+  const segs = top.map(([g, h]) => {
+    const len = h / total * C;
+    const col = g === 'Altri' ? 'rgba(var(--overlay-rgb),0.3)' : genreColor(g);
+    const s = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${col}" stroke-width="20" stroke-dasharray="${Math.max(0, len - 2).toFixed(1)} ${C.toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 70 70)"/>`;
+    off += len; return s;
+  }).join('');
+  return `<div class="wrap-card glass"><div class="sec-head" style="margin-top:0"><span class="sec-title">I tuoi generi</span></div>
+    <div class="donut-wrap"><svg width="140" height="140" viewBox="0 0 140 140">${segs}<text x="70" y="66" text-anchor="middle" class="dn-big">${Math.round(top[0][1])}h</text><text x="70" y="84" text-anchor="middle" class="dn-small">${escapeHtml(top[0][0])}</text></svg>
+    <div class="donut-legend">${top.map(([g, h]) => `<div class="dl-row"><span class="dl-dot" style="background:${g === 'Altri' ? 'rgba(var(--overlay-rgb),0.3)' : genreColor(g)}"></span><span class="dl-name">${escapeHtml(g)}</span><span class="dl-val num">${Math.round(h / total * 100)}%</span></div>`).join('')}</div></div></div>`;
+}
+
+// ---- a che ora guardi (orologio di 24 ore) ----
+function watchClockHtml() {
+  const hours = Array(24).fill(0);
+  watchEventsAll().forEach(e => { hours[new Date(e.t).getHours()]++; });
+  const max = Math.max(1, ...hours);
+  const peak = hours.indexOf(Math.max(...hours));
+  const night = hours.slice(22).concat(hours.slice(0, 4)).reduce((a, b) => a + b, 0);
+  const morning = hours.slice(5, 12).reduce((a, b) => a + b, 0);
+  const total = hours.reduce((a, b) => a + b, 0) || 1;
+  const tag = night / total > 0.35 ? 'Nottambulo' : morning / total > 0.3 ? 'Mattiniero' : peak >= 18 ? 'Da prima serata' : 'Da pomeriggio';
+  const bars = hours.map((n, h) => {
+    const a = (h / 24) * Math.PI * 2 - Math.PI / 2;
+    const r1 = 40, r2 = 40 + (n / max) * 40;
+    const x1 = 90 + r1 * Math.cos(a), y1 = 90 + r1 * Math.sin(a), x2 = 90 + r2 * Math.cos(a), y2 = 90 + r2 * Math.sin(a);
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${h === peak ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 45%, rgba(var(--overlay-rgb),0.25))'}" stroke-width="5.5" stroke-linecap="round" opacity="${n ? 1 : 0.25}"/>`;
+  }).join('');
+  const labels = [0, 6, 12, 18].map(h => { const a = (h / 24) * Math.PI * 2 - Math.PI / 2; return `<text x="${(90 + 88 * Math.cos(a)).toFixed(1)}" y="${(90 + 88 * Math.sin(a) + 4).toFixed(1)}" text-anchor="middle" class="ck-l">${h}</text>`; }).join('');
+  return `<div class="wrap-card glass"><div class="sec-head" style="margin-top:0"><span class="sec-title">A che ora guardi</span><span class="ck-tag">${tag}</span></div>
+    <div class="clock-wrap"><svg width="190" height="190" viewBox="-6 -6 192 192">${bars}${labels}
+      <text x="90" y="88" text-anchor="middle" class="ck-big">${String(peak).padStart(2,'0')}:00</text><text x="90" y="106" text-anchor="middle" class="ck-small">l'ora preferita</text></svg></div>
+    <div class="wrap-note" style="text-align:center">Conta l'ora in cui segni gli episodi e i film come visti.</div></div>`;
+}
+
+// ---- attori piu' visti ----
+// Il cast delle serie/film visti si salva in locale (cambia di rado): cosi'
+// il conteggio non rifà decine di richieste a ogni apertura del profilo.
+function getActorCache() { try { return JSON.parse(localStorage.getItem('itstracker_cast_v1') || '{}'); } catch(e) { return {}; } }
+async function loadTopActors() {
+  const body = document.getElementById('actorsBody');
+  if (!body || !hasTmdbKeySilent()) return;
+  const cache = getActorCache();
+  const titles = [
+    ...Object.values(library).filter(s => Object.keys(s.watched || {}).length).map(s => ({ key: 'tv' + s.id, type: 'tv', id: s.id })),
+    ...Object.values(filmLibrary).filter(f => f.watched).map(f => ({ key: 'mv' + f.id, type: 'movie', id: f.id }))
+  ];
+  const missing = titles.filter(t => !cache[t.key]).slice(0, 14);
+  await Promise.all(missing.map(async t => {
+    try {
+      const d = await (await fetch(tmdbUrl(`/${t.type}/${t.id}${t.type === 'tv' ? '/aggregate_credits' : '/credits'}`, {}))).json();
+      cache[t.key] = (d.cast || []).slice(0, 12).map(c => [c.id, c.name, c.profile_path || '']);
+    } catch(e) {}
+  }));
+  try { localStorage.setItem('itstracker_cast_v1', JSON.stringify(cache)); } catch(e) {}
+  const count = {};
+  titles.forEach(t => (cache[t.key] || []).forEach(([id, name, img]) => {
+    if (!count[id]) count[id] = { id, name, img, n: 0 };
+    count[id].n++;
+  }));
+  const top = Object.values(count).filter(a => a.n >= 2).sort((a, b) => b.n - a.n).slice(0, 8);
+  if (document.getElementById('actorsBody') !== body) return;
+  body.innerHTML = top.length ? `<div class="actors-grid">${top.map((a, i) => `<button class="ta" onclick="openActor(${a.id})">
+      ${a.img ? `<img src="${tmdbImg(a.img, 'w185')}" alt=""${i === 0 ? ' class="first"' : ''}>` : `<span class="ta-noimg">${escapeHtml((a.name || '?').charAt(0))}</span>`}
+      <span class="ta-name">${escapeHtml(a.name)}</span><span class="ta-n num">${a.n} titoli</span></button>`).join('')}</div>`
+    : '<div class="wrap-note">Guarda qualche serie o film in più per scoprire gli attori che ritrovi di più.</div>';
+}
+
+// ---- confronto con un amico (barre specchiate) ----
+let compareUid = null;
+async function renderCompare() {
+  const body = document.getElementById('compareBody');
+  if (!body || !currentUser) return;
+  const profs = await ensureFollowingProfiles();
+  if (!profs.length) { body.innerHTML = '<div class="wrap-note">Segui qualcuno per confrontarti.</div>'; return; }
+  if (!compareUid || !profs.find(p => p.uid === compareUid)) compareUid = profs[0].uid;
+  const p = profs.find(x => x.uid === compareUid);
+  const w = computeWrapped();
+  const theirEps = (p.shows || []).reduce((a, s) => a + (s.watched || 0), 0);
+  const theirFilms = (p.films || []).filter(f => f.watched).length;
+  const rows = [
+    ['Ore', w.hours, p.totalHours || 0],
+    ['Episodi', w.episodesWatched, theirEps],
+    ['Film', w.filmsWatched, theirFilms],
+    ['Serie', w.totalShows, (p.shows || []).length]
+  ];
+  const name = escapeHtml((p.nickname || p.displayName || 'Amico').split(' ')[0]);
+  body.innerHTML = `<div class="cmp-pick">${profs.slice(0, 20).map(x => `<button class="cmp-chip${x.uid === compareUid ? ' active' : ''}" onclick="compareUid='${x.uid}';renderCompare()">${x.photoURL ? `<img src="${x.photoURL}" alt="">` : ''}${escapeHtml((x.nickname || x.displayName || 'Utente').split(' ')[0])}</button>`).join('')}</div>
+    <div class="mirror-head"><span>Tu</span><span>${name}</span></div>
+    ${rows.map(([l, a, b]) => { const m = Math.max(1, a, b); return `<div class="mirror-row">
+      <span class="mr-v num${a >= b ? ' win' : ''}">${a}</span>
+      <span class="mr-l"><i style="width:${Math.round(a / m * 100)}%"></i></span>
+      <span class="mr-lbl">${l}</span>
+      <span class="mr-r"><i style="width:${Math.round(b / m * 100)}%"></i></span>
+      <span class="mr-v num${b > a ? ' win' : ''}">${b}</span></div>`; }).join('')}`;
+}
+
+// ---- bacheca trofei ----
+function trophyBoardHtml(w) {
+  const defs = getAchievements(w);
+  const unlocked = defs.filter(a => a.unlocked).length;
+  const nextGoals = defs.filter(a => !a.unlocked && a.target > 1).map(a => ({ ...a, p: (a.value || 0) / a.target })).sort((a, b) => b.p - a.p).slice(0, 3);
+  const filtered = defs.filter(a => a.category === achievementTab).sort((a, b) => (b.unlocked - a.unlocked) || (b.unlocked ? b.target - a.target : a.target - b.target));
+  const cup = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v4a5 5 0 01-10 0V4z"/><path d="M7 6H4a2 2 0 002 4M17 6h3a2 2 0 01-2 4"/></svg>`;
+  return `<div class="wrap-card glass trophy-head">
+      <div class="th-top"><b class="big-num num">${unlocked}</b><span>/ ${defs.length} trofei sbloccati</span></div>
+      <div class="xp-bar"><i style="width:${Math.round(unlocked / defs.length * 100)}%"></i></div>
+      ${nextGoals.length ? `<div class="th-next"><span class="th-next-lbl">Prossimi traguardi</span>${nextGoals.map(a => `<div class="tn-row"><span class="tn-e">${a.emoji}</span><span class="tn-name">${a.label}</span><span class="tn-p num">${a.value || 0}/${a.target}</span></div>`).join('')}</div>` : ''}
+    </div>
+    <div class="mini-seg trophy-seg">${ACH_CATEGORIES.map(c => `<button class="${achievementTab === c.id ? 'active' : ''}" onclick="achievementTab='${c.id}';renderProfileBody()">${c.label}</button>`).join('')}</div>
+    <div class="trophy-grid">${filtered.map(a => `<div class="trophy${a.unlocked ? ' won shine' : ''}">
+      <span class="tr-cup">${cup}<span class="tr-emoji">${a.emoji}</span></span>
+      <span class="tr-name">${a.label}</span>
+      ${!a.unlocked && a.target > 1 ? `<span class="tr-prog"><i style="width:${Math.min(100, Math.round((a.value || 0) / a.target * 100))}%"></i></span>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+// ---- figurina da condividere (immagine) ----
+async function shareProfileCard() {
+  if (!currentUser) return;
+  showToast('Preparo la figurina…');
+  try {
+    const W = 1080, H = 1350;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#FF2200';
+    const accentRgbStr = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim() || '255,34,0';
+    const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#0a1427'); g.addColorStop(1, '#060c1a');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W/2, 380, 40, W/2, 380, 620); glow.addColorStop(0, `rgba(${accentRgbStr},0.4)`); glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    roundRectPath(ctx, 70, 70, W - 140, H - 140, 56); ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 3; ctx.stroke();
+    const w = computeWrapped();
+    const lp = levelProgress(w.hours);
+    const av = await loadImageSafe(getAvatarUrl());
+    ctx.save(); ctx.beginPath(); ctx.arc(W/2, 360, 150, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+    if (av) ctx.drawImage(av, W/2 - 150, 210, 300, 300); else { ctx.fillStyle = '#26324a'; ctx.fillRect(W/2 - 150, 210, 300, 300); }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(W/2, 360, 158, 0, Math.PI * 2); ctx.strokeStyle = levelColor(w.hours); ctx.lineWidth = 12; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.font = '400 92px Anton, "Arial Narrow", sans-serif';
+    ctx.fillText((getNickname() || (currentUser.displayName || '').split(' ')[0] || '').toUpperCase(), W/2, 640);
+    ctx.fillStyle = '#F7B538'; ctx.font = '700 40px "Barlow Semi Condensed", sans-serif';
+    ctx.fillText(`LIVELLO ${lp.idx + 1} · ${lp.cur.label.toUpperCase()}`, W/2, 705);
+    const stats = [[w.totalShows, 'SERIE'], [w.episodesWatched, 'EPISODI'], [w.filmsWatched, 'FILM'], [w.hours, 'ORE']];
+    const colW = (W - 200) / 4;
+    stats.forEach(([v, l], i) => {
+      const cx = 100 + colW * i + colW / 2;
+      ctx.fillStyle = '#fff'; ctx.font = '700 84px "Barlow Semi Condensed", sans-serif'; ctx.fillText(Number(v).toLocaleString('it-IT'), cx, 900);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.font = '700 28px "Barlow Semi Condensed", sans-serif'; ctx.fillText(l, cx, 945);
+    });
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.font = '600 34px -apple-system, "Segoe UI", sans-serif';
+    ctx.fillText(`🔥 ${currentStreak()} giorni di fila · record ${w.streak}`, W/2, 1060);
+    ctx.font = '800 46px "Baloo 2", sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('ITS', W/2 - 4, 1200);
+    ctx.fillStyle = accent; ctx.textAlign = 'left'; ctx.fillText('TRACKER', W/2 - 4, 1200);
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const file = new File([blob], 'itstracker-figurina.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], text: 'La mia figurina su itstracker' });
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'itstracker-figurina.png'; a.click(); showToast('Immagine salvata'); }
+  } catch(e) { showToast('Errore nella creazione dell\'immagine'); }
 }
 
 // ---------- render library TV ----------
