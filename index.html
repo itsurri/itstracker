@@ -1972,6 +1972,105 @@
   .settingsrow .st { min-width: 0; }
   .settingsrow .sn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* =====================================================================
+     RESTYLING 2026 - NAVIGAZIONE
+     ===================================================================== */
+  /* Intestazione: pillola di vetro sospesa. Dietro, lo sfondo sfuma verso il
+     basso cosi' i contenuti che scorrono non finiscono "tagliati" sotto. */
+  .topbar-wrap {
+    padding: calc(env(safe-area-inset-top) + 8px) 14px 12px;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 38%, color-mix(in srgb, var(--bg) 70%, transparent) 72%, transparent 100%);
+    -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: none;
+  }
+  .topbar {
+    padding: 8px 12px; border-radius: 999px;
+    background: var(--topbar-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.16);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.2);
+    --logo-h: clamp(24px, 7.4vw, 34px);
+    transition: padding 0.25s ease;
+  }
+  :root[data-theme="light"] .topbar { box-shadow: 0 8px 22px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9); }
+  :root[data-radius="square"] .topbar { border-radius: 12px; }
+  .topbar-logo { transition: font-size 0.25s ease; }
+  /* scorrendo: logo e pillola si rimpiccioliscono */
+  .topbar-wrap.scrolled .topbar { --logo-h: 22px; padding: 6px 12px; }
+  .topbar-left { transition: height 0.25s ease; }
+
+  /* Barra in basso come Laurera: una pillola unica; ogni voce ha l'icona del
+     suo colore (--tc) e quella aperta si allarga, piena del colore, con il
+     nome scritto accanto. */
+  .tabbar-wrap { bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .pill-main { position: relative; flex: 1; padding: 5px; gap: 3px; border-color: rgba(255,255,255,0.16); background: color-mix(in srgb, var(--bg) 84%, transparent); }
+  .pill-main .tabbtn {
+    flex: 1 1 0; min-width: 34px; padding: 12px 0; gap: 7px; border-radius: 999px;
+    color: var(--tc); transition: flex 0.28s ease, background-color 0.25s ease, box-shadow 0.25s ease, color 0.2s;
+  }
+  .pill-main .tabbtn::before, .pill-main .tabbtn.active::before { display: none; }
+  .pill-main .tabbtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .pill-main .tabbtn.active {
+    flex: 0 1 auto; padding: 12px 16px; min-width: 0;
+    background: var(--tc); color: #111;
+    box-shadow: 0 0 18px color-mix(in srgb, var(--tc) 55%, transparent);
+  }
+  :root[data-radius="square"] .pill-main .tabbtn { border-radius: 9px; }
+  .tab-lbl {
+    display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .pill-main .tabbtn.active .tab-lbl { display: inline; }
+  @media (max-width: 370px) { .pill-main .tabbtn.active { padding: 12px 12px; } .tab-lbl { font-size: 11.5px; } }
+  .tabbtn { position: relative; }
+  /* badge della scheda Social: notifiche + messaggi non letti, pulsa quando ne arriva uno */
+  .tab-badge-pulse {
+    position: absolute; top: 7px; left: calc(50% + 5px); z-index: 2;
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-num); font-weight: 700; font-size: 11.5px; line-height: 18px; text-align: center;
+    box-shadow: 0 0 0 2px var(--bg); display: none;
+  }
+  .tab-badge-pulse.show { display: block; }
+  .tab-badge-pulse.pulse { animation: badgePulse 1.3s ease-out 3; }
+  @keyframes badgePulse {
+    0% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 2px rgba(var(--accent-rgb),0.85); }
+    100% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 13px rgba(var(--accent-rgb),0); }
+  }
+  @media (prefers-reduced-motion: reduce) { .tab-badge-pulse.pulse { animation: none; } }
+
+  /* Bottone + fisso sopra la barra, allineato alla pillola del profilo */
+  .fab-add {
+    position: fixed; z-index: 49;
+    right: max(14px, calc((100vw - 452px) / 2)); bottom: calc(86px + env(safe-area-inset-bottom));
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: var(--accent-ink);
+    box-shadow: 0 10px 26px rgba(var(--accent-rgb),0.42), inset 0 1px 0 rgba(255,255,255,0.35);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s ease;
+  }
+  .fab-add.hide { opacity: 0; transform: scale(0.5); pointer-events: none; }
+  body.splash-active .fab-add { visibility: hidden; }
+  #app { padding-bottom: 175px; }
+
+  /* Social: tab con il contatore dentro, non sull'angolo */
+  .cat-count {
+    position: static; display: none; margin-left: 6px; vertical-align: 1px;
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    font-size: 11.5px; line-height: 18px; box-shadow: none;
+    background: var(--fg); color: var(--bg);
+  }
+  .cat-count.show { display: inline-block; }
+  .social-login { padding: 22px 18px; text-align: center; }
+  .sl-title { font-family: var(--font-title); font-weight: var(--title-weight); font-size: calc(19px * var(--title-scale)); letter-spacing: var(--title-ls); }
+  .sl-sub { font-size: 13px; color: rgba(var(--overlay-rgb),0.55); margin-top: 6px; line-height: 1.45; }
+  .social-actions { display: flex; justify-content: flex-end; margin: -4px 0 8px; }
+  .link-btn { font-size: 12.5px; font-weight: 700; color: var(--accent); padding: 4px 2px; }
+  /* intestazione di sezione: titolo stretto con lineetta nel colore dell'app */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 22px 2px 12px; }
+  .sec-title { font-size: calc(15px * var(--title-scale)); text-transform: uppercase; letter-spacing: 0.05em; position: relative; padding-left: 12px; }
+  .sec-title::before { content: ''; position: absolute; left: 0; top: 50%; width: 4px; height: 70%; transform: translateY(-50%); border-radius: 2px; background: var(--accent); }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -1990,6 +2089,45 @@
       transition: transform 0.3s cubic-bezier(.32,.72,0,1), opacity 0.25s ease;
     }
     .sheetbg.open .sheet { transform: scale(1); opacity: 1; }
+
+    /* Menu in alto (come Martur): la barra delle schede sale accanto al logo,
+       con le scritte, e la voce aperta nel colore dell'app. */
+    .topbar { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 18px; }
+    .topbar-wrap.scrolled .topbar { padding: 8px 18px; }
+    .topbar-left { justify-content: flex-start; }
+    .topbar .tabbar-wrap {
+      position: static; margin: 0 0 0 auto; width: auto; max-width: none;
+    }
+    .tabbar { box-shadow: none; background: rgba(var(--overlay-rgb),0.06); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .tabbar::before { display: none; }
+    .pill-main .tabbtn, .pill-main .tabbtn.active { flex: 0 0 auto; padding: 9px 15px; gap: 8px; }
+    .pill-main .tabbtn svg { width: 19px; height: 19px; }
+    .tab-lbl { display: inline; font-size: 14px; }
+    .tab-badge-pulse { top: 3px; left: auto; right: 4px; }
+    .fab-add { display: none; }
+    #app { padding-bottom: 60px; }
+    body.splash-active .tabbar-wrap { visibility: hidden; }
+  }
+
+  /* Schermi larghi: la scheda di una serie/film si apre in una colonna a
+     destra e la libreria resta visibile (e toccabile) a sinistra. */
+  @media (min-width: 1100px) {
+    :root { --dock-w: min(600px, 44vw); }
+    #sheetBg {
+      left: auto; right: 0; width: var(--dock-w); padding: 16px 16px 16px 0;
+      display: block; background: transparent;
+    }
+    #sheetBg .sheet {
+      width: 100%; max-width: none; height: 100%; max-height: none;
+      transform: translateX(40px); opacity: 0;
+    }
+    #sheetBg.open .sheet { transform: none; opacity: 1; }
+    #sheetBg > .closebtn { position: absolute; top: 30px; right: 32px; }
+    body.sheet-open #app { max-width: none; margin-left: 24px; margin-right: calc(var(--dock-w) + 24px); }
+    /* con la scheda aperta la colonna e' stretta: il menu resta a sole icone */
+    body.sheet-open .tab-lbl { display: none; }
+    body.sheet-open .pill-main .tabbtn { padding: 9px 12px; }
+    body.sheet-open .pill-main .tabbtn.active .tab-lbl { display: inline; }
   }
 </style>
 </head>
@@ -2033,22 +2171,17 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/></svg>
   </div>
 
-  <div class="topbar-wrap">
+  <!-- Intestazione: una pillola di vetro sospesa con il solo logo (notifiche e
+       messaggi stanno nella scheda Social). Scorrendo si rimpicciolisce. Il
+       tasto indietro compare solo in Impostazioni. -->
+  <div class="topbar-wrap" id="topbarWrap">
   <div class="topbar">
     <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <button class="topbar-notif show" id="topbarNotif" onclick="toggleNotifPanel(event)" title="Notifiche">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      <span class="notif-badge" id="notifBadge"></span>
-    </button>
     <div class="topbar-left">
       <div class="topbar-logo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
     </div>
-    <button class="topbar-msg" id="topbarMsg" onclick="toggleChatListPanel(event)" title="Messaggi">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-      <span class="notif-badge" id="chatListBadge"></span>
-    </button>
   </div>
   </div>
 
@@ -2156,6 +2289,19 @@
     </div>
   </div>
 
+  <!-- SOCIAL: attività degli amici, notifiche, messaggi e persone in un posto solo -->
+  <div class="view" id="view-social">
+    <div class="cat-tabs-row">
+      <div class="seasontabs cat-tabs" id="socialTabs">
+        <button class="seasontab cat-tab-corner active" data-stab="feed" onclick="setSocialTab('feed')"><span class="cat-tab-label">Feed</span></button>
+        <button class="seasontab cat-tab-corner" data-stab="notif" onclick="setSocialTab('notif')"><span class="cat-tab-label">Avvisi</span><span class="tab-count cat-count" id="socialCount-notif"></span></button>
+        <button class="seasontab cat-tab-corner" data-stab="chat" onclick="setSocialTab('chat')"><span class="cat-tab-label">Chat</span><span class="tab-count cat-count" id="socialCount-chat"></span></button>
+        <button class="seasontab cat-tab-corner" data-stab="people" onclick="setSocialTab('people')"><span class="cat-tab-label">Amici</span></button>
+      </div>
+    </div>
+    <div class="section" style="padding-top:0" id="socialContent"></div>
+  </div>
+
   <!-- IMPOSTAZIONI -->
   <div class="view" id="view-settings">
     <div class="section" style="padding-top:14px">
@@ -2212,31 +2358,36 @@
 
 <!-- TAB BAR -->
 <div class="tabbar-wrap">
+  <!-- Menu unico come Laurera: ogni voce ha il suo colore; quella aperta si
+       allarga, piena del suo colore, e mostra il nome. -->
   <div class="tabbar pill-main">
-    <button class="tabbtn active" data-tab="tv" title="Serie TV">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/>
-        <path d="M8 3.5l4 4 4-4"/>
-      </svg>
+    <button class="tabbtn active" data-tab="tv" title="Serie TV" style="--tc:var(--accent)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7.5" width="19" height="13" rx="3.5"/><path d="M8 3.5l4 4 4-4"/></svg>
+      <span class="tab-lbl">Serie</span>
     </button>
-    <button class="tabbtn" data-tab="film" title="Film">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/>
-        <path d="m6.2 5.3 3.1 3.9"/>
-        <path d="m12.4 3.4 3.1 4"/>
-        <path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/>
-      </svg>
+    <button class="tabbtn" data-tab="film" title="Film" style="--tc:#FF9F0A">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v7.5a2.5 2.5 0 0 1-2.5 2.5H5.5A2.5 2.5 0 0 1 3 18.5Z"/></svg>
+      <span class="tab-lbl">Film</span>
     </button>
-    <button class="tabbtn" data-tab="search" title="Cerca">
+    <button class="tabbtn" data-tab="search" title="Ricerca" style="--tc:#38BDF8">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.6-4.6"/></svg>
+      <span class="tab-lbl">Ricerca</span>
     </button>
-  </div>
-  <div class="tabbar pill-side">
-    <button class="tabbtn" data-tab="profile" title="Profilo">
+    <button class="tabbtn" data-tab="profile" title="Profilo" style="--tc:#A78BFA">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
+      <span class="tab-lbl">Profilo</span>
+    </button>
+    <button class="tabbtn" data-tab="social" title="Social" style="--tc:#22C55E">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M16 4.9a3.4 3.4 0 0 1 0 6.3"/><path d="M18.2 14.2a6.2 6.2 0 0 1 3 5.8"/></svg>
+      <span class="tab-lbl">Social</span>
+      <span class="tab-badge-pulse" id="socialBadge"></span>
     </button>
   </div>
 </div>
+<!-- bottone + fisso: aggiunge subito una serie o un film (apre la ricerca) -->
+<button class="fab-add" id="fabAdd" onclick="goToSearch()" title="Aggiungi" aria-label="Aggiungi una serie o un film">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
 
 <div class="sheetbg" id="sheetBg">
   <div class="sheet" id="sheet"></div>
@@ -3035,15 +3186,24 @@ function updateViewButtons() {
 // ---------- tabs ----------
 document.querySelectorAll('.tabbtn').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 
+// La "goccia" segue la voce attiva della pillola principale; sul Profilo
+// (pillola a destra) si spegne e resta l'evidenziazione di quella pillola.
 function moveTabIndicator(btn) {
   const indicator = document.getElementById('tabIndicator');
-  if (!indicator || !btn) return;
+  if (!indicator) return;
+  if (!btn || !btn.closest('.pill-main')) { indicator.classList.add('off'); return; }
+  const wasOff = indicator.classList.contains('off') || !indicator.style.width;
+  if (wasOff) indicator.style.transition = 'none';
+  indicator.classList.remove('off');
   indicator.style.width = btn.offsetWidth + 'px';
-  indicator.style.transform = `translateX(${btn.offsetLeft - 6}px)`;
+  indicator.style.transform = `translateX(${btn.offsetLeft}px)`;
+  if (wasOff) { void indicator.offsetWidth; indicator.style.transition = ''; }
+  else { indicator.classList.remove('stretch'); void indicator.offsetWidth; indicator.classList.add('stretch'); }
 }
 
 // ordine visivo delle tab, per decidere il verso dello swipe al cambio
-const TAB_ORDER = { tv: 0, film: 1, search: 2, profile: 3, settings: 4 };
+const TAB_ORDER = { tv: 0, film: 1, search: 2, profile: 3, social: 4, settings: 5 };
+const SWIPE_TABS = ['tv', 'film', 'search', 'profile', 'social'];
 function switchTab(tab) {
   // Chiudi eventuali pannelli header aperti (notifiche/messaggi/follower), così
   // toccando Impostazioni (o un'altra tab) non restano aperti a coprire la vista.
@@ -3070,8 +3230,10 @@ function switchTab(tab) {
   // ritrova la stessa posizione di scroll lasciata nella tab precedente.
   window.scrollTo(0, 0);
   document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
-  document.getElementById('topbarNotif').classList.toggle('show', tab !== 'settings');
+  const fab = document.getElementById('fabAdd');
+  if (fab) fab.classList.toggle('hide', tab !== 'tv' && tab !== 'film');
   if (tab === 'profile') renderProfile();
+  if (tab === 'social') renderSocial();
   if (tab === 'search') {
     // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
     // un'altra tab, i risultati di ricerca restano vecchi finché non ricambi
@@ -4460,16 +4622,6 @@ function renderProfile() {
   }
 
   let html = renderWeekCard();
-  if (currentUser) {
-    html += `<div class="seasontabs cat-tabs" id="profilePeopleTabs" style="padding:0 0 12px">
-      <button class="seasontab${profilePeopleTab==='feed'?' active':''}" data-ptab="feed" onclick="setProfilePeopleTab('feed')">Attività amici</button>
-      <button class="seasontab${profilePeopleTab==='suggestions'?' active':''}" data-ptab="suggestions" onclick="setProfilePeopleTab('suggestions')">Amici suggeriti</button>
-      <button class="seasontab people-search-tab${profilePeopleTab==='search'?' active':''}" data-ptab="search" onclick="setProfilePeopleTab('search')" title="Cerca persone">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      </button>
-    </div>
-    <div class="wrap-card glass" style="padding:14px 16px; margin-bottom:16px"><div id="profilePeopleBody"></div></div>`;
-  }
   if (currentUser && followingList.length) {
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · di sempre</div><div id="leaderboardTotalBody"></div></div>`;
     html += `<div class="wrap-card glass" style="padding:14px 16px 8px; margin-bottom:12px"><div class="lb-title">Classifica · questo mese</div><div id="leaderboardBody"></div></div>`;
@@ -4491,7 +4643,6 @@ function renderProfile() {
 
   c.innerHTML = html;
   renderLeaderboard();
-  if (currentUser) loadProfilePeople();
 }
 
 // ---------- render library TV ----------
@@ -4760,17 +4911,36 @@ const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '
 
 let notifItemsCache = {};
 
+// Badge sulla scheda Social: notifiche + chat non lette. Pulsa quando il
+// numero sale (e' arrivato qualcosa di nuovo).
+let socialUnreadNotif = 0, socialUnreadChat = 0, socialBadgeLast = 0;
+function updateSocialBadge() {
+  const total = socialUnreadNotif + socialUnreadChat;
+  const b = document.getElementById('socialBadge');
+  if (b) {
+    b.textContent = total > 9 ? '9+' : total;
+    b.classList.toggle('show', total > 0);
+    if (total > socialBadgeLast) { b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); }
+  }
+  socialBadgeLast = total;
+  const setCount = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n > 9 ? '9+' : n; el.classList.toggle('show', n > 0); } };
+  setCount('socialCount-notif', socialUnreadNotif);
+  setCount('socialCount-chat', socialUnreadChat);
+}
+
 function renderNotifPanel() {
   const list = document.getElementById('notifList');
-  const badge = document.getElementById('notifBadge');
-  if (!list || !badge) return;
+  if (!list) return;
   const items = allNotifications();
-  const unread = items.filter(n => !n.read).length;
-  badge.textContent = unread > 9 ? '9+' : unread;
-  badge.classList.toggle('show', unread > 0);
+  socialUnreadNotif = items.filter(n => !n.read).length;
+  updateSocialBadge();
+  list.innerHTML = notifListHtml(items);
+  if (currentTab === 'social' && socialTab === 'notif') renderSocial();
+}
+function notifListHtml(items) {
   notifItemsCache = {};
   items.forEach(n => { notifItemsCache[n.id] = n; });
-  list.innerHTML = items.length
+  return items.length
     ? items.slice(0, 50).map(n => {
         const isChat = n.type === 'message' && n.fromUid;
         const isFollow = n.type === 'follow' && n.fromUid;
@@ -5272,7 +5442,7 @@ function validId(obj, key) {
 // ---------- search ----------
 function goToSearch(mode) {
   switchTab('search');
-  setSearchMode(mode);
+  if (mode) setSearchMode(mode);
   document.getElementById('searchInput').focus();
 }
 
@@ -5620,6 +5790,55 @@ function renderProfileFeedBody() {
   fetchPresence(shown.map(a => a.uid)).then(() => { applyPresenceDots(body); applyLevelRings(body); });
 }
 
+// ---------- scheda Social ----------
+// Feed degli amici, avvisi, chat e persone (ricerca + suggeriti) in un posto
+// solo: prima stavano sparsi fra l'intestazione e il fondo del Profilo.
+let socialTab = 'feed';
+function setSocialTab(tab) {
+  socialTab = tab;
+  document.querySelectorAll('#socialTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.stab === tab));
+  renderSocial();
+}
+function socialLoginCard(what) {
+  return `<div class="wrap-card glass social-login">
+    <div class="sl-title">Entra per ${what}</div>
+    <div class="sl-sub">Con l'accesso Google segui gli amici, vedi cosa guardano e chatti con loro.</div>
+    <button class="emptybtn" style="margin-top:12px" onclick="signInGoogle()">Accedi con Google</button>
+  </div>`;
+}
+function renderSocial() {
+  const c = document.getElementById('socialContent');
+  if (!c) return;
+  if (socialTab === 'notif') {
+    const items = allNotifications();
+    c.innerHTML = `${items.some(n => !n.read) ? `<div class="social-actions"><button class="link-btn" onclick="markAllNotificationsRead()">Segna tutte come lette</button></div>` : ''}
+      <div id="socialNotifList">${notifListHtml(items)}</div>`;
+    return;
+  }
+  if (!currentUser) {
+    c.innerHTML = socialLoginCard(socialTab === 'chat' ? 'chattare con i tuoi amici' : socialTab === 'people' ? 'trovare altre persone' : 'vedere cosa guardano i tuoi amici');
+    return;
+  }
+  if (socialTab === 'chat') {
+    c.innerHTML = `${socialUnreadChat ? `<div class="social-actions"><button class="link-btn" onclick="markAllChatsRead()">Segna tutte come lette</button></div>` : ''}<div id="socialChatList"><div class="spinner"></div></div>`;
+    renderChatListPanel(document.getElementById('socialChatList'));
+    return;
+  }
+  if (socialTab === 'people') {
+    c.innerHTML = `<input class="people-search-input" id="peopleSearchInput" placeholder="Cerca per nickname…" autocomplete="off" oninput="onPeopleSearch(this.value)">
+      <div id="peopleSearchResults"></div>
+      <div class="sec-head"><span class="sec-title">Amici suggeriti</span></div>
+      <div id="profilePeopleBody"><div class="spinner"></div></div>`;
+    profilePeopleTab = 'suggestions';
+    loadProfilePeople();
+    return;
+  }
+  // feed
+  c.innerHTML = `<div id="profilePeopleBody"><div class="spinner"></div></div>`;
+  profilePeopleTab = 'feed';
+  loadProfilePeople();
+}
+
 // ---------- scheda persona ----------
 let currentPersonProfile = null;
 
@@ -5912,11 +6131,9 @@ function startChatList() {
 function chatMillis2(c) { return (c.updatedAt && c.updatedAt.toMillis) ? c.updatedAt.toMillis() : (c.updatedAt || 0); }
 
 function renderChatListBadge() {
-  const badge = document.getElementById('chatListBadge');
-  if (!badge) return;
-  const unread = chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid)).length;
-  badge.textContent = unread > 9 ? '9+' : unread;
-  badge.classList.toggle('show', unread > 0);
+  socialUnreadChat = currentUser ? chatListCache.filter(c => c.lastSender && c.lastSender !== currentUser.uid && !(c.readBy||[]).includes(currentUser.uid)).length : 0;
+  updateSocialBadge();
+  if (currentTab === 'social' && socialTab === 'chat') renderSocial();
 }
 async function markAllChatsRead() {
   if (!fbDb || !currentUser) return;
@@ -5977,8 +6194,8 @@ async function deleteChat(chatId) {
 const peerProfileCache = new Map(); // uid -> { ts, data }
 const PEER_PROFILE_TTL = 45000;
 
-async function renderChatListPanel() {
-  const el = document.getElementById('chatListBody');
+async function renderChatListPanel(target) {
+  const el = target || document.getElementById('chatListBody');
   if (!currentUser) { el.innerHTML = '<div class="commentsEmpty">Accedi per vedere i messaggi.</div>'; return; }
   const peerUids = chatListCache.map(c => (c.participants||[]).find(u => u !== currentUser.uid)).filter(Boolean);
   // Foto/nome dal profilo live, non dalla copia salvata nel documento chat:
@@ -6997,6 +7214,77 @@ function initCardTilt() {
   document.addEventListener('pointermove', move, { passive: true });
   document.addEventListener('pointerup', reset, { passive: true });
   document.addEventListener('pointercancel', reset, { passive: true });
+}
+
+// ---------- navigazione: intestazione che si rimpicciolisce, swipe fra le schede ----------
+function initHeaderShrink() {
+  const wrap = document.getElementById('topbarWrap');
+  if (!wrap) return;
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { wrap.classList.toggle('scrolled', window.scrollY > 24); ticking = false; });
+  }, { passive: true });
+}
+// Swipe orizzontale sul contenuto: passa alla scheda accanto (Serie, Film,
+// Cerca, Social, Profilo). Non scatta partendo da righe che si scorrono di
+// lato (locandine, cast, tab...) ne' dalle righe delle liste, che hanno il
+// loro swipe per segnare l'episodio.
+function startsInHorizontalScroller(el) {
+  for (let n = el; n && n !== document.body; n = n.parentElement) {
+    if (n.scrollWidth > n.clientWidth + 2) {
+      const ox = getComputedStyle(n).overflowX;
+      if (ox === 'auto' || ox === 'scroll') return true;
+    }
+  }
+  return false;
+}
+function initTabSwipe() {
+  const app = document.getElementById('app');
+  let st = null;
+  app.addEventListener('touchstart', e => {
+    st = null;
+    if (e.touches.length !== 1 || anyOverlayOpen()) return;
+    const tgt = e.target;
+    if (tgt.closest('input, textarea, select, .swipe-row, .no-tab-swipe') || startsInHorizontalScroller(tgt)) return;
+    const t = e.touches[0];
+    st = { x: t.clientX, y: t.clientY, t: Date.now() };
+  }, { passive: true });
+  app.addEventListener('touchend', e => {
+    if (!st) return;
+    const s = st; st = null;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x, dy = t.clientY - s.y;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2 || Date.now() - s.t > 650) return;
+    const i = SWIPE_TABS.indexOf(currentTab);
+    if (i < 0) return;
+    const next = SWIPE_TABS[i + (dx < 0 ? 1 : -1)];
+    if (next) { haptic(); switchTab(next); }
+  }, { passive: true });
+}
+// PC: il menu delle schede sta DENTRO l'intestazione, accanto al logo (cosi'
+// resta allineato anche quando sopra compaiono gli avvisi). Sul telefono torna
+// in basso. Si sposta l'elemento, non se ne crea una copia: stessi listener.
+function initTopMenu() {
+  const mq = window.matchMedia('(min-width: 900px)');
+  const bar = document.querySelector('.tabbar-wrap');
+  const topbar = document.querySelector('.topbar');
+  const fab = document.getElementById('fabAdd');
+  const place = () => {
+    if (mq.matches) { if (bar.parentElement !== topbar) topbar.appendChild(bar); }
+    else if (bar.parentElement !== document.body) document.body.insertBefore(bar, fab);
+    moveTabIndicator(document.querySelector('.tabbtn.active'));
+  };
+  mq.addEventListener('change', place);
+  place();
+}
+// Su schermi larghi la scheda serie/film si apre in colonna: la pagina sotto
+// deve sapere quando e' aperta per farle spazio (vedi CSS min-width:1100px).
+function initSheetDock() {
+  const bg = document.getElementById('sheetBg');
+  new MutationObserver(() => document.body.classList.toggle('sheet-open', bg.classList.contains('open')))
+    .observe(bg, { attributes: true, attributeFilter: ['class'] });
 }
 
 function isFutureEpisode(ep) {
@@ -8696,6 +8984,10 @@ initSheetParallax();
 initCardTilt();
 initBackButton();
 initContentFadeIn();
+initHeaderShrink();
+initTabSwipe();
+initSheetDock();
+initTopMenu();
 // tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
 setTimeout(() => maybeShowTutorial('tv'), 2600);
 </script>
