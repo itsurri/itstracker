@@ -3070,6 +3070,11 @@
   .prov-chips > :last-child { margin-right: auto; }
   :root .list-item.li-frame .ep-ring.add-ring { background: var(--accent); color: var(--accent-ink); }
   .ep-ring.add-ring .epr { display: none; }
+  /* feed senza linea e pallini a sinistra: gli avatar partono dal bordo come il resto */
+  .feed-log { padding-left: 0; }
+  .feed-log::before, .feed-log .log-dot { display: none; }
+  /* stanno guardando ora: spazio attorno perche l anello dell avatar non venga tagliato */
+  .nw-list { padding: 5px 4px 2px; margin: -5px -4px 0; }
 </style>
 </head>
 <body>
