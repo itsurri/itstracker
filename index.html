@@ -1877,8 +1877,8 @@
   .topbar-logo .tw-its, #splashLogo .tw-its { color: var(--fg); text-shadow: none; }
   .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); text-shadow: none; }
   .topbar-logo::after, #splashLogo::after { content: '.'; color: var(--accent); }
-  .topbar-logo { font-size: 17.5px; top: 0; line-height: 1; } /* "i" e "t" alti come le maiuscole del ticker (13px) */
-  @media (min-width: 1000px) { .topbar-logo { font-size: 17.5px; } }
+  .topbar-logo { font-size: 17px; top: 0; line-height: 1; } /* "i" e "t" alti come le maiuscole del ticker (13px) */
+  @media (min-width: 1000px) { .topbar-logo { font-size: 17px; } }
   #splashLogo { font-size: clamp(40px, 13vw, 54px); }
 
   /* --- splash: titoli di testa in dissolvenza --- */
@@ -3022,12 +3022,45 @@
   .sheet-acts .sa-remove { background: rgba(255,69,58,0.12); color: #FF453A; border-color: rgba(255,69,58,0.32); }
   .sheet-acts .sa-pari { background: rgba(48,209,88,0.12); color: #30D158; border-color: rgba(48,209,88,0.32); }
   .sheet-acts .sa-todo { background: rgba(var(--overlay-rgb),0.08); color: var(--fg); border-color: rgba(var(--overlay-rgb),0.16); }
-  .sheet-acts .sa-seen { background: var(--accent); color: var(--accent-ink); }
+  .sheet-acts .sa-seen-on { background: rgba(48,209,88,0.12); color: #30D158; border-color: rgba(48,209,88,0.32); }
   .sheet-acts .film-watch-btn { width: auto; margin: 0; }
   .sheet:has(.sheet-acts .sa-remove) .removebtn { display: none; }
   .day-head.stale-head { margin: 12px 4px 12px; }
   @media (min-width: 900px) { .day-head.stale-head { margin: 0 4px; } }
   @media (max-width: 899px) { .stale-section { padding-top: 0; } .day-head.stale-head { margin-top: 4px; } }
+  /* Logo e ticker centrati "sull'inchiostro" in ogni browser: il riquadro del
+     testo viene tagliato all'altezza delle maiuscole e alla linea di base
+     (text-box-trim), cosi' la centratura non dipende da come Safari o Chrome
+     posizionano il carattere. Dove non e' supportato resta la correzione fissa. */
+  @supports (text-box: trim-both cap alphabetic) {
+    .topbar-logo { top: 0 !important; line-height: 1; text-box: trim-both cap alphabetic; }
+    .topbar .tk > * { text-box: trim-both cap alphabetic; line-height: 1; }
+    .topbar .tk-label i { margin-top: 0; }
+  }
+  /* Stesso spazio (14px) fra l'intestazione e il contenuto in tutte le pagine */
+  .cat-tabs-row { padding-top: 2px; }
+  #view-profile > .section:first-child { padding-top: 8px !important; }
+  #view-settings > .section:first-child { padding-top: 0 !important; }
+  #view-settings .ios-h:first-child { margin-top: 0; }
+  #view-search .searchwrap { padding-top: 8px; }
+  .topbar .tk-viewport { padding-block: 6px; margin-block: -6px; }
+  /* Giorni di fila: numero e scritta al centro, un po' d'aria sotto */
+  .sk-main { justify-content: center; }
+  .sk-days { margin-top: 18px; }
+  .sk-best { text-align: center; }
+  /* Titoli di sezione nello stile di "Riprendi": scritta piccola, riga ai lati,
+     niente barretta colorata. Solo la Classifica amici resta com'era. */
+  .sec-head:not(#lbCard .sec-head) .sec-title {
+    padding-left: 0; font-family: var(--font-title); font-weight: var(--title-weight);
+    font-size: calc(13px * var(--title-scale)); letter-spacing: 0.06em; color: rgba(var(--overlay-rgb),0.55); flex: none;
+  }
+  .sec-head:not(#lbCard .sec-head) .sec-title::before { display: none; }
+  .sec-head:not(#lbCard .sec-head)::before, .sec-head:not(#lbCard .sec-head)::after { content: ''; flex: 1; height: 1px; background: rgba(var(--overlay-rgb),0.1); }
+  .sec-head:not(#lbCard .sec-head) { justify-content: center; }
+  /* con qualcosa a destra (conteggio, selettore): titolo, riga, poi il resto */
+  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2))::before { display: none; }
+  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2))::after { order: 1; }
+  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2)) > :not(.sec-title) { order: 2; flex: none; }
 </style>
 </head>
 <body>
@@ -4825,8 +4858,8 @@ function renderHeatmap() {
   }
 
   const isCurrentMonth = heatmapMonthOffset === 0;
-  return `<div class="hm-title-row">
-      <div class="hm-title">Attività · ${MONTHS[month]} ${year}</div>
+  return `<div class="sec-head hm-title-row" style="margin-top:0">
+      <span class="sec-title">Attività · ${MONTHS[month]} ${year}</span>
       <div class="hm-nav">
         <button class="hm-navbtn" onclick="heatmapPrevMonth()">‹</button>
         <button class="hm-navbtn" onclick="heatmapNextMonth()"${isCurrentMonth?' disabled':''}>›</button>
@@ -5458,7 +5491,7 @@ function renderWeekCard() {
     delta = `<span class="skpi ${d >= 0 ? 'tier-g' : 'tier-r'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)}% vs scorsa</span>`;
   }
   return `<div class="wrap-card glass" style="padding:16px; margin-bottom:16px">
-    <div class="lb-title">La tua settimana</div>
+    <div class="sec-head" style="margin-top:0"><span class="sec-title">La tua settimana</span></div>
     <div class="week-bars">${bars}</div>
     <div class="sheet-kpis" style="margin:12px 0 0">
       <span class="skpi skpi-b">⏱ <b>${fmt(curMins)}</b> questa settimana</span>
@@ -7200,9 +7233,9 @@ function buildDiscover() {
     discoverBuilt = true;
     box.innerHTML = `
       <div id="top10Tv"></div>
+      <div id="top10Film"></div>
       <div id="forYou"></div>
       <div id="provNew"></div>
-      <div id="top10Film"></div>
       <div class="sec-head"><span class="sec-title">Popolari</span>
         <div class="mini-seg" id="popularSeg"><button data-m="tv" class="${searchMode === 'tv' ? 'active' : ''}" onclick="setSearchMode('tv')">Serie</button><button data-m="film" class="${searchMode === 'film' ? 'active' : ''}" onclick="setSearchMode('film')">Film</button></div>
       </div>
@@ -8068,7 +8101,7 @@ function renderPersonSheet(p) {
     </div>
     <div class="section" style="padding-top:0">
       ${inCommonHtml(p)}
-      ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
+      ${shows.length ? `<div class="sec-head"><span class="sec-title">Serie TV</span></div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
         const inLib = !!library[s.id];
         return `<div class="person-item" onclick="openShowFromPerson(${s.id})" style="cursor:pointer">
@@ -8081,7 +8114,7 @@ function renderPersonSheet(p) {
           ${searchActionsTv(s.id)}
         </div>`;
       }).join('')}` : ''}
-      ${films.length ? `<div class="wrap-sec-title">Film</div>${films.map(f => {
+      ${films.length ? `<div class="sec-head"><span class="sec-title">Film</span></div>${films.map(f => {
         const inLib = !!filmLibrary[f.id];
         return `<div class="person-item" onclick="openFilmFromPerson(${f.id})" style="cursor:pointer">
         ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
@@ -10563,7 +10596,7 @@ async function renderFilmSheet(f, inLib) {
       ${f.runtime ? `<div class="next-card film-time" id="filmTime">${filmTimeHtml(f)}</div>` : ''}
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">+ Aggiungi alla libreria</button>`
-        : `<div class="sheet-acts"><button class="sa-remove" onclick="removeFilm(${f.id})">Rimuovi</button><button class="${f.watched ? 'sa-todo' : 'sa-seen'} film-watch-btn" onclick="toggleFilmWatched(${f.id})">${f.watched ? 'Da vedere' : '✓ Visto'}</button></div>`}
+        : `<div class="sheet-acts"><button class="sa-remove" onclick="removeFilm(${f.id})">Rimuovi</button><button class="${f.watched ? 'sa-seen-on' : 'sa-todo'} film-watch-btn" onclick="toggleFilmWatched(${f.id})" title="Tocca per cambiare">${f.watched ? '✓ Visto' : 'Da vedere'}</button></div>`}
       ${inLib && f.watched ? `<div id="myRating">${myRatingHtml(f)}</div>` : ''}
       <div id="filmSaga"></div>
       <div class="sec-head"><span class="sec-title">Trama</span></div>
@@ -11791,7 +11824,7 @@ function maybeShowNews() {
       if (b) { e.preventDefault(); closeNews(b.dataset.news === 'forever'); if (b.dataset.news === 'settings') switchTab('settings'); }
     };
     bg.addEventListener('click', onTap);
-    bg.addEventListener('pointerup', onTap);
+    // solo click: chiudendo gia' al pointerup, il click che segue finiva sulla serie sotto
     document.body.appendChild(bg);
   }
   bg.innerHTML = `<div class="confirmbox news-box">
