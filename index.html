@@ -11838,6 +11838,11 @@ const APP_NEWS = [
   ['Profilo', 'Livello accanto al nome, giorni di fila, record, statistiche, i 4 attori che vedi di più fra tutte le tue serie e la bacheca dei trofei.'],
   ['Più veloce e stabile', 'Segnare centinaia di episodi insieme non blocca più l\'app e lo scorrimento nelle schede è più fluido.']
 ];
+// Click "fantasma" dopo la chiusura del popup novita': fino a questo istante si ignora.
+let swallowClickUntil = 0;
+document.addEventListener('click', e => {
+  if (Date.now() < swallowClickUntil && !e.target.closest('#newsBg')) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 function closeNews(forever) {
   try {
     if (forever) localStorage.setItem('itstracker_news_hidden', APP_VERSION);
@@ -11859,13 +11864,26 @@ function maybeShowNews() {
     observeOverlay(bg);
     // tocco ovunque fuori dal riquadro, o sui pulsanti: chiude (pointerup oltre
     // al click, perche' su iPhone il click a volte si perde)
+    // Si agisce al rilascio del dito (su iPhone il click qui a volte non arriva)
+    // e solo se e' un tocco, non uno scorrimento della lista. Il click che il
+    // telefono genera subito dopo viene "mangiato" per mezzo secondo, se no
+    // finiva sulla serie sotto il popup appena chiuso.
+    let down = null;
+    bg.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
     const onTap = e => {
-      if (e.target === bg) return closeNews(false);
+      if (e.type === 'pointerup') {
+        if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10) { down = null; return; }
+        down = null;
+      } else if (Date.now() < swallowClickUntil) return;
       const b = e.target.closest('[data-news]');
-      if (b) { e.preventDefault(); closeNews(b.dataset.news === 'forever'); if (b.dataset.news === 'settings') switchTab('settings'); }
+      if (e.target !== bg && !b) return;
+      e.preventDefault();
+      swallowClickUntil = Date.now() + 600;
+      if (b) { closeNews(b.dataset.news === 'forever'); if (b.dataset.news === 'settings') switchTab('settings'); }
+      else closeNews(false);
     };
+    bg.addEventListener('pointerup', onTap);
     bg.addEventListener('click', onTap);
-    // solo click: chiudendo gia' al pointerup, il click che segue finiva sulla serie sotto
     document.body.appendChild(bg);
   }
   bg.innerHTML = `<div class="confirmbox news-box">
