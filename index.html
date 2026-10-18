@@ -7821,21 +7821,22 @@ async function toggleFeedReaction(actId, emoji) {
     }
   } catch(e) {}
 }
-// "Sta guardando ora": amici che hanno segnato un episodio nell'ultima ora.
+// "Sta guardando ora": amici che nell'ultima ora hanno segnato un episodio
+// (anche a gruppi: conta l'ultimo del gruppo) o un film come visto.
 function nowWatchingHtml(items) {
   const seen = new Set(), now = Date.now(), out = [];
   items.forEach(a => {
-    if (a.type !== 'watched_episode' || seen.has(a.uid) || (currentUser && a.uid === currentUser.uid)) return;
+    if (!['watched_episode', 'watched_bulk', 'watched_film'].includes(a.type) || seen.has(a.uid) || (currentUser && a.uid === currentUser.uid)) return;
     if (now - actMillis(a) > 60 * 60000) return;
     seen.add(a.uid); out.push(a);
   });
   if (!out.length) return '';
   return `<div class="now-watch">
     <div class="nw-lbl"><i></i>Stanno guardando ora</div>
-    <div class="nw-list">${out.map(a => `<button class="nw-item" onclick="openShow(${a.showId})">
+    <div class="nw-list">${out.map(a => `<button class="nw-item" onclick="${a.type === 'watched_film' ? 'openFilm' : 'openShow'}(${a.showId})">
       <span class="nw-av">${a.photo ? `<img src="${a.photo}" alt="">` : ''}<span class="nw-live"></span></span>
       <span class="nw-name">${escapeHtml(a.name || 'Utente')}</span>
-      <span class="nw-what">${escapeHtml(a.title || '')} ${epTag(a)}</span>
+      <span class="nw-what">${escapeHtml(a.title || '')}${a.type === 'watched_film' ? ' · film' : ' ' + epTag(a)}</span>
     </button>`).join('')}</div>
   </div>`;
 }
