@@ -45,7 +45,7 @@
      diverse su ogni piattaforma che rendevano impossibile centrarlo rispetto
      ai bottoni con un solo valore CSS. Caricandolo esplicitamente la resa è
      identica ovunque. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Anton&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@800&family=Anton&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <!-- Gli altri caratteri per i titoli (Bebas Neue, Oswald, Unbounded, Fraunces)
      si caricano solo se scelti in Impostazioni: vedi loadTitleFont(). -->
 <link rel="icon" href="logo.png">
@@ -560,10 +560,6 @@
     align-items: center; justify-content: center; line-height: 1;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
-  /* badge conteggio delle sezioni: bianco/nero di tema invece del colore
-     scelto, ora che il bottone attivo usa il colore scelto come sfondo */
-  #tvCount-continua, #tvCount-inpari, #tvCount-davedere,
-  #filmCount-visti, #filmCount-davedere { background: var(--fg); color: var(--bg); }
   /* barra + % sulla STESSA riga: la barra si accorcia per lasciare spazio
      fisso alla percentuale, che non va mai a capo. */
   .li-progrow { display: flex; align-items: center; gap: 7px; margin-top: 6px; }
@@ -1870,29 +1866,19 @@
   .profile-stats-inline .v { font-size: 24px; }
   .tab-count, .notif-badge { font-weight: 700; }
 
-  /* --- logo: piena / contorno / neon --- */
-  :root[data-logo="neon"] .topbar-logo, :root[data-logo="neon"] #splashLogo { overflow: visible; }
-  :root[data-logo="neon"] .topbar-logo .tw-its, :root[data-logo="neon"] #splashLogo .tw-its {
-    color: #fff;
-    text-shadow: 0 0 3px rgba(var(--accent-rgb),0.9), 0 0 10px rgba(var(--accent-rgb),0.75), 0 0 22px rgba(var(--accent-rgb),0.45);
+  /* --- logo "Minuscolo": its + tracker in Manrope pieno, minuscolo e
+     compatto, "tracker" nel colore dell'app e il punto finale anche lui
+     colorato. Stesso logo nell'intestazione, su PC e nel caricamento. --- */
+  .topbar-logo, #splashLogo {
+    font-family: "Manrope", -apple-system, "Segoe UI", sans-serif; font-weight: 800;
+    letter-spacing: -0.045em; text-transform: lowercase; overflow: visible;
   }
-  :root[data-logo="neon"] .topbar-logo .tw-tracker, :root[data-logo="neon"] #splashLogo .tw-tracker {
-    color: color-mix(in srgb, var(--accent) 38%, #fff);
-    text-shadow: 0 0 3px rgba(var(--accent-rgb),1), 0 0 10px rgba(var(--accent-rgb),0.85), 0 0 24px rgba(var(--accent-rgb),0.55);
-  }
-  /* sul tema chiaro il bianco sparirebbe: "ITS" resta del colore del testo */
-  :root[data-theme="light"][data-logo="neon"] .topbar-logo .tw-its, :root[data-theme="light"][data-logo="neon"] #splashLogo .tw-its {
-    color: var(--fg); text-shadow: 0 0 8px rgba(var(--accent-rgb),0.35);
-  }
-  :root[data-theme="light"][data-logo="neon"] .topbar-logo .tw-tracker, :root[data-theme="light"][data-logo="neon"] #splashLogo .tw-tracker {
-    color: var(--accent); text-shadow: 0 0 10px rgba(var(--accent-rgb),0.45);
-  }
-  :root[data-logo="outline"] .topbar-logo .tw-its, :root[data-logo="outline"] #splashLogo .tw-its {
-    color: transparent; -webkit-text-stroke: 1.4px var(--fg);
-  }
-  :root[data-logo="outline"] .topbar-logo .tw-tracker, :root[data-logo="outline"] #splashLogo .tw-tracker {
-    color: transparent; -webkit-text-stroke: 1.4px var(--accent);
-  }
+  .topbar-logo .tw-its, #splashLogo .tw-its { color: var(--fg); text-shadow: none; }
+  .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); text-shadow: none; }
+  .topbar-logo::after, #splashLogo::after { content: '.'; color: var(--accent); }
+  .topbar-logo { font-size: 19px; top: 0; line-height: 1; }
+  @media (min-width: 1000px) { .topbar-logo { font-size: 22px; } }
+  #splashLogo { font-size: clamp(40px, 13vw, 54px); }
 
   /* --- splash: titoli di testa in dissolvenza --- */
   #splashLogo { animation: none; }
@@ -1999,15 +1985,21 @@
     -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: none;
   }
   .topbar {
-    display: block; padding: 8px 0 0; border-radius: 24px;
+    display: flex; align-items: center; min-height: 54px; padding: 6px 4px 6px 16px; border-radius: 999px;
     background: color-mix(in srgb, var(--bg) 86%, transparent);
     -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
     border: 0.5px solid rgba(var(--overlay-rgb),0.2);
     box-shadow: 0 10px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.25);
-    --logo-h: clamp(24px, 7.4vw, 34px);
+    --logo-h: 30px;
   }
-  .topbar-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 2px 12px 4px; }
-  .topbar:not(:has(.ticker:not([hidden]))) { padding-bottom: 8px; }
+  /* scelta "Pillola su una riga": logo a sinistra, ticker accanto */
+  .topbar-row { display: flex; align-items: center; gap: 8px; flex: none; }
+  .topbar-row .topbar-back { display: none; }
+  .topbar-row .topbar-back.show { display: flex; }
+  .topbar .ticker { flex: 1; min-width: 0; margin-left: 10px; min-height: 30px; border-left: 0.5px solid rgba(var(--overlay-rgb),0.16); }
+  .topbar .tk-label { padding-left: 12px; }
+  .topbar-left { height: auto; }
+  .topbar:not(:has(.ticker:not([hidden]))) { justify-content: center; padding-left: 16px; padding-right: 16px; }
   :root[data-theme="light"] .topbar { box-shadow: 0 8px 22px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9); }
   :root[data-radius="square"] .topbar { border-radius: 12px; }
 
@@ -2749,6 +2741,45 @@
   .tr-name { white-space: nowrap; }
 
   /* =====================================================================
+     TAB "SOTTOLINEATO" (scelta della testata): niente pillole e niente
+     badge. Tab di solo testo; quello aperto ha una lineetta luminosa sotto e
+     il numero colorato. Vale per tutti i tab e i piccoli selettori.
+     ===================================================================== */
+  .cat-tabs { gap: 20px; padding: 0 2px; justify-content: flex-start; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.12); overflow-x: auto; overflow-y: visible; }
+  .cat-tabs .seasontab, .cat-tabs .cat-tab-corner, .cat-tabs .seasontab.active, .cat-tab-corner.active,
+  .cat-tab-corner.active[data-cat="inpari"], .cat-tab-corner.active[data-cat="davedere"], #filmCatTabs .cat-tab-corner.active[data-cat="visti"] {
+    flex: 0 0 auto; background: none; border: none; border-radius: 0; box-shadow: none;
+    padding: 6px 0 11px; position: relative; color: rgba(var(--overlay-rgb),0.45);
+    font-size: calc(14.5px * var(--title-scale)); letter-spacing: 0.04em;
+  }
+  .cat-tabs .seasontab.active { color: var(--fg); }
+  .cat-tabs .seasontab.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -0.5px; height: 3px; border-radius: 3px;
+    background: var(--tu, var(--accent)); box-shadow: 0 0 10px var(--tu, var(--accent));
+  }
+  .cat-tabs [data-cat="inpari"] { --tu: #30D158; }
+  .cat-tabs [data-cat="davedere"] { --tu: #0A84FF; }
+  #filmCatTabs [data-cat="visti"] { --tu: #30D158; }
+  .cat-tabs .cat-count, .cat-tab-corner.active .cat-count {
+    display: inline; position: static; min-width: 0; height: auto; padding: 0; margin-left: 5px; border-radius: 0;
+    background: none; box-shadow: none; color: rgba(var(--overlay-rgb),0.35);
+    font-family: var(--font-num); font-weight: 700; font-size: 13px; letter-spacing: 0; line-height: 1; vertical-align: 0;
+  }
+  .cat-tabs .cat-count:not(.show) { display: none; }
+  .cat-tabs .seasontab.active .cat-count { color: var(--tu, var(--accent)); }
+  .cat-tabs .cat-tab-label { max-width: none; }
+  .sheet-tabs { border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.12); padding-top: 8px; padding-bottom: 0; }
+  .sheet-tabs .seasontab, #socialTabs .seasontab, .profile-tabs .seasontab { flex: 0 0 auto; padding: 6px 0 11px; letter-spacing: 0.04em; }
+  @media (max-width: 350px) { .cat-tabs { gap: 14px; } .cat-tabs .seasontab { font-size: calc(13px * var(--title-scale)); } }
+  /* piccoli selettori (Popolari, Classifica, Trofei) con lo stesso stile */
+  .mini-seg { background: none; padding: 0; gap: 14px; border-radius: 0; }
+  .mini-seg button, .mini-seg button.active { background: none; padding: 4px 0 7px; border-radius: 0; position: relative; color: rgba(var(--overlay-rgb),0.45); }
+  .mini-seg button.active { color: var(--fg); }
+  .mini-seg button.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2.5px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .trophy-seg { border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.12); justify-content: flex-start; }
+  .trophy-seg button { flex: 0 0 auto; }
+
+  /* =====================================================================
      IMPOSTAZIONI STILE IPHONE + FOGLIO COLORI
      ===================================================================== */
   .ios-set { max-width: 620px; margin: 0 auto; }
@@ -2788,6 +2819,13 @@
   .cs-sw { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
   .cs-dot { width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.18); transition: transform 0.15s; }
   .cs-sw.on .cs-dot { box-shadow: 0 0 0 2px var(--sheet-bg), 0 0 0 4px var(--fg); transform: scale(1.06); }
+  .tk-opt .ios-l { display: flex; flex-direction: column; white-space: normal; }
+  .tk-opt-t { font-size: 15.5px; }
+  .tk-opt-d { font-size: 12.5px; color: rgba(var(--overlay-rgb),0.5); }
+  .ios-switch { position: relative; flex-shrink: 0; width: 51px; height: 31px; border-radius: 16px; background: rgba(var(--overlay-rgb),0.2); transition: background 0.2s; }
+  .ios-switch i { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
+  .ios-switch.on { background: #30D158; }
+  .ios-switch.on i { transform: translateX(20px); }
   .cs-name { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.7); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---------- vista tablet/desktop ----------
@@ -2811,8 +2849,9 @@
 
     /* Menu in alto (come Martur): la barra delle schede sale accanto al logo,
        con le scritte, e la voce aperta nel colore dell'app. */
-    .topbar { padding: 0; }
-    .topbar-row { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 0 18px; }
+    .topbar { padding: 6px 12px 6px 18px; }
+    .topbar-row { gap: 14px; min-height: 52px; flex: 0 1 auto; }
+    .topbar .ticker { margin-left: 16px; }
     .topbar-left { justify-content: flex-start; }
     .topbar .tabbar-wrap {
       position: static; margin: 0 0 0 auto; width: auto; max-width: none;
@@ -2852,7 +2891,7 @@
 <body>
 <div id="splash">
   <div>
-    <div id="splashLogo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
+    <div id="splashLogo"><span class="tw-its">its</span><span class="tw-tracker">tracker</span></div>
     <div class="splash-by">di Andrea Dellerba</div>
   </div>
 </div>
@@ -2900,7 +2939,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="topbar-left">
-        <div class="topbar-logo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
+        <div class="topbar-logo"><span class="tw-its">its</span><span class="tw-tracker">tracker</span></div>
       </div>
     </div>
     <!-- ticker dentro la pillola (seconda riga), con solo il pallino: come Laurera -->
@@ -5847,7 +5886,7 @@ function confirmAbandon(id) {
 // (vedi TICKER_SOURCES); ognuna produce zero o piu' voci. Si ridisegna solo se
 // il contenuto cambia, cosi' lo scorrimento non riparte da capo.
 const TICKER_SOURCES = ['out', 'new', 'friends', 'left', 'streak', 'trophy', 'trend', 'renew', 'saga'];
-const TICKER_DEFAULT = ['out', 'new', 'friends', 'left'];
+const TICKER_DEFAULT = ['out', 'new', 'renew'];
 function getTickerSources() { try { const v = JSON.parse(localStorage.getItem('itstracker_ticker') || 'null'); return Array.isArray(v) ? v : TICKER_DEFAULT; } catch(e) { return TICKER_DEFAULT; } }
 let tickerTrend = null;
 function tickerItems() {
@@ -10796,11 +10835,46 @@ function renderAppearanceSettings() {
     <button class="ios-row" onclick="openColorPicker('bg')"><span class="ios-l">Sfondo</span><span class="ios-v">${escapeHtml(colorName(ALL_BG, bg))}</span><span class="ios-dot" style="background:${bg}"></span>${IOS_CHEV}</button>
     <button class="ios-row" onclick="openColorPicker('accent')"><span class="ios-l">Colore principale</span><span class="ios-v">${escapeHtml(colorName(ALL_ACCENTS, ac))}</span><span class="ios-dot" style="background:${ac}"></span>${IOS_CHEV}</button>
     ${iosSelectRow('Carattere titoli', "setPref('font', this.value)", [['anton','Anton'],['baloo','Baloo'],['bebas','Bebas Neue'],['oswald','Oswald'],['unbounded','Unbounded'],['fraunces','Fraunces'],['system','Sistema']], getPref('font'))}
-    ${iosSelectRow('Logo', "setPref('logo', this.value)", [['neon','Neon'],['solid','Pieno'],['outline','Contorno']], getPref('logo'))}
     ${iosSelectRow('Angoli', "setPref('radius', this.value)", [['round','Molto tondi'],['medium','Medi'],['square','Squadrati']], getPref('radius'))}
     ${iosSelectRow('Densità lista', "setPref('density', this.value)", [['compact','Compatta'],['normal','Normale'],['airy','Ariosa']], getPref('density'))}
     ${iosSelectRow('Testo', "setPref('textsize', this.value)", [['m','Normale'],['l','Grande'],['xl','Molto grande']], getPref('textsize'))}
-    ${iosSelectRow('Visualizzazione', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)}`;
+    ${iosSelectRow('Visualizzazione', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)}
+    <button class="ios-row" onclick="openTickerSettings()"><span class="ios-l">Notizie nel ticker</span><span class="ios-v">${getTickerSources().length} attive</span>${IOS_CHEV}</button>`;
+}
+// Quali notizie scorrono nel ticker dell'intestazione.
+const TICKER_LABELS = [
+  ['out', 'Uscite di oggi e domani', 'Gli episodi delle tue serie che escono'],
+  ['new', 'Episodi nuovi da vedere', 'Usciti negli ultimi 7 giorni e non ancora visti'],
+  ['renew', 'Rinnovi e nuove stagioni', 'Quando una serie che hai finito torna'],
+  ['left', 'Quanto ti manca', 'Il tempo per finire le serie in corso'],
+  ['friends', 'Amici che stanno guardando', 'Cosa hanno visto nelle ultime ore'],
+  ['streak', 'Giorni di fila', 'La tua serie di giorni e il record'],
+  ['trophy', 'Prossimo livello', 'Quante ore mancano al livello dopo'],
+  ['trend', 'In tendenza in Italia', 'La serie più vista della settimana'],
+  ['saga', 'Saghe da finire', 'I film che ti mancano di una saga']
+];
+function openTickerSettings() {
+  let bg = document.getElementById('colorPickBg');
+  if (!bg) { openColorPicker('accent'); bg = document.getElementById('colorPickBg'); }
+  bg.dataset.kind = 'ticker';
+  const on = getTickerSources();
+  bg.innerHTML = `<div class="color-sheet">
+    <div class="cs-head"><span class="cs-title">Notizie nel ticker</span><button class="cs-done" onclick="closeColorPicker()">Fatto</button></div>
+    <div class="cs-body"><div class="ios-group">${TICKER_LABELS.map(([k, t, d]) => `<button class="ios-row tk-opt" onclick="toggleTickerSource('${k}')">
+      <span class="ios-l"><span class="tk-opt-t">${t}</span><span class="tk-opt-d">${d}</span></span>
+      <span class="ios-switch${on.includes(k) ? ' on' : ''}"><i></i></span></button>`).join('')}</div></div>
+  </div>`;
+  bg.classList.add('open');
+}
+function toggleTickerSource(k) {
+  const cur = getTickerSources();
+  const next = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
+  try { localStorage.setItem('itstracker_ticker', JSON.stringify(next)); } catch(e) {}
+  haptic();
+  openTickerSettings();
+  renderAppearanceSettings();
+  if (k === 'friends') refreshTickerFeed();
+  renderTicker();
 }
 // Foglio con tutti i colori a gruppi: si tocca e l'app cambia subito, il foglio
 // resta aperto per confrontare; "Fatto" chiude.
@@ -11426,7 +11500,7 @@ function initOfflineBar() {
 // Dopo un aggiornamento, una volta sola: cosa e' cambiato, con i titoletti in oro.
 const APP_VERSION = '2026.10';
 const APP_NEWS = [
-  ['Nuovo aspetto', 'Blu notte, titoli in Anton, logo neon e angoli tondi. In Impostazioni > Aspetto puoi scegliere tema, carattere, logo, angoli, densità e dimensione del testo.'],
+  ['Nuovo aspetto', 'Blu notte, titoli in Anton, logo nuovo e angoli tondi. In Impostazioni > Aspetto scegli tema, sfondo, colore principale, carattere, angoli e notizie del ticker.'],
   ['Menu nuovo', 'Una pillola sola in basso: Serie, Film, Ricerca, Profilo e la nuova scheda Social. Puoi anche passare da una scheda all\'altra scorrendo col dito.'],
   ['Serie più veloci', 'Scorri una riga verso destra per segnare l\'episodio, verso sinistra per toglierla. In cima scorrono le frasi delle tue serie e le serie ferme da tempo hanno il loro gruppo.'],
   ['Schede rifatte', 'Logo della serie, trailer muto, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
