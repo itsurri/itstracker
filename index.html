@@ -597,7 +597,9 @@
     will-change: transform, opacity;
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .hero { position: relative; height: clamp(240px, 62vw, 340px); overflow: hidden; z-index: 0; isolation: isolate; }
+  /* la copertina parte SOTTO la barra di stato (ora, batteria): prima la parte
+     alta dell immagine finiva dietro e sembrava tagliata in alto */
+  .hero { position: relative; box-sizing: border-box; padding-top: env(safe-area-inset-top); height: calc(clamp(240px, 62vw, 340px) + env(safe-area-inset-top)); overflow: hidden; z-index: 0; isolation: isolate; }
   .sheetbg > .closebtn {
     position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 101;
     width: 32px; height: 32px; border-radius: 50%; border: none;
@@ -607,7 +609,7 @@
   }
   .sheetbg.open > .closebtn { opacity: 1; pointer-events: auto; }
   .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
-  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; will-change: transform; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center top; will-change: transform; }
   .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 62%, color-mix(in srgb, var(--sheet-bg) 70%, transparent) 86%, var(--sheet-bg) 100%); }
   /* riflesso di luce che attraversa la copertina all'apertura della scheda */
   .hero .hero-sheen {
@@ -1997,7 +1999,7 @@
   .topbar-row { display: flex; align-items: center; gap: 8px; flex: none; }
   .topbar-row .topbar-back { display: none; }
   .topbar-row .topbar-back.show { display: flex; }
-  .topbar .ticker { flex: 1; min-width: 0; margin-left: 10px; min-height: 30px; border-left: 0.5px solid rgba(var(--overlay-rgb),0.16); }
+  .topbar .ticker { flex: 1; min-width: 0; margin-left: 1px; /* misurato: cosi lo spazio prima della barretta = quello dopo (12,5px) */ min-height: 30px; border-left: 0.5px solid rgba(var(--overlay-rgb),0.16); }
   .topbar .tk-label { padding-left: 12px; }
   .topbar-left { height: auto; }
   .topbar:not(:has(.ticker:not([hidden]))) { justify-content: center; padding-left: 16px; padding-right: 16px; }
@@ -2272,8 +2274,8 @@
   .rr-ep { font-size: 13px; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rr-caret { opacity: 0.4; transition: transform 0.25s ease; flex-shrink: 0; }
   .resume-recap.open .rr-caret { transform: rotate(180deg); }
-  .rr-text { display: none; font-size: 13px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.7); margin-top: 8px; }
-  .resume-recap.open .rr-text { display: block; }
+  .rr-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; line-height: 1.55; color: rgba(var(--overlay-rgb),0.7); margin-top: 8px; }
+  .resume-recap.open .rr-text { display: block; -webkit-line-clamp: unset; }
   /* anelli per stagione */
   .season-rings { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 10px; }
   .season-rings::-webkit-scrollbar { display: none; }
@@ -2752,7 +2754,7 @@
             mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
   }
   .sc-name { -webkit-line-clamp: unset; display: block; }
-  .tr-name { white-space: nowrap; }
+  .tr-name { white-space: nowrap; align-self: stretch; min-width: 0; } /* stava al centro e usciva da entrambi i lati */
 
   /* =====================================================================
      TAB "SOTTOLINEATO" (scelta della testata): niente pillole e niente
@@ -2908,6 +2910,8 @@
     #profileBody { display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 14px; align-items: start; }
     #profileBody > * { margin-top: 0 !important; margin-bottom: 0 !important; min-width: 0; }
     #profileBody > :not(.wrap-card) { grid-column: 1 / -1; }
+    #profileBody > .wrap-card:has(.hm-title-row) { grid-column: 1 / -1; }
+    #profileBody .hm-cell { aspect-ratio: auto; height: 46px; }
     #view-social > .cat-tabs-row, #socialContent { max-width: 900px; margin-left: auto; margin-right: auto; }
   }
   /* Schermi larghi: la scheda di una serie/film si apre in una colonna a
@@ -3050,17 +3054,22 @@
   .sk-best { text-align: center; }
   /* Titoli di sezione nello stile di "Riprendi": scritta piccola, riga ai lati,
      niente barretta colorata. Solo la Classifica amici resta com'era. */
-  .sec-head:not(#lbCard .sec-head) .sec-title {
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head) .sec-title {
     padding-left: 0; font-family: var(--font-title); font-weight: var(--title-weight);
     font-size: calc(13px * var(--title-scale)); letter-spacing: 0.06em; color: rgba(var(--overlay-rgb),0.55); flex: none;
   }
-  .sec-head:not(#lbCard .sec-head) .sec-title::before { display: none; }
-  .sec-head:not(#lbCard .sec-head)::before, .sec-head:not(#lbCard .sec-head)::after { content: ''; flex: 1; height: 1px; background: rgba(var(--overlay-rgb),0.1); }
-  .sec-head:not(#lbCard .sec-head) { justify-content: center; }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head) .sec-title::before { display: none; }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head)::before, .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head)::after { content: ''; flex: 1; height: 1px; background: rgba(var(--overlay-rgb),0.1); }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head) { justify-content: center; }
   /* con qualcosa a destra (conteggio, selettore): titolo, riga, poi il resto */
-  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2))::before { display: none; }
-  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2))::after { order: 1; }
-  .sec-head:not(#lbCard .sec-head):has(> :nth-child(2)) > :not(.sec-title) { order: 2; flex: none; }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head):has(> :nth-child(2))::before { display: none; }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head):has(> :nth-child(2))::after { order: 1; }
+  .sec-head:not(#lbCard .sec-head):not(#filmSaga .sec-head):has(> :nth-child(2)) > :not(.sec-title) { order: 2; flex: none; }
+  /* loghi delle piattaforme (Nuovo su...) centrati; se non ci stanno scorrono */
+  .prov-chips > :first-child { margin-left: auto; }
+  .prov-chips > :last-child { margin-right: auto; }
+  :root .list-item.li-frame .ep-ring.add-ring { background: var(--accent); color: var(--accent-ink); }
+  .ep-ring.add-ring .epr { display: none; }
 </style>
 </head>
 <body>
@@ -3114,7 +3123,7 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <div class="topbar-left">
-        <div class="topbar-logo"><span class="tw-its">its</span><span class="tw-tracker">tracker</span></div>
+        <div class="topbar-logo" onclick="switchTab('tv')" role="link" title="Serie" style="cursor:pointer"><span class="tw-its">its</span><span class="tw-tracker">tracker</span></div>
       </div>
     </div>
     <!-- ticker dentro la pillola (seconda riga), con solo il pallino: come Laurera -->
@@ -5925,7 +5934,7 @@ function trophyBoardHtml(w) {
       <div class="xp-bar"><i style="width:${Math.round(unlocked / defs.length * 100)}%"></i></div>
       ${nextGoals.length ? `<div class="th-next"><span class="th-next-lbl">Prossimi traguardi</span>${nextGoals.map(a => `<div class="tn-row"><span class="tn-e">${a.emoji}</span><span class="tn-name">${a.label}</span><span class="tn-p num">${a.value || 0}/${a.target}</span></div>`).join('')}</div>` : ''}
     </div>
-    <div class="mini-seg trophy-seg">${ACH_CATEGORIES.map(c => `<button class="${achievementTab === c.id ? 'active' : ''}" onclick="achievementTab='${c.id}';renderProfileBody()">${c.label}</button>`).join('')}</div>
+    <div class="seasontabs cat-tabs trophy-seg">${ACH_CATEGORIES.map(c => `<button class="seasontab cat-tab-corner${achievementTab === c.id ? ' active' : ''}" onclick="achievementTab='${c.id}';renderProfileBody()"><span class="cat-tab-label">${c.label}</span></button>`).join('')}</div>
     <div class="trophy-grid">${filtered.map(a => `<div class="trophy${a.unlocked ? ' won shine' : ''}">
       <span class="tr-cup">${cup}<span class="tr-emoji">${a.emoji}</span></span>
       <span class="tr-name">${a.label}</span>
@@ -7594,11 +7603,21 @@ async function fetchFriendFeedItems() {
   if (!fbDb || !currentUser || !followingList.length) return [];
   const chunks = [];
   for (let i = 0; i < followingList.length; i += 10) chunks.push(followingList.slice(i, i + 10));
-  const snaps = await Promise.all(chunks.map(ch =>
-    fbDb.collection('activity').where('uid', 'in', ch).limit(150).get().catch(() => null)
-  ));
-  let items = [];
-  snaps.forEach(s => { if (s) s.forEach(d => items.push({ id: d.id, ...d.data() })); });
+  // Prima: where('uid','in',...).limit(150) SENZA ordinamento. Firestore in quel
+  // caso restituisce i documenti in ordine di id (cioe' a caso rispetto alla
+  // data): con tante attivita' arrivavano 150 eventi qualsiasi e nel feed
+  // mancavano episodi (es. visti 2x6-2x7, poi subito 3x8). Ora: le ultime
+  // attivita' in ordine di data (indice semplice su createdAt, gia' presente),
+  // filtrate sugli amici; piu' la vecchia query come rete di sicurezza.
+  const follow = new Set(followingList);
+  const [recent, ...snaps] = await Promise.all([
+    fbDb.collection('activity').orderBy('createdAt', 'desc').limit(600).get().catch(() => null),
+    ...chunks.map(ch => fbDb.collection('activity').where('uid', 'in', ch).limit(150).get().catch(() => null))
+  ]);
+  const byId = new Map();
+  if (recent) recent.forEach(d => { const x = d.data(); if (follow.has(x.uid)) byId.set(d.id, { id: d.id, ...x }); });
+  snaps.forEach(s => { if (s) s.forEach(d => { if (!byId.has(d.id)) byId.set(d.id, { id: d.id, ...d.data() }); }); });
+  let items = [...byId.values()];
   // Ordina per data più recente. Alziamo il limite perché ora ogni episodio è
   // un evento: il raggruppamento nel feed poi compatta i binge in un unico
   // elemento, ma servono abbastanza dati grezzi perché non spingano fuori
@@ -8508,24 +8527,24 @@ function renderTvResultsFromCache() {
   if (!enriched.length) { c.innerHTML = chips + '<div class="empty">Nessuna serie trovata.</div>'; return; }
 
   if (viewMode === 'list') {
-    c.innerHTML = chips + `<div>${enriched.map(s => {
-      const inLib = !!library[s.id];
-      const poster = tmdbImg(s.poster_path, 'w185');
+    // Stesse card "Fotogramma" della libreria: titolo, voto e stagioni, episodi in blu.
+    c.innerHTML = chips + `<div class="lib-list">${enriched.map(s => {
       const rating = s.vote_average ? Math.round(s.vote_average*10)/10 : null;
-      const badges = [
+      const meta = [
         rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null,
-        s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} St.</span>` : null,
-        s.totalEpisodes ? `<span class="chip chip-episodes">${s.totalEpisodes} Ep</span>` : null
+        s.totalSeasons ? `<span class="chip chip-seasons">${s.totalSeasons} ${s.totalSeasons === 1 ? 'Stagione' : 'Stagioni'}</span>` : null
       ].filter(Boolean).join('');
-      return `<div class="list-item" onclick="openShow(${s.id}, this)">
-        ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
+      return `<div class="list-item li-frame" onclick="openShow(${s.id}, this)"${s.poster_path ? ` data-poster="${tmdbImg(s.poster_path, 'w92')}"` : ''}>
+        ${frameImg(s.backdrop_path, s.poster_path)}
         <div class="li-info">
           <div class="li-name">${escapeHtml(s.name)}</div>
-          <div class="li-chips">${badges}</div>
+          ${meta ? `<div class="li-chips">${meta}</div>` : ''}
+          ${s.totalEpisodes ? `<div class="li-next">${s.totalEpisodes} Episodi</div>` : ''}
         </div>
-        ${searchActionsTv(s.id)}
+        <div class="lib-actions">${searchCircle('tv', s.id)}</div>
       </div>`;
     }).join('')}</div>`;
+    applyCardGlows(c);
     return;
   }
 
@@ -8596,25 +8615,24 @@ function renderFilmResultsFromCache() {
   if (!ranked.length) { c.innerHTML = chips + '<div class="empty">Nessun film trovato.</div>'; return; }
 
   if (viewMode === 'list') {
-    c.innerHTML = chips + `<div>${ranked.map(f => {
-      const inLib = !!filmLibrary[f.id];
-      const poster = tmdbImg(f.poster_path, 'w185');
+    c.innerHTML = chips + `<div class="lib-list">${ranked.map(f => {
       const rating = f.vote_average ? Math.round(f.vote_average*10)/10 : null;
       const genreName = (f.genre_ids && f.genre_ids.length && filmGenreMap) ? filmGenreMap[f.genre_ids[0]] : null;
-      const badges = [
+      const meta = [
         rating ? `<span class="chip chip-star">★ ${fmtRating(rating)}</span>` : null,
-        genreName ? genreChip(genreName) : null,
-        `<span class="chip chip-date">${f.release_date?f.release_date.slice(0,4):'—'}</span>`
+        genreName ? genreChip(genreName) : null
       ].filter(Boolean).join('');
-      return `<div class="list-item" onclick="openFilm(${f.id}, this)">
-        ${poster ? `<img src="${poster}" alt="">` : `<div class="noimg-s"></div>`}
+      return `<div class="list-item li-frame" onclick="openFilm(${f.id}, this)"${f.poster_path ? ` data-poster="${tmdbImg(f.poster_path, 'w92')}"` : ''}>
+        ${frameImg(f.backdrop_path, f.poster_path)}
         <div class="li-info">
           <div class="li-name">${escapeHtml(f.title)}</div>
-          <div class="li-chips">${badges}</div>
+          ${meta ? `<div class="li-chips">${meta}</div>` : ''}
+          ${f.release_date ? `<div class="li-next">${f.release_date.slice(0,4)}</div>` : ''}
         </div>
-        ${searchActionsFilm(f.id)}
+        <div class="lib-actions">${searchCircle('film', f.id)}</div>
       </div>`;
     }).join('')}</div>`;
+    applyCardGlows(c);
     return;
   }
 
@@ -8642,6 +8660,20 @@ const ICO_V = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" strok
 const ICO_ARROW = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 // Bottone "Aggiungi": testo lungo ("in libreria") nella griglia dove c'è spazio,
 // corto ("Aggiungi") nelle liste dove deve stare quanto [Visto/Da Vedere][×].
+// Card "Fotogramma" fuori dalla libreria (ricerca, popolari): immagine da TMDb.
+function frameImg(backdropPath, posterPath) {
+  if (backdropPath) return `<img class="li-bd" src="${tmdbImg(backdropPath, 'w780')}" alt="" loading="lazy" decoding="async">`;
+  if (posterPath) return `<img class="li-bd is-poster" src="${tmdbImg(posterPath, 'w342')}" alt="" loading="lazy" decoding="async">`;
+  return '';
+}
+// Cerchio a destra: "+" per aggiungere, spunta verde se e' gia' nella libreria.
+function searchCircle(kind, id) {
+  const inLib = kind === 'tv' ? !!library[id] : !!filmLibrary[id];
+  const fn = kind === 'tv' ? 'quickAdd' : 'quickAddFilm';
+  return inLib
+    ? `<button class="ep-ring ep-ring-done" onclick="event.stopPropagation();${fn}(${id})" title="Nella tua libreria" aria-label="Nella tua libreria">${epRingSvg(100)}<span class="epr-ico">${ICO_V}</span></button>`
+    : `<button class="ep-ring add-ring" onclick="event.stopPropagation();${fn}(${id})" title="Aggiungi" aria-label="Aggiungi"><span class="epr-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>`;
+}
 function addWideTv(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAdd(${id})">${full?'+ Aggiungi in libreria':'+ Aggiungi'}</button>`; }
 function addWideFilm(id, full) { return `<button class="add-wide" onclick="event.stopPropagation();quickAddFilm(${id})">${full?'+ Aggiungi in libreria':'+ Aggiungi'}</button>`; }
 // Pillola stato Visto/Da Vedere (usata in ricerca e profili).
@@ -9196,12 +9228,15 @@ async function loadShowLogo(type, id) {
         const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 40, 16);
         const d = ctx.getImageData(0, 0, 40, 16).data; let sum = 0, n = 0;
         for (let i = 0; i < d.length; i += 4) { if (d[i+3] > 120) { sum += (0.2126*d[i] + 0.7152*d[i+1] + 0.0722*d[i+2]); n++; } }
-        dark = n > 0 && sum / n < 150;
-        light = n > 0 && sum / n > 175; // logo chiaro: sul tema chiaro va scurito
+        dark = n > 0 && sum / n < 70;
+        light = n > 0 && sum / n > 200;
       } catch(e) {}
       if (document.getElementById('sheetTitle') !== box) return;
+      // logo sempre nei suoi colori: se sullo sfondo non si vedrebbe, resta il titolo scritto
+      const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+      if ((dark && !isLightTheme) || (light && isLightTheme)) return;
       box.classList.add('has-logo');
-      box.insertAdjacentHTML('afterbegin', `<img class="show-logo${dark ? ' lighten' : ''}${light ? ' is-light' : ''}" src="${src}" alt="">`);
+      box.insertAdjacentHTML('afterbegin', `<img class="show-logo" src="${src}" alt="">`);
     };
     img.src = src;
   } catch(e) {}
@@ -10626,7 +10661,7 @@ async function renderFilmSheet(f, inLib) {
 function filmKpisHtml(f) {
   const tile = (lbl, val) => `<div class="kt"><div class="kt-l">${lbl}</div><div class="kt-v num">${val}</div></div>`;
   const dur = f.runtime ? `${Math.floor(f.runtime/60)}h${String(f.runtime%60).padStart(2,'0')}` : '—';
-  return tile('Durata', dur) + tile('Anno', f.year || '—') + tile('Voto', f.rating ? fmtRating(f.rating) : '—') + tile('Il tuo', f.myRating ? f.myRating.toFixed(1).replace('.0','') : '—');
+  return tile('Durata', dur) + tile('Anno', f.year || '—') + tile('Voto', f.rating ? fmtRating(f.rating) : '—') + tile('Tuo voto', f.myRating ? f.myRating.toFixed(1).replace('.0','') : '—');
 }
 // "1 h 52 min, se inizi ora finisce alle 23:10": per scegliere il film in base all'ora.
 function filmTimeHtml(f) {
