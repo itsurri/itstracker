@@ -597,7 +597,7 @@
     will-change: transform, opacity;
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .hero { position: relative; height: 230px; overflow: hidden; }
+  .hero { position: relative; height: 230px; overflow: hidden; z-index: 0; isolation: isolate; }
   .sheetbg > .closebtn {
     position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 101;
     width: 32px; height: 32px; border-radius: 50%; border: none;
@@ -2009,13 +2009,13 @@
   .tabbar-wrap { bottom: calc(14px + env(safe-area-inset-bottom)); }
   .pill-main { position: relative; flex: 1; padding: 5px; gap: 3px; border-color: rgba(255,255,255,0.16); background: color-mix(in srgb, var(--bg) 84%, transparent); }
   .pill-main .tabbtn {
-    flex: 1 1 0; min-width: 34px; padding: 12px 0; gap: 7px; border-radius: 999px;
+    flex: 1 1 0; min-width: 34px; padding: 16px 0; gap: 7px; border-radius: 999px;
     color: var(--tc); transition: flex 0.28s ease, background-color 0.25s ease, box-shadow 0.25s ease, color 0.2s;
-  }
+    }
   .pill-main .tabbtn::before, .pill-main .tabbtn.active::before { display: none; }
-  .pill-main .tabbtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .pill-main .tabbtn svg { width: 24px; height: 24px; flex-shrink: 0; }
   .pill-main .tabbtn.active {
-    flex: 0 1 auto; padding: 12px 16px; min-width: 0;
+    flex: 0 1 auto; padding: 16px 18px; min-width: 0;
     background: var(--tc); color: #111;
     box-shadow: 0 0 18px color-mix(in srgb, var(--tc) 55%, transparent);
   }
@@ -2026,7 +2026,7 @@
     letter-spacing: 0.05em; text-transform: uppercase;
   }
   .pill-main .tabbtn.active .tab-lbl { display: inline; }
-  @media (max-width: 370px) { .pill-main .tabbtn.active { padding: 12px 12px; } .tab-lbl { font-size: 11.5px; } }
+  @media (max-width: 370px) { .pill-main .tabbtn.active { padding: 16px 12px; } .tab-lbl { font-size: 11.5px; } }
   .tabbtn { position: relative; }
   /* badge della scheda Social: notifiche + messaggi non letti, pulsa quando ne arriva uno */
   .tab-badge-pulse {
@@ -2533,6 +2533,9 @@
   .fig-av .profile-avatar { width: 84px; height: 84px; border: 3px solid var(--sheet-bg); }
   .fig-info { flex: 1; min-width: 0; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
   .fig-info .profile-name { font-size: calc(22px * var(--title-scale)); line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fig-nameline { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .fig-nameline .profile-name { min-width: 0; flex: 0 1 auto; }
+  .fig-nameline .fig-level { align-self: center; flex: none; white-space: nowrap; }
   .fig-level {
     align-self: flex-start; position: relative; overflow: hidden; padding: 3px 9px; border-radius: 8px;
     font-family: var(--font-num); font-weight: 700; font-size: 12.5px; letter-spacing: 0.05em; text-transform: uppercase;
@@ -2630,7 +2633,8 @@
   .ck-small { font-size: 9.5px; fill: rgba(var(--overlay-rgb),0.55); }
   .ck-tag { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 9px; background: rgba(var(--accent-rgb),0.16); color: var(--accent); }
   /* attori piu' visti */
-  .actors-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 6px; }
+  .actors-grid { display: flex; justify-content: center; gap: 12px 6px; }
+  .actors-grid .ta { flex: 0 1 25%; }
   .ta { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
   .ta img, .ta-noimg { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.1); display: flex; align-items: center; justify-content: center; font-weight: 700; }
   .ta img.first { box-shadow: 0 0 0 2.5px #F7B538; }
@@ -2737,6 +2741,8 @@
   .tn-name, .mp-show, .rc-name, .pi-name, .ta-name, .rec-name, .pr-name, .lb-name, .nw-name, .tr-name,
   .pc-name, .saga-item .saga-year, .cast-name, .es-name {
     display: block; white-space: nowrap; overflow: hidden; text-overflow: clip;
+  }
+  .fade-ovf {
     -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
             mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
   }
@@ -2771,7 +2777,7 @@
   .cat-tabs .cat-count:not(.show) { display: none; }
   .cat-tabs .seasontab.active .cat-count { color: var(--tu, var(--accent)); }
   .cat-tabs .cat-tab-label { max-width: none; }
-  .sheet-tabs { border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.12); padding-top: 8px; padding-bottom: 0; }
+  .sheet-tabs { border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.12); padding: 8px 20px 0; }
   .sheet-tabs .seasontab, #socialTabs .seasontab, .profile-tabs .seasontab { flex: 0 0 auto; padding: 6px 0 11px; letter-spacing: 0.04em; }
   @media (max-width: 350px) { .cat-tabs { gap: 14px; } .cat-tabs .seasontab { font-size: calc(13px * var(--title-scale)); } }
   /* piccoli selettori (Popolari, Classifica, Trofei) con lo stesso stile */
@@ -2785,6 +2791,12 @@
   /* =====================================================================
      IMPOSTAZIONI STILE IPHONE + FOGLIO COLORI
      ===================================================================== */
+  .font-list { display: flex; flex-direction: column; gap: 8px; }
+  .font-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid transparent; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); color: var(--fg); text-align: left; }
+  .font-opt.on { border-color: var(--accent); background: rgba(var(--accent-rgb),0.12); }
+  .fo-sample { line-height: 1.15; text-transform: uppercase; white-space: nowrap; overflow: hidden; min-width: 0; }
+  .fo-name { flex: none; font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.55); }
+  .font-opt.on .fo-name { color: var(--accent); }
   .ios-set { max-width: 620px; margin: 0 auto; }
   .ios-h { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: rgba(var(--overlay-rgb),0.5); margin: 22px 16px 7px; }
   .ios-group { border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
@@ -3067,10 +3079,10 @@
   <div class="view" id="view-social">
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="socialTabs">
-        <button class="seasontab cat-tab-corner active" data-stab="feed" onclick="setSocialTab('feed')"><span class="cat-tab-label">Feed</span></button>
+        <button class="seasontab cat-tab-corner active" data-stab="people" onclick="setSocialTab('people')"><span class="cat-tab-label">Amici</span></button>
+        <button class="seasontab cat-tab-corner" data-stab="feed" onclick="setSocialTab('feed')"><span class="cat-tab-label">Feed</span></button>
         <button class="seasontab cat-tab-corner" data-stab="notif" onclick="setSocialTab('notif')"><span class="cat-tab-label">Avvisi</span><span class="tab-count cat-count" id="socialCount-notif"></span></button>
         <button class="seasontab cat-tab-corner" data-stab="chat" onclick="setSocialTab('chat')"><span class="cat-tab-label">Chat</span><span class="tab-count cat-count" id="socialCount-chat"></span></button>
-        <button class="seasontab cat-tab-corner" data-stab="people" onclick="setSocialTab('people')"><span class="cat-tab-label">Amici</span></button>
       </div>
     </div>
     <div class="section" style="padding-top:0" id="socialContent"></div>
@@ -5430,9 +5442,7 @@ function renderProfileAuth() {
           ${avatarUrl ? `<img class="profile-avatar" style="${levelRing(hours, 3)}" src="${avatarUrl}" alt="">` : `<div class="profile-avatar" style="${levelRing(hours, 3)}"></div>`}
         </div>
         <div class="fig-info">
-          <div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>
-          ${levelBadgeHtml(hours)}
-          ${xpHtml(hours)}
+          <div class="fig-nameline"><div class="profile-name">${onlineDot(Date.now())}${escapeHtml(displayHandle)}</div>${levelBadgeHtml(hours)}</div>
           <div class="follow-inline">
             <span onclick="toggleFollowList('followers')"><b>${followerUids.length}</b> Follower</span>
             <span onclick="toggleFollowList('following')"><b>${followingList.length}</b> Seguiti</span>
@@ -5536,7 +5546,7 @@ function streakCardHtml() {
     dots.push(`<span class="sk-day${days.has(d.getTime()) ? ' on' : ''}${i === 0 ? ' today' : ''}"><i></i>${DOW[d.getDay()]}</span>`);
   }
   return `<div class="wrap-card glass streak-card">
-    <div class="sk-main"><span class="sk-fire${cur ? ' lit' : ''}">🔥</span><b class="big-num num">${cur}</b><span class="sk-lbl">${cur === 1 ? 'giorno' : 'giorni'} di fila</span></div>
+    <div class="sk-main"><b class="big-num num">${cur}</b><span class="sk-lbl">${cur === 1 ? 'giorno' : 'giorni'} di fila</span></div>
     <div class="sk-days">${dots.join('')}</div>
     <div class="sk-best">Record: <b class="num">${best}</b> ${best === 1 ? 'giorno' : 'giorni'}${cur && cur >= best ? ' · <span class="sk-new">stai battendo il record!</span>' : ''}</div>
   </div>`;
@@ -5686,8 +5696,9 @@ async function loadTopActors() {
     ...Object.values(library).filter(s => Object.keys(s.watched || {}).length).map(s => ({ key: 'tv' + s.id, type: 'tv', id: s.id })),
     ...Object.values(filmLibrary).filter(f => f.watched).map(f => ({ key: 'mv' + f.id, type: 'movie', id: f.id }))
   ];
-  const missing = titles.filter(t => !cache[t.key]).slice(0, 14);
-  await Promise.all(missing.map(async t => {
+  // tutte le serie e i film visti, a gruppi di 8 per non intasare TMDb
+  const missing = titles.filter(t => !cache[t.key]);
+  for (let i = 0; i < missing.length; i += 8) await Promise.all(missing.slice(i, i + 8).map(async t => {
     try {
       const d = await (await fetch(tmdbUrl(`/${t.type}/${t.id}${t.type === 'tv' ? '/aggregate_credits' : '/credits'}`, {}))).json();
       cache[t.key] = (d.cast || []).slice(0, 12).map(c => [c.id, c.name, c.profile_path || '']);
@@ -5699,11 +5710,11 @@ async function loadTopActors() {
     if (!count[id]) count[id] = { id, name, img, n: 0 };
     count[id].n++;
   }));
-  const top = Object.values(count).filter(a => a.n >= 2).sort((a, b) => b.n - a.n).slice(0, 8);
+  const top = Object.values(count).sort((a, b) => b.n - a.n).slice(0, 4);
   if (document.getElementById('actorsBody') !== body) return;
   body.innerHTML = top.length ? `<div class="actors-grid">${top.map((a, i) => `<button class="ta" onclick="openActor(${a.id})">
       ${a.img ? `<img src="${tmdbImg(a.img, 'w185')}" alt=""${i === 0 ? ' class="first"' : ''}>` : `<span class="ta-noimg">${escapeHtml((a.name || '?').charAt(0))}</span>`}
-      <span class="ta-name">${escapeHtml(a.name)}</span><span class="ta-n num">${a.n} titoli</span></button>`).join('')}</div>`
+      <span class="ta-name">${escapeHtml(a.name)}</span><span class="ta-n num">${a.n} ${a.n === 1 ? 'titolo' : 'titoli'}</span></button>`).join('')}</div>`
     : '<div class="wrap-note">Guarda qualche serie o film in più per scoprire gli attori che ritrovi di più.</div>';
 }
 
@@ -5832,6 +5843,17 @@ function toggleLibSearch(kind) {
   if (open) { input.focus(); }
   else { input.value = ''; libQuery[kind] = ''; kind === 'tv' ? renderLibrary() : renderFilmLibrary(); }
 }
+// Toccando un punto qualsiasi fuori dalla barra (e dalla lente) la barra si chiude.
+document.addEventListener('pointerdown', e => {
+  ['tv', 'film'].forEach(kind => {
+    const box = document.getElementById(kind + 'LibSearch');
+    if (!box || box.hidden) return;
+    if (e.target.closest(`#${kind}LibSearch, #${kind}LibSearchBtn`)) return;
+    // con un filtro attivo, toccare un risultato lo apre (non chiude sotto il dito)
+    if (libQuery[kind] && e.target.closest('.list-item, .gcard, .wall-card, .swipe-row')) return;
+    toggleLibSearch(kind);
+  });
+}, true);
 function onLibSearch(kind, v) {
   libQuery[kind] = (v || '').trim().toLowerCase();
   kind === 'tv' ? renderLibrary() : renderFilmLibrary();
@@ -5980,12 +6002,12 @@ function renderTicker() {
       renderTicker();
     }).catch(() => {});
   }
-  const items = isSectionHidden('home', 'ticker') ? [] : tickerItems();
+  const items = tickerItems();
   if (!items.length) { el.hidden = true; el.dataset.key = ''; return; }
   const html = items.join('');
   if (el.dataset.key === html && !el.hidden) return;
   el.dataset.key = html;
-  const dur = Math.max(18, Math.round(html.replace(/<[^>]+>/g, '').length * 0.28));
+  const dur = Math.max(9, Math.round(html.replace(/<[^>]+>/g, '').length * 0.15));
   el.innerHTML = `<div class="tk-label"><i></i>Notizie</div>
     <div class="tk-viewport"><div class="tk-track" style="animation-duration:${dur}s">${html}${html}</div></div>`;
   el.hidden = false;
@@ -6233,6 +6255,7 @@ function genreNamesFromIds(results, map) {
 }
 
 function renderResumeRail(items) {
+  return ''; // tolta: le card grandi "Riprendi" ripetevano la lista sotto
   const cards = items
     .filter(([k, s]) => s.next)
     .sort((a, b) => (b[1].lastWatchedAt || 0) - (a[1].lastWatchedAt || 0));
@@ -7503,7 +7526,7 @@ function renderProfileFeedBody() {
 // ---------- scheda Social ----------
 // Feed degli amici, avvisi, chat e persone (ricerca + suggeriti) in un posto
 // solo: prima stavano sparsi fra l'intestazione e il fondo del Profilo.
-let socialTab = 'feed';
+let socialTab = 'people';
 function setSocialTab(tab) {
   socialTab = tab;
   document.querySelectorAll('#socialTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.stab === tab));
@@ -7540,14 +7563,10 @@ function renderSocial() {
       ${followingList.length ? `<div class="wrap-card glass lb-card" id="lbCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Classifica amici</span>
         <div class="mini-seg" id="lbSeg">${[['week','Settimana'],['month','Mese'],['total','Sempre']].map(([k, t]) => `<button data-k="${k}" class="${lbPeriod === k ? 'active' : ''}" onclick="lbPeriod='${k}';renderLbCard()">${t}</button>`).join('')}</div></div>
         <div id="lbCardBody"><div class="spinner"></div></div></div>` : ''}
-      <div class="sec-head"><span class="sec-title">I tuoi pronostici</span></div>
-      <div class="pred-help">Prima che esca un episodio, indovina che voto prenderà su TMDb. Quando esce, vince chi c'è andato più vicino fra te e i tuoi amici. Si pronostica dalla scheda di una serie che aspetti, nel tab Info.</div>
-      <div id="myPreds"><div class="spinner"></div></div>
       <div class="sec-head"><span class="sec-title">Amici suggeriti</span></div>
       <div id="profilePeopleBody"><div class="spinner"></div></div>`;
     profilePeopleTab = 'suggestions';
     loadProfilePeople();
-    renderMyPredictions();
     renderLeaderboard();
     return;
   }
@@ -7783,10 +7802,9 @@ function renderSheetSocialExtra(id, type) {
   const item = isTv ? (sheetCtx && sheetCtx.show) : filmLibrary[id];
   const title = isTv ? (item && item.name) : (item && item.title);
   const image = isTv ? (library[id] && library[id].image) : (item && item.image);
-  box.innerHTML = `${isTv ? '<div id="predBox"></div>' : ''}
+  box.innerHTML = `
     ${currentUser ? `<button class="rec-btn" onclick="openRecommend('${isTv ? 'tv' : 'film'}', ${Number(id)}, this.dataset.t, this.dataset.i)" data-t="${escapeHtml(title || '')}" data-i="${escapeHtml(image || '')}">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Consiglia a un amico</button>` : ''}`;
-  if (isTv) renderPredictionCard(id);
 }
 
 // ---------- in comune con un amico (scheda persona) ----------
@@ -10846,12 +10864,39 @@ function renderAppearanceSettings() {
         <span class="tc-dot" style="background:${b}"><i style="background:${a}"></i></span><span>${n}</span></button>`).join('')}</div></div>
     <button class="ios-row" onclick="openColorPicker('bg')"><span class="ios-l">Sfondo</span><span class="ios-v">${escapeHtml(colorName(ALL_BG, bg))}</span><span class="ios-dot" style="background:${bg}"></span>${IOS_CHEV}</button>
     <button class="ios-row" onclick="openColorPicker('accent')"><span class="ios-l">Colore principale</span><span class="ios-v">${escapeHtml(colorName(ALL_ACCENTS, ac))}</span><span class="ios-dot" style="background:${ac}"></span>${IOS_CHEV}</button>
-    ${iosSelectRow('Carattere titoli', "setPref('font', this.value)", [['anton','Anton'],['baloo','Baloo'],['bebas','Bebas Neue'],['oswald','Oswald'],['unbounded','Unbounded'],['fraunces','Fraunces'],['system','Sistema']], getPref('font'))}
+    <button class="ios-row" onclick="openFontPicker()"><span class="ios-l">Carattere titoli</span><span class="ios-v" style="${fontStyle(FONT_CHOICES.find(f => f[0] === getPref('font')) || FONT_CHOICES[0])};font-size:17px;color:var(--fg)">${(FONT_CHOICES.find(f => f[0] === getPref('font')) || FONT_CHOICES[0])[1]}</span>${IOS_CHEV}</button>
     ${iosSelectRow('Angoli', "setPref('radius', this.value)", [['round','Molto tondi'],['medium','Medi'],['square','Squadrati']], getPref('radius'))}
     ${iosSelectRow('Densità lista', "setPref('density', this.value)", [['compact','Compatta'],['normal','Normale'],['airy','Ariosa']], getPref('density'))}
     ${iosSelectRow('Testo', "setPref('textsize', this.value)", [['m','Normale'],['l','Grande'],['xl','Molto grande']], getPref('textsize'))}
     ${iosSelectRow('Visualizzazione', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)}
     <button class="ios-row" onclick="openTickerSettings()"><span class="ios-l">Notizie nel ticker</span><span class="ios-v">${getTickerSources().length} attive</span>${IOS_CHEV}</button>`;
+}
+// Caratteri dei titoli con l'anteprima: ognuno si vede scritto nel suo font.
+const FONT_CHOICES = [
+  ['anton', 'Anton', '"Anton", sans-serif', 400, '0.01em', 1],
+  ['bebas', 'Bebas Neue', '"Bebas Neue", sans-serif', 400, '0.03em', 1.14],
+  ['oswald', 'Oswald', '"Oswald", sans-serif', 600, '0', 1],
+  ['baloo', 'Baloo', '"Baloo 2", sans-serif', 800, '-0.01em', 1],
+  ['unbounded', 'Unbounded', '"Unbounded", sans-serif', 600, '-0.02em', 0.86],
+  ['fraunces', 'Fraunces', '"Fraunces", Georgia, serif', 700, '-0.01em', 1.04],
+  ['system', 'Sistema', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 750, '-0.015em', 1]
+];
+const fontStyle = f => `font-family:${f[2].replace(/"/g, '&quot;')};font-weight:${f[3]};letter-spacing:${f[4]}`;
+function openFontPicker() {
+  let bg = document.getElementById('colorPickBg');
+  if (!bg) { openColorPicker('accent'); bg = document.getElementById('colorPickBg'); }
+  bg.dataset.kind = 'font';
+  if (!document.getElementById('fontPreviewLink')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.id = 'fontPreviewLink'; l.href = 'https://fonts.googleapis.com/css2?' + Object.values(TITLE_FONT_URLS).map(f => 'family=' + f).join('&') + '&display=swap'; document.head.appendChild(l); } // tutti, per le anteprime
+  const cur = getPref('font');
+  const sc = bg.querySelector('.cs-body') ? bg.querySelector('.cs-body').scrollTop : 0;
+  bg.innerHTML = `<div class="color-sheet">
+    <div class="cs-head"><span class="cs-title">Carattere titoli</span><button class="cs-done" onclick="closeColorPicker()">Fatto</button></div>
+    <div class="cs-body"><div class="font-list">${FONT_CHOICES.map(f => `<button class="font-opt${f[0] === cur ? ' on' : ''}" onclick="setPref('font','${f[0]}');renderAppearanceSettings();openFontPicker()">
+      <span class="fo-sample" style="${fontStyle(f)};font-size:${Math.round(24 * f[5])}px">Serie in corso</span>
+      <span class="fo-name">${f[1]}</span></button>`).join('')}</div></div>
+  </div>`;
+  const body = bg.querySelector('.cs-body'); if (body) body.scrollTop = sc;
+  bg.classList.add('open');
 }
 // Quali notizie scorrono nel ticker dell'intestazione.
 const TICKER_LABELS = [
@@ -11483,6 +11528,26 @@ function initBackButton() {
   });
 }
 
+// ---------- sfumatura dei titoli solo se non ci stanno ----------
+// I titoli stanno su una riga; la sfumatura finale serve solo quando il testo
+// e' davvero piu' lungo dello spazio (prima sfumava anche "Capo").
+const FADE_SEL = '.li-name, .up-name, .rail-title, .sc-name, .af-name, .nc-ep, .rr-ep, .bw-ep, .fw-name, .pod-name, .tn-name, .mp-show, .rc-name, .pi-name, .ta-name, .rec-name, .pr-name, .lb-name, .nw-name, .tr-name, .pc-name, .saga-item .saga-year, .cast-name, .es-name';
+function updateFadeOverflow() {
+  document.querySelectorAll(FADE_SEL).forEach(el => {
+    if (!el.offsetParent) return;
+    el.classList.toggle('fade-ovf', el.scrollWidth > el.clientWidth + 1);
+  });
+}
+function initFadeOverflow() {
+  let t = null;
+  const run = () => { clearTimeout(t); t = setTimeout(updateFadeOverflow, 120); };
+  new MutationObserver(run).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('resize', run);
+  document.addEventListener('click', run, true); // cambio scheda: elementi che diventano visibili
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(run);
+  run();
+}
+
 // ---------- avviso offline ----------
 // Senza rete l'app continua a funzionare (tutto resta salvato sul telefono) e
 // la sincronizzazione riparte da sola: meglio dirlo che lasciare errori muti.
@@ -11518,7 +11583,7 @@ const APP_NEWS = [
   ['Schede rifatte', 'Logo della serie, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
   ['Film', 'Il tuo voto a mezze stelle, le saghe con i capitoli visti, l\'ora in cui finisce il film se inizi adesso.'],
   ['Ricerca', 'Serie e film insieme, Top 10 della settimana, consigli in base a cosa guardi e novità per piattaforma.'],
-  ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e pronostici sul voto del prossimo episodio.'],
+  ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e classifica.'],
   ['Profilo', 'Livelli con barra esperienza, record personali, giorni di fila, statistiche nuove e bacheca dei trofei.']
 ];
 function closeNews(forever) {
@@ -11565,7 +11630,7 @@ function maybeShowNews() {
 // Home (Continua) e Profilo (Panoramica): l'ordine delle sezioni si sceglie
 // trascinandole; l'occhio le nasconde.
 const LAYOUT_SECTIONS = {
-  home: [['rail', 'Riprendi'], ['list', 'Serie in corso'], ['upcoming', 'In arrivo'], ['stale', 'Ferme da tanto'], ['ticker', 'Frasi delle tue serie']],
+  home: [['list', 'Serie in corso'], ['upcoming', 'In arrivo'], ['stale', 'Ferme da tanto']],
   profile: [['streak', 'Giorni di fila'], ['week', 'La tua settimana'], ['records', 'Record personali'], ['heatmap', 'Calendario']]
 };
 function getLayout() {
@@ -11727,7 +11792,7 @@ function tutData(tab) {
     social: { icon: TUT_SVG.people, title: 'Social', sub: 'Gli amici, gli avvisi e le chat in un posto solo.', steps: [
       { vis: tutNeutral(TUT_SVG.people), label: 'Feed', desc: 'Cosa guardano le persone che segui. Reagisci con 🔥 👀 😭 ❤️.' },
       { vis: tutAccent(TUT_SVG.bell), label: 'Avvisi', desc: 'Like, risposte, nuovi episodi e stagioni annunciate, divisi per giorno.' },
-      { vis: tutAccent(TUT_SVG.chat), label: 'Chat e amici', desc: 'Le tue conversazioni, la ricerca di persone e i tuoi pronostici.' }
+      { vis: tutAccent(TUT_SVG.chat), label: 'Chat e amici', desc: 'Le tue conversazioni, la ricerca di persone e la classifica.' }
     ]}
   };
   return T[tab];
@@ -11797,6 +11862,7 @@ initTopMenu();
 initRowSwipe();
 setTimeout(enrichFilmCollections, 4000);
 initOfflineBar();
+initFadeOverflow();
 maybeShowNews();
 // tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
 setTimeout(() => maybeShowTutorial('tv'), 2600);
