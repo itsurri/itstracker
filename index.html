@@ -26,6 +26,16 @@
   root.setAttribute('data-font', pref('itstracker_font', 'anton'));
   root.setAttribute('data-logo', pref('itstracker_logo', 'neon'));
   root.setAttribute('data-textsize', pref('itstracker_textsize', 'm'));
+  // Sfondo scelto (tanti colori, come in Attivita'): decide anche chiaro/scuro.
+  var bg = pref('itstracker_bg', '');
+  if (!bg) { var v = pref('itstracker_theme_variant', 'blu'); bg = t === 'light' ? '#ffffff' : (v === 'nero' ? '#000000' : v === 'grafite' ? '#13161b' : '#060c1a'); }
+  var hx = bg.replace('#', ''), lin = function(i) { var x = parseInt(hx.slice(i, i + 2), 16) / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+  var light = (0.2126 * lin(0) + 0.7152 * lin(2) + 0.0722 * lin(4)) > 0.18;
+  root.setAttribute('data-theme', light ? 'light' : 'dark');
+  root.style.setProperty('--bg', bg);
+  root.style.setProperty('--sheet-bg', 'color-mix(in srgb, ' + bg + ' ' + (light ? 96 : 93) + '%, ' + (light ? '#000' : '#fff') + ')');
+  root.style.setProperty('--panel-bg', 'color-mix(in srgb, ' + bg + ' ' + (light ? 92 : 86) + '%, ' + (light ? '#000' : '#fff') + ')');
+  root.style.setProperty('--topbar-bg', 'color-mix(in srgb, ' + bg + ' 70%, transparent)');
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1979,28 +1989,27 @@
   /* =====================================================================
      RESTYLING 2026 - NAVIGAZIONE
      ===================================================================== */
-  /* Intestazione: pillola di vetro sospesa. Dietro, lo sfondo sfuma verso il
-     basso cosi' i contenuti che scorrono non finiscono "tagliati" sotto. */
+  /* Intestazione come Laurera: piu' in basso sotto la tacca (18 px oltre la
+     zona sicura), dietro il colore dello sfondo che sfuma solo sotto la
+     pillola. Pillola quasi piena (si legge sopra qualsiasi contenuto), con il
+     ticker come seconda riga. Niente rimpicciolimento scorrendo: era a scatti. */
   .topbar-wrap {
-    padding: calc(env(safe-area-inset-top) + 8px) 14px 12px;
-    background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 38%, color-mix(in srgb, var(--bg) 70%, transparent) 72%, transparent 100%);
+    padding: calc(env(safe-area-inset-top) + 18px) 12px 6px;
+    background: linear-gradient(180deg, var(--bg) 0, var(--bg) calc(env(safe-area-inset-top) + 12px), color-mix(in srgb, var(--bg) 85%, transparent) calc(env(safe-area-inset-top) + 40px), transparent 100%);
     -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: none;
   }
   .topbar {
-    padding: 8px 12px; border-radius: 999px;
-    background: var(--topbar-bg);
-    -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
-    border: 0.5px solid rgba(var(--overlay-rgb),0.16);
-    box-shadow: 0 8px 26px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.2);
+    display: block; padding: 8px 0 0; border-radius: 24px;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(30px) saturate(200%); backdrop-filter: blur(30px) saturate(200%);
+    border: 0.5px solid rgba(var(--overlay-rgb),0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.25);
     --logo-h: clamp(24px, 7.4vw, 34px);
-    transition: padding 0.25s ease;
   }
+  .topbar-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 2px 12px 4px; }
+  .topbar:not(:has(.ticker:not([hidden]))) { padding-bottom: 8px; }
   :root[data-theme="light"] .topbar { box-shadow: 0 8px 22px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9); }
   :root[data-radius="square"] .topbar { border-radius: 12px; }
-  .topbar-logo { transition: font-size 0.25s ease; }
-  /* scorrendo: logo e pillola si rimpiccioliscono */
-  .topbar-wrap.scrolled .topbar { --logo-h: 22px; padding: 6px 12px; }
-  .topbar-left { transition: height 0.25s ease; }
 
   /* Barra in basso come Laurera: una pillola unica; ogni voce ha l'icona del
      suo colore (--tc) e quella aperta si allarga, piena del colore, con il
@@ -2067,34 +2076,26 @@
   /* =====================================================================
      RESTYLING 2026 - HOME SERIE / FILM
      ===================================================================== */
-  /* Ticker in stile diretta, come quello di Laurera */
-  .ticker {
-    display: flex; align-items: stretch; margin: 2px 16px 0; height: 38px; overflow: hidden;
-    border-radius: 14px; background: color-mix(in srgb, var(--bg) 70%, #0e0f12);
-    border: 1px solid rgba(var(--overlay-rgb),0.12);
-    box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
-  }
+  /* Ticker dentro la pillola dell'intestazione, come Laurera sul telefono:
+     niente etichetta, solo il pallino pulsante (colore dell'app); le notizie
+     sfumano ai lati. */
+  .ticker { display: flex; align-items: center; min-height: 36px; overflow: hidden; }
   .ticker[hidden] { display: none; }
-  :root[data-radius="square"] .ticker { border-radius: 6px; }
-  .tk-label {
-    position: relative; z-index: 2; flex-shrink: 0; display: flex; align-items: center; gap: 7px;
-    padding: 0 12px 0 11px; color: #fff; white-space: nowrap;
-    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
-    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000));
-    box-shadow: 8px 0 18px rgba(0,0,0,0.5);
-  }
-  .tk-label i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: livePulse 1.6s infinite; }
+  .tk-label { flex-shrink: 0; display: flex; align-items: center; padding: 0 4px 0 16px; font-size: 0; }
+  .tk-label i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: tkPulse 1.6s infinite; display: block; }
+  @keyframes tkPulse { 0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),0.6); } 70% { box-shadow: 0 0 0 8px rgba(var(--accent-rgb),0); } 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),0); } }
   .tk-viewport { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
-            mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
-  .tk-track { display: inline-flex; white-space: nowrap; padding-left: 14px; animation: tickerScroll linear infinite; will-change: transform; }
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 26px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 26px), transparent); }
+  .tk-track { display: inline-flex; white-space: nowrap; padding-left: 10px; animation: tickerScroll linear infinite; will-change: transform; }
   @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  .tk { display: inline-flex; align-items: center; gap: 8px; margin-right: 24px; cursor: pointer;
-    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 15px; letter-spacing: 0.03em; }
-  .tk b { color: var(--fg); font-weight: inherit; text-transform: uppercase; }
-  .tk s { text-decoration: none; color: rgba(var(--overlay-rgb),0.62); font-family: var(--sf, -apple-system, sans-serif); font-size: 12.5px; font-weight: 600; letter-spacing: 0; }
-  .tk::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.28); margin-left: 16px; }
-  .ticker:active .tk-track, .ticker:hover .tk-track { animation-play-state: paused; }
+  .tk { display: inline-flex; align-items: center; gap: 6px; margin-right: 22px; cursor: pointer; line-height: 1;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 14.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .tk b { color: rgba(var(--overlay-rgb),0.9); font-weight: inherit; }
+  .tk s { text-decoration: none; color: rgba(var(--overlay-rgb),0.45); }
+  .tk em { font-style: normal; color: var(--accent); }
+  .tk::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.25); margin-left: 16px; }
+  .ticker:active .tk-track { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) { .tk-track { animation: none; } .tk-label i { animation: none; } }
 
   /* Lente accanto ai tab: cerca dentro la tua libreria */
@@ -2167,14 +2168,7 @@
   /* Serie ferme da tanto */
   .stale-section { padding-top: 4px; }
   .sec-count { font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.45); }
-  .stale-row { margin-bottom: 10px; }
-  .stale-item { margin-bottom: 0; opacity: 0.72; filter: saturate(0.6); }
-  .stale-when { color: rgba(var(--overlay-rgb),0.5); }
-  .stale-actions { display: flex; gap: 8px; justify-content: flex-end; margin: 6px 4px 0; }
-  .stale-btn { padding: 7px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700; }
-  .stale-btn.resume { background: var(--accent); color: var(--accent-ink); }
-  .stale-btn.drop { background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.75); }
-  :root[data-radius="square"] .stale-btn { border-radius: 6px; }
+.stale-item img { filter: saturate(0.45) brightness(0.8); }  .stale-when { color: rgba(var(--overlay-rgb),0.5); }  .stale-acts { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 9px; padding-right: 6px; }  .sa { font-size: 13px; font-weight: 800; padding: 2px 0; line-height: 1.1; }  .sa.resume { color: var(--accent); }  .sa.drop { color: rgba(var(--overlay-rgb),0.5); }
 
   /* In arrivo: intestazione di ogni giorno */
   .day-head { display: flex; align-items: center; gap: 10px; margin: 14px 4px 8px;
@@ -2198,7 +2192,6 @@
   /* =====================================================================
      RESTYLING 2026 - SCHEDA SERIE / FILM
      ===================================================================== */
-  .hero { height: 250px; }
   /* trailer muto nella copertina: copre tutta l'immagine (taglio 16:9 centrato) */
   .hero-trailer { position: absolute; inset: 0; z-index: 1; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; overflow: hidden; }
   .hero-trailer.on { opacity: 1; }
@@ -2217,7 +2210,6 @@
     border: 0.5px solid rgba(255,255,255,0.3);
   }
   .hero-sound[hidden] { display: none; }
-  .sheetbody { margin-top: -54px; }
   /* logo della serie al posto del titolo */
   .sheet-title { min-height: 30px; }
   .sheet-title .show-logo { display: block; max-width: min(78%, 300px); max-height: 92px; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.55)); margin-bottom: 8px; animation: logoIn 0.5s ease both; }
@@ -2319,6 +2311,8 @@
   .cast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 14px 8px; padding-top: 4px; }
   .cast-grid .cast-item { width: auto; }
   .cast-grid .cast-item img, .cast-grid .cast-noimg { width: 64px; height: 64px; }
+  .cast-grid.collapsed { max-height: 112px; overflow: hidden; }
+  .cast-more { display: block; margin: 8px auto 0; padding: 7px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700; color: var(--accent); background: rgba(var(--overlay-rgb),0.06); }
   /* commenti della serie */
   .sc-item { padding: 11px 2px; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); cursor: pointer; }
   .sc-head { display: flex; align-items: center; gap: 7px; font-size: 13px; }
@@ -2443,7 +2437,7 @@
   .t10:first-child .t10-n { -webkit-text-stroke-color: var(--accent); }
   .t10 .rail-card { position: relative; z-index: 1; width: 98px; }
   /* novita' per piattaforma: loghi da scegliere */
-  .prov-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 0 2px 10px; }
+  .prov-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 6px 6px 12px; margin: -4px -4px 0; }
   .prov-chips::-webkit-scrollbar { display: none; }
   .prov-chip { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; overflow: hidden; opacity: 0.45; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.12); font-size: 10px; font-weight: 700; }
   .prov-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2518,6 +2512,7 @@
   .pr-name { flex: 1; min-width: 0; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pr-guess { font-weight: 700; }
   .pr-err { font-size: 12px; color: rgba(var(--overlay-rgb),0.55); width: 38px; text-align: right; }
+  .pred-help { font-size: 12.5px; line-height: 1.5; color: rgba(var(--overlay-rgb),0.6); margin: -4px 2px 10px; }
   .mp-row { width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); text-align: left; }
   .mp-show { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mp-show .num { color: rgba(var(--overlay-rgb),0.5); font-weight: 600; }
@@ -2741,6 +2736,60 @@
   .wheel-pointer { position: absolute; top: -6px; left: 50%; z-index: 2; transform: translateX(-50%); width: 0; height: 0;
     border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--accent); filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5)); }
 
+  /* Titoli uniformi ovunque: una riga sola; se non ci sta, sfuma alla fine
+     (niente puntini, niente seconda riga). Le info stanno sempre sotto. */
+  .li-name, .up-name, .rail-title, .sc-name, .af-name, .nc-ep, .rr-ep, .bw-ep, .fw-name, .pod-name,
+  .tn-name, .mp-show, .rc-name, .pi-name, .ta-name, .rec-name, .pr-name, .lb-name, .nw-name, .tr-name,
+  .pc-name, .saga-item .saga-year, .cast-name, .es-name {
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: clip;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+            mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+  }
+  .sc-name { -webkit-line-clamp: unset; display: block; }
+  .tr-name { white-space: nowrap; }
+
+  /* =====================================================================
+     IMPOSTAZIONI STILE IPHONE + FOGLIO COLORI
+     ===================================================================== */
+  .ios-set { max-width: 620px; margin: 0 auto; }
+  .ios-h { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: rgba(var(--overlay-rgb),0.5); margin: 22px 16px 7px; }
+  .ios-group { border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
+  :root[data-radius="round"] .ios-group { border-radius: 18px; }
+  :root[data-radius="square"] .ios-group { border-radius: 6px; }
+  .ios-row { position: relative; width: 100%; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 16px; text-align: left; color: var(--fg); text-decoration: none; font-size: 16px; }
+  .ios-row + .ios-row { box-shadow: inset 16px 0.5px 0 0 color-mix(in srgb, var(--fg) 6%, var(--bg)), inset 0 0.5px 0 0 rgba(var(--overlay-rgb),0.14); }
+  .ios-row:active { background: rgba(var(--overlay-rgb),0.06); transform: none; }
+  .ios-l { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-v { color: rgba(var(--overlay-rgb),0.5); font-size: 15.5px; white-space: nowrap; }
+  .ios-chev { flex-shrink: 0; color: rgba(var(--overlay-rgb),0.3); }
+  .ios-dot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.2); }
+  .ios-sel { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+  .ios-danger .ios-l { color: #FF453A; }
+  .ios-col { flex-direction: column; align-items: stretch; gap: 10px; }
+  .ios-inline { display: flex; gap: 8px; }
+  .ios-inline input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 0.5px solid rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.06); color: var(--fg); font: inherit; font-size: 15px; }
+  .ios-btn { padding: 0 16px; border-radius: 12px; font-weight: 700; font-size: 15px; color: var(--accent); background: rgba(var(--overlay-rgb),0.06); }
+  .ios-note { font-size: 12.5px; line-height: 1.4; color: rgba(var(--overlay-rgb),0.45); margin: 7px 16px 0; }
+  .theme-chips { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 4px; }
+  .theme-chips::-webkit-scrollbar { display: none; }
+  .theme-chip { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.7); }
+  .tc-dot { position: relative; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.2); }
+  .tc-dot i { position: absolute; right: 0; bottom: 0; width: 50%; height: 50%; border-top-left-radius: 100%; }
+  .theme-chip.on .tc-dot { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+  .theme-chip.on { color: var(--fg); }
+  .color-pick-bg { align-items: flex-end; }
+  .color-sheet { width: 100%; max-width: 520px; max-height: 82vh; display: flex; flex-direction: column; border-radius: 22px 22px 0 0; background: var(--sheet-bg); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -10px 40px rgba(0,0,0,0.4); }
+  .cs-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; }
+  .cs-title { font-family: var(--font-title); font-weight: var(--title-weight); font-size: calc(19px * var(--title-scale)); }
+  .cs-done { font-weight: 800; font-size: 15px; color: var(--accent); }
+  .cs-body { overflow-y: auto; padding: 0 14px 18px; }
+  .cs-group { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(var(--overlay-rgb),0.5); margin: 12px 4px 8px; }
+  .cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 12px 6px; }
+  .cs-sw { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+  .cs-dot { width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.18); transition: transform 0.15s; }
+  .cs-sw.on .cs-dot { box-shadow: 0 0 0 2px var(--sheet-bg), 0 0 0 4px var(--fg); transform: scale(1.06); }
+  .cs-name { font-size: 10.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.7); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2762,8 +2811,8 @@
 
     /* Menu in alto (come Martur): la barra delle schede sale accanto al logo,
        con le scritte, e la voce aperta nel colore dell'app. */
-    .topbar { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 18px; }
-    .topbar-wrap.scrolled .topbar { padding: 8px 18px; }
+    .topbar { padding: 0; }
+    .topbar-row { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 0 18px; }
     .topbar-left { justify-content: flex-start; }
     .topbar .tabbar-wrap {
       position: static; margin: 0 0 0 auto; width: auto; max-width: none;
@@ -2846,12 +2895,16 @@
        tasto indietro compare solo in Impostazioni. -->
   <div class="topbar-wrap" id="topbarWrap">
   <div class="topbar">
-    <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <div class="topbar-left">
-      <div class="topbar-logo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
+    <div class="topbar-row">
+      <button class="topbar-back" id="topbarBack" onclick="switchTab('profile')" title="Indietro">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="topbar-left">
+        <div class="topbar-logo"><span class="tw-its">ITS</span><span class="tw-tracker">TRACKER</span></div>
+      </div>
     </div>
+    <!-- ticker dentro la pillola (seconda riga), con solo il pallino: come Laurera -->
+    <div class="ticker" id="tvTicker" hidden></div>
   </div>
   </div>
 
@@ -2893,7 +2946,6 @@
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
     <!-- ticker in stile diretta: le frasi di lancio (tagline) delle tue serie -->
-    <div class="ticker" id="tvTicker" hidden></div>
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="tvCatTabs">
         <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')"><span class="cat-tab-label">Continua</span><span class="tab-count cat-count" id="tvCount-continua"></span></button>
@@ -2983,55 +3035,47 @@
   </div>
 
   <!-- IMPOSTAZIONI -->
+  <!-- IMPOSTAZIONI: elenco a gruppi come su iPhone (voce a sinistra, valore e
+       freccia a destra), senza iconcine. -->
   <div class="view" id="view-settings">
-    <div class="section" style="padding-top:14px">
-      <h2 class="settings-h2">Aspetto</h2>
-      <div class="glass settings-group" id="appearanceGroup"></div>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">Account</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="set-head"><span class="set-ico" style="background:#0A84FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg></span><div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div></div>
-          <div style="display:flex; gap:8px">
-            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
-              style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
-            <button class="filebtn" onclick="saveNickname()">Salva</button>
+    <div class="section ios-set" style="padding-top:10px">
+      <div class="ios-h">Aspetto</div>
+      <div class="ios-group" id="appearanceGroup"></div>
+      <div class="ios-note">Lo sfondo decide anche se l'app è chiara o scura.</div>
+
+      <div class="ios-h">Account</div>
+      <div class="ios-group">
+        <div class="ios-row ios-col">
+          <span class="ios-l">Nickname</span>
+          <div class="ios-inline">
+            <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off">
+            <button class="ios-btn" onclick="saveNickname()">Salva</button>
           </div>
         </div>
       </div>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <a class="glass settings-group satispay-row" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener" style="display:block; text-decoration:none; color:inherit">
-        <div class="settingsrow" style="align-items:center; gap:12px">
-          <img src="satispay-logo.png" alt="Satispay" width="34" height="34" style="display:block; border-radius:9px; flex:none">
-          <div class="st" style="flex:1"><div class="sn">Offrimi un caffè</div><div class="sd">Sostieni lo sviluppo dell'app su Satispay</div></div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.4; flex:none"><path d="M9 18l6-6-6-6"/></svg>
-        </div>
-      </a>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">Libreria</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:10px">
-<div class="set-head"><span class="set-ico" style="background:#FF9F0A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></span><div class="st"><div class="sn">Backup della libreria</div><div class="sd">Salva o ripristina serie e film in un file</div></div></div>
-          <div style="display:flex; gap:8px">
-            <button class="filebtn" style="flex:1" onclick="document.getElementById('jsonAllInput').click()">Importa</button>
-            <button class="filebtn" style="flex:1" onclick="exportAll()">Esporta</button>
-            <button class="redbtn" style="flex:1" onclick="askReset('all')">Reset</button>
-          </div>
-          <input type="file" id="jsonAllInput" accept="application/json" />
-        </div>
+      <div class="ios-note">Usato per i tuoi commenti e per farti trovare dagli amici.</div>
+
+      <div class="ios-h">Libreria</div>
+      <div class="ios-group">
+        <button class="ios-row" onclick="document.getElementById('jsonAllInput').click()"><span class="ios-l">Importa da file</span><svg class="ios-chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg></button>
+        <button class="ios-row" onclick="exportAll()"><span class="ios-l">Esporta backup</span><svg class="ios-chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg></button>
+        <button class="ios-row ios-danger" onclick="askReset('all')"><span class="ios-l">Azzera libreria</span></button>
+        <input type="file" id="jsonAllInput" accept="application/json" />
       </div>
-    </div>
-    <div class="section" style="margin-top:16px">
-      <h2 class="settings-h2">TMDb</h2>
-      <div class="glass settings-group">
-        <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="set-head"><span class="set-ico" style="background:#01B4E4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span><div class="st"><div class="sn">Dati da TMDb</div><div class="sd">Serie, film e locandine provengono da TMDb (The Movie Database).</div></div></div>
-          <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
-        </div>
+
+      <div class="ios-h">Supporto</div>
+      <div class="ios-group">
+        <a class="ios-row" href="https://web.satispay.com/download/qrcode/S6Y-CON--9BC179DC-18E9-4580-94F7-4CA56D2B6460?" target="_blank" rel="noopener">
+          <span class="ios-l">Offrimi un caffè</span><span class="ios-v">Satispay</span>
+          <svg class="ios-chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg>
+        </a>
       </div>
+
+      <div class="ios-h">Informazioni</div>
+      <div class="ios-group">
+        <div class="ios-row"><span class="ios-l">Dati di serie e film</span><span class="ios-v">TMDb</span></div>
+      </div>
+      <div class="ios-note">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
     </div>
   </div>
 
@@ -3423,6 +3467,7 @@ if (fbAuth) {
           const followingChanged = newFollowing.length !== followingList.length || newFollowing.some(u => !followingList.includes(u));
           followingList = newFollowing;
           if (followingChanged && currentTab === 'profile') loadProfilePeople();
+          if (followingChanged) refreshTickerFeed();
           if (data.coverImage && data.coverImage !== getCoverImage()) {
             try { localStorage.setItem('serietracker_cover', data.coverImage); } catch(e) {}
           }
@@ -5775,17 +5820,17 @@ function staleRowHtml(key, s) {
   const id = validId(s, key);
   const days = Math.floor((Date.now() - lastShowActivity(s)) / 86400000);
   const next = s.next ? `S${s.next.season}E${s.next.number}` : '';
-  return `<div class="stale-row">
-    <div class="list-item stale-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
-      ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
-      <div class="li-info">
-        <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
-        <div class="li-next stale-when">Ferma da ${days} giorni${next ? ` · ${next}` : ''}</div>
-      </div>
+  // Riprendi / Abbandona dentro la card, a destra e centrati, come testo: il
+  // titolo, se lungo, sfuma prima di toccarli.
+  return `<div class="list-item stale-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
+    ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
+    <div class="li-info">
+      <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
+      <div class="li-next stale-when">Ferma da ${days} giorni${next ? ` · ${next}` : ''}</div>
     </div>
-    <div class="stale-actions">
-      <button class="stale-btn resume" onclick="openShow(${id})">Riprendi</button>
-      <button class="stale-btn drop" onclick="confirmAbandon(${id})">Abbandona</button>
+    <div class="stale-acts">
+      <button class="sa resume" onclick="event.stopPropagation();openShow(${id})">Riprendi</button>
+      <button class="sa drop" onclick="event.stopPropagation();confirmAbandon(${id})">Abbandona</button>
     </div>
   </div>`;
 }
@@ -5798,25 +5843,100 @@ function confirmAbandon(id) {
   okBtn.onclick = () => { closeConfirm(); doRemoveShow(id); };
   document.getElementById('confirmBg').classList.add('open');
 }
-
-// Ticker in stile diretta (come Laurera): scorrono le frasi di lancio delle
-// tue serie, prese da TMDb. Si ridisegna solo se cambiano, cosi' lo
-// scorrimento non riparte da capo a ogni aggiornamento della lista.
+// Ticker: notizie utili che scorrono nell'intestazione. Le fonti si scelgono
+// (vedi TICKER_SOURCES); ognuna produce zero o piu' voci. Si ridisegna solo se
+// il contenuto cambia, cosi' lo scorrimento non riparte da capo.
+const TICKER_SOURCES = ['out', 'new', 'friends', 'left', 'streak', 'trophy', 'trend', 'renew', 'saga'];
+const TICKER_DEFAULT = ['out', 'new', 'friends', 'left'];
+function getTickerSources() { try { const v = JSON.parse(localStorage.getItem('itstracker_ticker') || 'null'); return Array.isArray(v) ? v : TICKER_DEFAULT; } catch(e) { return TICKER_DEFAULT; } }
+let tickerTrend = null;
+function tickerItems() {
+  const src = getTickerSources(), out = [];
+  const tk = (onclick, html) => out.push(`<span class="tk" onclick="${onclick}">${html}</span>`);
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (src.includes('out') && upcomingCache) {
+    upcomingCache.forEach(u => {
+      if (!library[u.id]) return;
+      const diff = Math.round((new Date(u.date + 'T00:00:00') - today) / 86400000);
+      if (diff < 0 || diff > 1) return;
+      tk(`openShow(${u.id})`, `<em>${diff === 0 ? 'Oggi' : 'Domani'}</em><b>${escapeHtml(library[u.id].name || u.name || '')} ${u.season}x${String(u.number).padStart(2,'0')}</b>`);
+    });
+  }
+  if (src.includes('new')) {
+    Object.values(library).forEach(s => {
+      const n = s.next;
+      if (!n || !n.airdate || isFutureDateStr(n.airdate)) return;
+      const age = (Date.now() - new Date(n.airdate + 'T00:00:00').getTime()) / 86400000;
+      if (age > 7 || categorizeShow(s) === 'davedere') return;
+      tk(`openShow(${s.id})`, `<em>Nuovo</em><b>${escapeHtml(s.name || '')} ${n.season}x${String(n.number).padStart(2,'0')}</b><s>da vedere</s>`);
+    });
+  }
+  if (src.includes('friends') && profileFeedItemsCache.length) {
+    const seen = new Set();
+    profileFeedItemsCache.forEach(a => {
+      if (a.type !== 'watched_episode' || seen.has(a.uid) || Date.now() - actMillis(a) > 3 * 3600000) return;
+      seen.add(a.uid);
+      tk(`openShow(${a.showId})`, `<b>${escapeHtml((a.name || 'Un amico').split(' ')[0])}</b><s>guarda</s><b>${escapeHtml(a.title || '')} ${epTag(a)}</b>`);
+    });
+  }
+  if (src.includes('left')) {
+    Object.values(library).filter(s => categorizeShow(s) === 'continua' && !isStaleShow(s))
+      .sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 2).forEach(s => {
+        const left = Math.max(0, (s.totalEpisodes || 0) - Object.keys(s.watched || {}).length);
+        if (!left) return;
+        tk(`openShow(${s.id})`, `<b>${escapeHtml(s.name || '')}</b><s>mancano</s><em>${fmtHM(left * (s.runtime || 42))}</em>`);
+      });
+  }
+  if (src.includes('streak')) {
+    const cur = currentStreak();
+    if (cur >= 2) tk(`switchTab('profile')`, `<em>${cur} giorni di fila</em><s>record ${computeWrapped().streak}</s>`);
+  }
+  if (src.includes('trophy')) {
+    const lp = levelProgress(computeWrapped().hours);
+    if (lp.next) tk(`switchTab('profile')`, `<s>a ${lp.missing} h da</s><b>${escapeHtml(lp.next.label)}</b>`);
+  }
+  if (src.includes('trend') && tickerTrend) tk(`openShow(${tickerTrend.id})`, `<em>#1 in Italia</em><b>${escapeHtml(tickerTrend.name || '')}</b>`);
+  if (src.includes('renew')) {
+    getLocalNotifications().filter(n => n.type === 'renewed' && Date.now() - notifMillis(n) < 14 * 86400000).slice(0, 3)
+      .forEach(n => tk(`openShow(${n.showId})`, `<em>Rinnovata</em><b>${escapeHtml((n.text || '').replace(/^Rinnovata!\s*/, ''))}</b>`));
+  }
+  if (src.includes('saga')) {
+    const seenCol = new Set();
+    Object.values(filmLibrary).forEach(f => {
+      if (!f.collection || seenCol.has(f.collection)) return;
+      seenCol.add(f.collection);
+      const c = tmdbSideCache.get(`coll:${f.collection}`);
+      const parts = c && c.data && (c.data.parts || []).filter(p => p.release_date);
+      if (!parts || parts.length < 2) return;
+      const miss = parts.filter(p => !(filmLibrary[p.id] && filmLibrary[p.id].watched)).length;
+      if (miss && miss < parts.length) tk(`openFilm(${f.id})`, `<b>${escapeHtml(sagaName(c.data.name))}</b><s>ti ${miss === 1 ? 'manca 1 film' : `mancano ${miss} film`}</s>`);
+    });
+  }
+  return out;
+}
+// Cosa guardano gli amici, per il ticker: si carica una volta all'accesso.
+async function refreshTickerFeed() {
+  if (!getTickerSources().includes('friends') || !currentUser || !followingList.length) return;
+  try { profileFeedItemsCache = await fetchFriendFeedItems(); renderTicker(); } catch(e) {}
+}
 function renderTicker() {
   const el = document.getElementById('tvTicker');
   if (!el) return;
-  const shows = Object.values(library).filter(s => s.tagline && s.tagline.trim());
-  if (!shows.length || isSectionHidden('home', 'ticker')) { el.hidden = true; el.dataset.key = ''; return; }
-  const rank = s => ({ continua: 0, inpari: 1, davedere: 2 }[categorizeShow(s)] ?? 3);
-  shows.sort((a, b) => rank(a) - rank(b) || (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0));
-  const key = shows.map(s => s.id + ':' + s.tagline).join('|');
-  if (el.dataset.key === key && !el.hidden) return;
-  el.dataset.key = key;
-  const items = shows.map(s => `<span class="tk" onclick="openShow(${Number(s.id)})"><b>${escapeHtml(s.name || '')}</b><s>«${escapeHtml(s.tagline.trim())}»</s></span>`).join('');
-  const chars = shows.reduce((n, s) => n + (s.name || '').length + s.tagline.length, 0);
-  const dur = Math.max(22, Math.round(chars * 0.22));
-  el.innerHTML = `<div class="tk-label"><i></i>Le tue serie</div>
-    <div class="tk-viewport"><div class="tk-track" style="animation-duration:${dur}s">${items}${items}</div></div>`;
+  if (getTickerSources().includes('trend') && !tickerTrend && hasTmdbKeySilent() && !renderTicker._trendAsked) {
+    renderTicker._trendAsked = true;
+    tmdbCachedJson('top10:tv', tmdbUrl('/trending/tv/week', {})).then(d => {
+      tickerTrend = (d.results || []).find(r => !['ja','zh','cn'].includes(r.original_language)) || null;
+      renderTicker();
+    }).catch(() => {});
+  }
+  const items = isSectionHidden('home', 'ticker') ? [] : tickerItems();
+  if (!items.length) { el.hidden = true; el.dataset.key = ''; return; }
+  const html = items.join('');
+  if (el.dataset.key === html && !el.hidden) return;
+  el.dataset.key = html;
+  const dur = Math.max(18, Math.round(html.replace(/<[^>]+>/g, '').length * 0.28));
+  el.innerHTML = `<div class="tk-label"><i></i>Notizie</div>
+    <div class="tk-viewport"><div class="tk-track" style="animation-duration:${dur}s">${html}${html}</div></div>`;
   el.hidden = false;
 }
 
@@ -6168,7 +6288,8 @@ async function ensureUpcomingCache() {
   }));
   upcomingCache = results.filter(Boolean).sort((a,b) => a.date.localeCompare(b.date));
   upcomingCacheAt = now;
-  if (taglineChanged) { saveLibrary(); renderTicker(); }
+  if (taglineChanged) saveLibrary();
+  renderTicker();
   updateUpcomingBadge();
   checkAiredEpisodeNotifications(upcomingCache);
   return upcomingCache;
@@ -7005,6 +7126,15 @@ async function loadPopular(mode) {
 function setTvPopularGenre(g) { tvSearchGenreFilter = g || null; loadPopular('tv'); }
 function setFilmPopularGenre(g) { filmSearchGenreFilter = g || null; loadPopular('film'); }
 
+// Toccando fuori da un campo di ricerca la tastiera si chiude (e la barra
+// smette di essere attiva), come nelle app di sistema.
+document.addEventListener('pointerdown', e => {
+  const a = document.activeElement;
+  if (!a || a.tagName !== 'INPUT') return;
+  if (!['searchInput', 'tvLibSearchInput', 'filmLibSearchInput', 'peopleSearchInput'].includes(a.id)) return;
+  if (e.target.closest('.searchbar, .lib-search, .people-search-input, .search-clear')) return;
+  a.blur();
+}, true);
 // Ricerca: serie e film insieme, prima le serie poi i film.
 function doSearchAll(q) {
   const box = document.getElementById('searchResults');
@@ -7316,6 +7446,7 @@ function renderProfileFeedBody() {
   applyLevelRings(body);
   fetchPresence(shown.map(a => a.uid)).then(() => { applyPresenceDots(body); applyLevelRings(body); });
   loadFeedReactions(shown.map(a => a.id));
+  renderTicker();
 }
 
 // ---------- scheda Social ----------
@@ -7355,13 +7486,18 @@ function renderSocial() {
   if (socialTab === 'people') {
     c.innerHTML = `<input class="people-search-input" id="peopleSearchInput" placeholder="Cerca per nickname…" autocomplete="off" oninput="onPeopleSearch(this.value)">
       <div id="peopleSearchResults"></div>
+      ${followingList.length ? `<div class="wrap-card glass lb-card" id="lbCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Classifica amici</span>
+        <div class="mini-seg" id="lbSeg">${[['week','Settimana'],['month','Mese'],['total','Sempre']].map(([k, t]) => `<button data-k="${k}" class="${lbPeriod === k ? 'active' : ''}" onclick="lbPeriod='${k}';renderLbCard()">${t}</button>`).join('')}</div></div>
+        <div id="lbCardBody"><div class="spinner"></div></div></div>` : ''}
       <div class="sec-head"><span class="sec-title">I tuoi pronostici</span></div>
+      <div class="pred-help">Prima che esca un episodio, indovina che voto prenderà su TMDb. Quando esce, vince chi c'è andato più vicino fra te e i tuoi amici. Si pronostica dalla scheda di una serie che aspetti, nel tab Info.</div>
       <div id="myPreds"><div class="spinner"></div></div>
       <div class="sec-head"><span class="sec-title">Amici suggeriti</span></div>
       <div id="profilePeopleBody"><div class="spinner"></div></div>`;
     profilePeopleTab = 'suggestions';
     loadProfilePeople();
     renderMyPredictions();
+    renderLeaderboard();
     return;
   }
   // feed
@@ -9050,7 +9186,7 @@ async function loadTrailer(type, id) {
     if (!t) return;
     btn.href = `https://www.youtube.com/watch?v=${t.key}`;
     btn.style.display = 'flex';
-    startHeroTrailer(t.key);
+
   } catch(e) {}
 }
 
@@ -9063,11 +9199,13 @@ async function loadCast(type, id) {
     const cast = (data.cast || []).slice(0, 24);
     if (!cast.length) { box.innerHTML = '<div class="commentsEmpty">Cast non disponibile.</div>'; return; }
     // Griglia nel tab Cast: tocchi un attore e vedi la sua filmografia.
-    box.innerHTML = `<div class="cast-grid">` + cast.map(c => {
+    // Film: una riga sola, poi "Mostra tutto il cast" (nella scheda serie il cast ha il suo tab)
+    const collapse = type === 'movie' && cast.length > 4;
+    box.innerHTML = `<div class="cast-grid${collapse ? ' collapsed' : ''}">` + cast.map(c => {
       const role = type === 'tv' ? ((c.roles && c.roles[0] && c.roles[0].character) || '') : (c.character || '');
       const photo = c.profile_path ? `<img src="${tmdbImg(c.profile_path,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="cast-noimg">${escapeHtml((c.name||'?').charAt(0))}</div>`;
       return `<button class="cast-item" onclick="openActor(${Number(c.id)})">${photo}<div class="cast-name">${escapeHtml(c.name||'')}</div>${role?`<div class="cast-role">${escapeHtml(role)}</div>`:''}</button>`;
-    }).join('') + `</div>`;
+    }).join('') + `</div>` + (collapse ? `<button class="cast-more" onclick="const g=this.previousElementSibling;g.classList.toggle('collapsed');this.textContent=g.classList.contains('collapsed')?'Mostra tutto il cast (${cast.length})':'Mostra meno'">Mostra tutto il cast (${cast.length})</button>` : '');
   } catch(e) { box.innerHTML = ''; }
 }
 
@@ -9407,7 +9545,7 @@ function initTabSwipe() {
 function initTopMenu() {
   const mq = window.matchMedia('(min-width: 900px)');
   const bar = document.querySelector('.tabbar-wrap');
-  const topbar = document.querySelector('.topbar');
+  const topbar = document.querySelector('.topbar-row');
   const anchor = document.getElementById('sheetBg');
   const place = () => {
     if (mq.matches) { if (bar.parentElement !== topbar) topbar.appendChild(bar); }
@@ -10579,42 +10717,128 @@ function applySheetAccent(el, col) {
   el.style.setProperty('--accent-ink', accentInk(hex));
   el.style.setProperty('--tint', col);
 }
-// Voci di Impostazioni > Aspetto: ogni riga ha la sua iconcina colorata.
-const SET_ICONS = {
-  theme: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
-  color: '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 9.8C22 5.5 17.5 2 12 2z"/>',
-  font: '<path d="M4 20l6-16h1l6 16M6.5 14h8"/><path d="M17 20v-6a2.5 2.5 0 0 1 5 0v6M17 17h5"/>',
-  logo: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
-  radius: '<rect x="3.5" y="3.5" width="17" height="17" rx="6"/>',
-  density: '<path d="M4 6h16M4 10h16M4 14h16M4 18h16"/>',
-  textsize: '<path d="M3 19l4.5-12h1L13 19M4.6 15h6.8"/><path d="M15 19l3-8h1l3 8M15.9 16.5h5.2"/>',
-  view: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>'
-};
-function setIco(name, color) {
-  return `<span class="set-ico" style="background:${color}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${SET_ICONS[name]}</svg></span>`;
+// ---------- Impostazioni > Aspetto (stile iPhone) ----------
+// Sfondi e colori principali come nell'app Attivita': tanti colori a gruppi,
+// ognuno con il suo cerchio gia' visibile. Lo sfondo decide chiaro/scuro.
+const BG_GROUPS = [
+  ['Scuri', [['Nero','#000000'],['Blu notte','#060c1a'],['Mezzanotte','#0a0e1a'],['Navy notte','#0c1530'],['Navy','#1a2b5e'],['Indaco scuro','#26215c'],['Viola scuro','#3b2167'],['Melanzana','#3b1f4a'],
+    ['Prugna','#4a1d47'],['Vinaccia','#4c1424'],['Bordeaux','#5c1a2b'],['Granata','#5e1b1b'],['Ruggine','#5b2a1a'],['Cioccolato','#3f2a1d'],['Caffè','#3a2f25'],['Oliva','#3a3d1c'],
+    ['Bosco','#1d3b2a'],['Pino','#0f3d2e'],['Petrolio','#0f3a40'],['Oceano','#0c3b52'],['Ardesia','#2b313d'],['Antracite','#2f3238'],['Grafite','#13161b'],['Piombo','#3a3f4a']]],
+  ['Vivaci', [['Rosso','#dc2626'],['Ciliegia','#be123c'],['Burgundy','#800020'],['Rubino','#9b111e'],['Corallo','#e11d48'],['Rosa','#db2777'],['Fucsia','#c026d3'],['Viola','#7c3aed'],
+    ['Ametista','#9333ea'],['Indaco','#4f46e5'],['Blu','#2563eb'],['Cobalto','#1d4ed8'],['Azzurro','#0284c7'],['Turchese','#0891b2'],['Verde acqua','#0d9488'],['Smeraldo','#059669'],
+    ['Verde','#16a34a'],['Arancione','#ea580c'],['Zucca','#c2410c'],['Mattone','#b45309']]],
+  ['Chiari', [['Bianco','#ffffff'],['Carta','#f3f3ef'],['Avorio','#faf7ef'],['Panna','#fdf8f0'],['Nebbia','#f2f3f7'],['Perla','#eef0f3'],['Ghiaccio','#edf3f6'],['Cielo','#eef5fc'],
+    ['Polvere blu','#eaf0fb'],['Lavanda','#f1eefa'],['Glicine','#f4effc'],['Lilla','#f8f0fb'],['Cipria','#fbf0f2'],['Rosa tenue','#fdf2f5'],['Pesca','#fbf2ec'],['Albicocca','#fdf1e6'],
+    ['Sabbia','#f5f0e6'],['Crema','#fbf6e4'],['Vaniglia','#fdfbea'],['Pistacchio','#f3f8e8'],['Salvia','#eef2ea'],['Menta','#eef7f1'],['Acqua','#ecf8f6']]]
+];
+const ACCENT_GROUPS = [
+  ['Rossi e rosa', [['Rosso fuoco','#FF2200'],['Salmone','#fb8c7a'],['Corallo','#ff6b8b'],['Rosso','#ef4444'],['Ciliegia','#dc2626'],['Lampone','#e11d48'],['Cremisi','#FF0037'],['Rosa','#ec4899'],['Rosa confetto','#f9a8d4'],['Peonia','#f472b6'],['Magenta','#FF10AE'],['Fucsia','#d946ef']]],
+  ['Gialli e arancio', [['Sole','#fde047'],['Limone','#facc15'],['Giallo','#eab308'],['Oro','#F7B538'],['Ambra','#f0b44c'],['Albicocca','#fdba74'],['Mandarino','#ff8a3d'],['Arancio','#f97316'],['Zucca','#ea580c'],['Terracotta','#c2410c']]],
+  ['Verdi', [['Lime acido','#e8ff00'],['Pistacchio','#bef264'],['Lime','#84cc16'],['Prato','#4ade80'],['Verde','#22c55e'],['Smeraldo','#10b981'],['Menta','#4fe0a3'],['Acquamarina','#2dd4bf'],['Verde acqua','#14b8a6'],['Salvia','#86efac'],['Oliva','#a3a635']]],
+  ['Blu e azzurri', [['Ciano','#38d6e8'],['Turchese','#06b6d4'],['Celeste','#7dd3fc'],['Cielo','#38bdf8'],['Azzurro','#0ea5e9'],['Pervinca','#8fa2ff'],['Fiordaliso','#6c8cff'],['Blu','#3b6cf6'],['Zaffiro','#2563eb'],['Cobalto','#1d4ed8'],['Lavanda','#a5b4fc']]],
+  ['Viola', [['Orchidea','#c084fc'],['Lilla','#b98fff'],['Glicine','#c4b5fd'],['Viola','#8b5cf6'],['Ametista','#9333ea'],['Indaco','#6d4aff'],['Indaco scuro','#4f46e5']]],
+  ['Neutri', [['Bianco','#ffffff'],['Ghiaccio','#e2e8f0'],['Argento','#cbd5e1'],['Ardesia','#64748b'],['Sabbia','#d6c7a1'],['Moka','#b08968']]]
+];
+// Temi pronti: sfondo + colore principale con un tocco.
+const READY_THEMES = [['Classico','#060c1a','#FF2200'],['Nero e lime','#000000','#e8ff00'],['Navy','#0c1530','#ff8a3d'],['Mezzanotte','#0a0e1a','#8fa2ff'],
+  ['Bosco','#0f1f18','#4fe0a3'],['Bordeaux','#3a0f1a','#f0b44c'],['Prugna','#2a1430','#f472b6'],['Carta','#f3f3ef','#2f5bea'],['Pesca','#fbf2ec','#c2410c'],['Bianco','#ffffff','#FF2200']];
+const ALL_BG = BG_GROUPS.flatMap(g => g[1]);
+const ALL_ACCENTS = ACCENT_GROUPS.flatMap(g => g[1]);
+function isLightColor(hex) {
+  const h = (hex || '').replace('#', '');
+  if (h.length < 6) return false;
+  const v = i => { const x = parseInt(h.slice(i, i + 2), 16) / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+  return 0.2126 * v(0) + 0.7152 * v(2) + 0.0722 * v(4) > 0.18;
 }
-const SET_CARET = '<svg class="settings-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-function settingSelectRow(icon, color, label, id, onchange, options, current) {
-  const opts = options.map(([v, t]) => `<option value="${v}"${v === current ? ' selected' : ''}>${t}</option>`).join('');
-  return `<div class="settingsrow">${setIco(icon, color)}<div class="st"><div class="sn">${label}</div></div>
-    <div class="accent-select-wrap"><select id="${id}" class="settings-select" onchange="${onchange}">${opts}</select>${SET_CARET}</div></div>`;
+// Sfondo attuale: se non e' mai stato scelto, deriva da tema e scuro di prima.
+function currentBg() {
+  try {
+    const b = localStorage.getItem('itstracker_bg');
+    if (b) return b;
+    if (localStorage.getItem('serietracker_theme') === 'light') return '#ffffff';
+    const v = localStorage.getItem('itstracker_theme_variant') || 'blu';
+    return v === 'nero' ? '#000000' : v === 'grafite' ? '#13161b' : '#060c1a';
+  } catch(e) { return '#060c1a'; }
+}
+function applyBg(hex) {
+  const root = document.documentElement;
+  const light = isLightColor(hex);
+  root.setAttribute('data-theme', light ? 'light' : 'dark');
+  root.style.setProperty('--bg', hex);
+  root.style.setProperty('--sheet-bg', `color-mix(in srgb, ${hex} ${light ? 96 : 93}%, ${light ? '#000' : '#fff'})`);
+  root.style.setProperty('--panel-bg', `color-mix(in srgb, ${hex} ${light ? 92 : 86}%, ${light ? '#000' : '#fff'})`);
+  root.style.setProperty('--topbar-bg', `color-mix(in srgb, ${hex} 70%, transparent)`);
+  updateThemeColorMeta();
+  if (typeof updateLogo === 'function') updateLogo();
+}
+function setBg(hex) {
+  try { localStorage.setItem('itstracker_bg', hex); localStorage.setItem('serietracker_theme', isLightColor(hex) ? 'light' : 'dark'); } catch(e) {}
+  applyBg(hex);
+  haptic();
+}
+const colorName = (list, hex) => { const f = list.find(c => c[1].toLowerCase() === (hex || '').toLowerCase()); return f ? f[0] : hex; };
+const IOS_CHEV = '<svg class="ios-chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l6 6-6 6"/></svg>';
+// Riga con tendina: il valore si vede a destra; la tendina vera, invisibile,
+// copre tutta la riga (su iPhone apre la rotella di sistema).
+function iosSelectRow(label, onchange, options, current) {
+  const cur = (options.find(o => o[0] === current) || options[0])[1];
+  return `<label class="ios-row"><span class="ios-l">${label}</span><span class="ios-v">${cur}</span>${IOS_CHEV}
+    <select class="ios-sel" aria-label="${label}" onchange="${onchange};renderAppearanceSettings()">${options.map(([v, t]) => `<option value="${v}"${v === current ? ' selected' : ''}>${t}</option>`).join('')}</select></label>`;
 }
 function renderAppearanceSettings() {
   const box = document.getElementById('appearanceGroup');
   if (!box) return;
-  box.innerHTML = [
-    settingSelectRow('theme', '#5E5CE6', 'Tema', 'themeSelect', 'setTheme(this.value)', [['light','Chiaro'],['dark','Scuro'],['grafite','Grafite'],['blu','Blu notte']], ''),
-    settingSelectRow('color', '#FF375F', 'Colore', 'accentSelect', 'setAccent(this.value)', [], ''),
-    settingSelectRow('font', '#FF9F0A', 'Carattere titoli', 'fontSelect', "setPref('font', this.value)", [['anton','Anton'],['baloo','Baloo'],['bebas','Bebas Neue'],['oswald','Oswald'],['unbounded','Unbounded'],['fraunces','Fraunces'],['system','Sistema']], getPref('font')),
-    settingSelectRow('logo', '#E5B300', 'Logo', 'logoSelect', "setPref('logo', this.value)", [['neon','Neon'],['solid','Pieno'],['outline','Contorno']], getPref('logo')),
-    settingSelectRow('radius', '#30D158', 'Angoli', 'radiusSelect', "setPref('radius', this.value)", [['round','Molto tondi'],['medium','Medi'],['square','Squadrati']], getPref('radius')),
-    settingSelectRow('density', '#32ADE6', 'Densità lista', 'densitySelect', "setPref('density', this.value)", [['compact','Compatta'],['normal','Normale'],['airy','Ariosa']], getPref('density')),
-    settingSelectRow('textsize', '#BF5AF2', 'Testo', 'textsizeSelect', "setPref('textsize', this.value)", [['m','Normale'],['l','Grande'],['xl','Molto grande']], getPref('textsize')),
-    settingSelectRow('view', '#0A84FF', 'Visualizzazione', 'viewSelect', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)
-  ].join('');
-  renderAccentControl();
-  updateThemeButtons();
+  const bg = currentBg(), ac = currentAccent();
+  box.innerHTML = `
+    <div class="ios-row ios-col"><span class="ios-l">Temi pronti</span>
+      <div class="theme-chips">${READY_THEMES.map(([n, b, a]) => `<button class="theme-chip${b.toLowerCase() === bg.toLowerCase() && a.toLowerCase() === ac.toLowerCase() ? ' on' : ''}" onclick="setBg('${b}');setAccent('${a}');renderAppearanceSettings()">
+        <span class="tc-dot" style="background:${b}"><i style="background:${a}"></i></span><span>${n}</span></button>`).join('')}</div></div>
+    <button class="ios-row" onclick="openColorPicker('bg')"><span class="ios-l">Sfondo</span><span class="ios-v">${escapeHtml(colorName(ALL_BG, bg))}</span><span class="ios-dot" style="background:${bg}"></span>${IOS_CHEV}</button>
+    <button class="ios-row" onclick="openColorPicker('accent')"><span class="ios-l">Colore principale</span><span class="ios-v">${escapeHtml(colorName(ALL_ACCENTS, ac))}</span><span class="ios-dot" style="background:${ac}"></span>${IOS_CHEV}</button>
+    ${iosSelectRow('Carattere titoli', "setPref('font', this.value)", [['anton','Anton'],['baloo','Baloo'],['bebas','Bebas Neue'],['oswald','Oswald'],['unbounded','Unbounded'],['fraunces','Fraunces'],['system','Sistema']], getPref('font'))}
+    ${iosSelectRow('Logo', "setPref('logo', this.value)", [['neon','Neon'],['solid','Pieno'],['outline','Contorno']], getPref('logo'))}
+    ${iosSelectRow('Angoli', "setPref('radius', this.value)", [['round','Molto tondi'],['medium','Medi'],['square','Squadrati']], getPref('radius'))}
+    ${iosSelectRow('Densità lista', "setPref('density', this.value)", [['compact','Compatta'],['normal','Normale'],['airy','Ariosa']], getPref('density'))}
+    ${iosSelectRow('Testo', "setPref('textsize', this.value)", [['m','Normale'],['l','Grande'],['xl','Molto grande']], getPref('textsize'))}
+    ${iosSelectRow('Visualizzazione', 'setView(this.value)', [['grid','Griglia'],['list','Lista'],['wall','Muro']], viewMode)}`;
 }
+// Foglio con tutti i colori a gruppi: si tocca e l'app cambia subito, il foglio
+// resta aperto per confrontare; "Fatto" chiude.
+function openColorPicker(kind) {
+  let bg = document.getElementById('colorPickBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.className = 'confirmbg color-pick-bg'; bg.id = 'colorPickBg';
+    observeOverlay(bg);
+    bg.addEventListener('click', e => { if (e.target === bg) closeColorPicker(); });
+    document.body.appendChild(bg);
+  }
+  bg.dataset.kind = kind;
+  renderColorPicker();
+  bg.classList.add('open');
+}
+function renderColorPicker() {
+  const bg = document.getElementById('colorPickBg');
+  if (!bg) return;
+  const kind = bg.dataset.kind;
+  const groups = kind === 'bg' ? BG_GROUPS : ACCENT_GROUPS;
+  const cur = (kind === 'bg' ? currentBg() : currentAccent()).toLowerCase();
+  bg.innerHTML = `<div class="color-sheet">
+    <div class="cs-head"><span class="cs-title">${kind === 'bg' ? 'Sfondo' : 'Colore principale'}</span><button class="cs-done" onclick="closeColorPicker()">Fatto</button></div>
+    <div class="cs-body">${groups.map(([g, list]) => `<div class="cs-group">${g}</div><div class="cs-grid">${list.map(([n, c]) =>
+      `<button class="cs-sw${c.toLowerCase() === cur ? ' on' : ''}" onclick="pickColor('${c}')"><span class="cs-dot" style="background:${c}"></span><span class="cs-name">${n}</span></button>`).join('')}</div>`).join('')}</div>
+  </div>`;
+}
+function pickColor(c) {
+  const bg = document.getElementById('colorPickBg');
+  if (!bg) return;
+  if (bg.dataset.kind === 'bg') setBg(c); else setAccent(c);
+  const scroll = bg.querySelector('.cs-body') ? bg.querySelector('.cs-body').scrollTop : 0;
+  renderColorPicker();
+  const body = bg.querySelector('.cs-body'); if (body) body.scrollTop = scroll;
+  renderAppearanceSettings();
+}
+function closeColorPicker() { const bg = document.getElementById('colorPickBg'); if (bg) bg.classList.remove('open'); }
 function clearSheetAccent(el) {
   ['--accent', '--accent-rgb', '--accent-ink', '--tint'].forEach(p => el.style.removeProperty(p));
 }
@@ -10663,12 +10887,7 @@ function setAccent(c) {
   if (typeof haptic === 'function') haptic();
 }
 function renderAccentControl() {
-  const sel = document.getElementById('accentSelect');
-  if (!sel) return;
-  const cur = currentAccent().toLowerCase();
-  sel.innerHTML = ACCENT_COLORS.map(o =>
-    `<option value="${o.c}"${o.c.toLowerCase()===cur?' selected':''}>${o.n}</option>`
-  ).join('');
+  // la scelta ora si fa dal foglio dei colori (openColorPicker)
 }
 
 // ---------- tema (override manuale su quello di sistema) ----------
@@ -11216,12 +11435,15 @@ const APP_NEWS = [
   ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e pronostici sul voto del prossimo episodio.'],
   ['Profilo', 'Livelli con barra esperienza, record personali, giorni di fila, statistiche nuove e bacheca dei trofei.']
 ];
+function hideNewsForever() {
+  try { localStorage.setItem('itstracker_news_hidden', APP_VERSION); } catch(e) {}
+  document.getElementById('newsBg').classList.remove('open');
+}
 function maybeShowNews() {
-  let seen = null;
-  try { seen = localStorage.getItem('itstracker_seen_version'); } catch(e) {}
-  const isNewUser = !seen && !Object.keys(library).length && !Object.keys(filmLibrary).length;
-  try { localStorage.setItem('itstracker_seen_version', APP_VERSION); } catch(e) {}
-  if (seen === APP_VERSION || isNewUser) return;
+  // Esce a ogni apertura finche' non tocchi "Non mostrare piu'".
+  let hidden = null;
+  try { hidden = localStorage.getItem('itstracker_news_hidden'); } catch(e) {}
+  if (hidden === APP_VERSION) return;
   let bg = document.getElementById('newsBg');
   if (!bg) {
     bg = document.createElement('div');
@@ -11234,7 +11456,7 @@ function maybeShowNews() {
     <div class="news-eyebrow">Novità</div>
     <h3>itstracker si è rifatto il look</h3>
     <div class="news-list">${APP_NEWS.map(([t, d]) => `<div class="news-item"><b>${t}</b><span>${d}</span></div>`).join('')}</div>
-    <div class="cbrow"><button class="cb-confirm news-ok" onclick="document.getElementById('newsBg').classList.remove('open')">Ho capito</button></div>
+    <div class="cbrow"><button class="cb-cancel" onclick="hideNewsForever()">Non mostrare più</button><button class="cb-confirm news-ok" onclick="document.getElementById('newsBg').classList.remove('open')">Chiudi</button></div>
   </div>`;
   setTimeout(() => bg.classList.add('open'), 2800);
 }
@@ -11244,7 +11466,7 @@ function maybeShowNews() {
 // trascinandole; l'occhio le nasconde.
 const LAYOUT_SECTIONS = {
   home: [['rail', 'Riprendi'], ['list', 'Serie in corso'], ['upcoming', 'In arrivo'], ['stale', 'Ferme da tanto'], ['ticker', 'Frasi delle tue serie']],
-  profile: [['streak', 'Giorni di fila'], ['week', 'La tua settimana'], ['records', 'Record personali'], ['leaderboard', 'Classifica amici'], ['heatmap', 'Calendario']]
+  profile: [['streak', 'Giorni di fila'], ['week', 'La tua settimana'], ['records', 'Record personali'], ['heatmap', 'Calendario']]
 };
 function getLayout() {
   let l = {};
@@ -11469,7 +11691,6 @@ initSheetParallax();
 initCardTilt();
 initBackButton();
 initContentFadeIn();
-initHeaderShrink();
 initTabSwipe();
 initSheetDock();
 initTopMenu();
