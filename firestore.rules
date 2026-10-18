@@ -77,7 +77,7 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.toUid is string
                     && request.resource.data.toUid != request.auth.uid
-                    && request.resource.data.type in ['message', 'like', 'reply', 'mention', 'follow']
+                    && request.resource.data.type in ['message', 'like', 'reply', 'mention', 'follow', 'recommend', 'reaction']
                     && request.resource.data.text is string
                     && request.resource.data.text.size() <= 300;
     }
@@ -90,6 +90,30 @@ service cloud.firestore {
                     && request.resource.data.uid == request.auth.uid;
       allow update, delete: if request.auth != null
                             && resource.data.uid == request.auth.uid;
+    }
+
+    // ---- Reazioni alle attività del feed (🔥 👀 😭 ❤️) ----
+    // Come le reazioni agli episodi: lettura libera, scrittura da autenticati
+    // (ognuno aggiunge/toglie il proprio uid). L'actId dichiarato deve
+    // combaciare con l'id del documento.
+    match /activityReactions/{actId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.data.actId == actId;
+    }
+
+    // ---- Pronostici sul voto del prossimo episodio ----
+    // Id documento = "<epKey>_<uid>": ognuno scrive solo il proprio pronostico,
+    // con un voto fra 1 e 10. Lettura libera (si vedono quelli degli amici).
+    match /predictions/{predId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid
+                    && predId == request.resource.data.epKey + '_' + request.auth.uid
+                    && request.resource.data.guess is number
+                    && request.resource.data.guess >= 1
+                    && request.resource.data.guess <= 10;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
 
     // ---- Chat 1:1 ----

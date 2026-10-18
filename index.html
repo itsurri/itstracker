@@ -2032,6 +2032,7 @@
     box-shadow: 0 0 0 2px var(--bg); display: none;
   }
   .tab-badge-pulse.show { display: block; }
+  .pill-main .tabbtn.active .tab-badge-pulse { left: 27px; top: 3px; box-shadow: 0 0 0 2px var(--tc); }
   .tab-badge-pulse.pulse { animation: badgePulse 1.3s ease-out 3; }
   @keyframes badgePulse {
     0% { box-shadow: 0 0 0 2px var(--bg), 0 0 0 2px rgba(var(--accent-rgb),0.85); }
@@ -2436,6 +2437,89 @@
   .prov-chip { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; overflow: hidden; opacity: 0.45; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.12); font-size: 10px; font-weight: 700; }
   .prov-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .prov-chip.active { opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 2px var(--accent); }
+
+  /* =====================================================================
+     RESTYLING 2026 - SOCIAL E AVVISI
+     ===================================================================== */
+  /* feed come registro: linea verticale con un pallino colorato per tipo */
+  .feed-log { position: relative; padding-left: 18px; }
+  .feed-log::before { content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: rgba(var(--overlay-rgb),0.12); }
+  .feed-item.log { position: relative; align-items: flex-start; border-bottom: none; padding: 9px 0; }
+  .log-dot { position: absolute; left: -18px; top: 22px; width: 12px; height: 12px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0 3px var(--bg), 0 0 10px var(--dot); }
+  .feed-item.log .fi-avatar { margin-top: 2px; }
+  .fi-react { display: flex; gap: 5px; margin-top: 6px; }
+  .fr-btn { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 12px; font-size: 13px; line-height: 1.2;
+    background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid transparent; }
+  .fr-btn .num { font-size: 12px; font-weight: 700; color: rgba(var(--overlay-rgb),0.65); }
+  .fr-btn.on { background: rgba(var(--accent-rgb),0.16); border-color: rgba(var(--accent-rgb),0.45); }
+  .fr-btn.on .num { color: var(--accent); }
+  /* stanno guardando ora */
+  .now-watch { margin-bottom: 14px; padding: 12px; border-radius: 18px; background: rgba(var(--accent-rgb),0.08); border: 0.5px solid rgba(var(--accent-rgb),0.3); }
+  .nw-lbl { display: flex; align-items: center; gap: 7px; font-family: var(--font-title); font-weight: var(--title-weight); font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .nw-lbl i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: livePulse 1.3s infinite; }
+  .nw-list { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+  .nw-list::-webkit-scrollbar { display: none; }
+  .nw-item { flex-shrink: 0; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+  .nw-av { position: relative; width: 50px; height: 50px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.12); box-shadow: 0 0 0 2px var(--accent); }
+  .nw-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .nw-live { position: absolute; right: -1px; bottom: -1px; width: 13px; height: 13px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); animation: badgePulse 1.6s ease-out infinite; }
+  .nw-name { font-size: 11.5px; font-weight: 700; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nw-what { font-size: 10.5px; color: rgba(var(--overlay-rgb),0.6); line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  /* avvisi: icona del tipo in un cerchio colorato */
+  .notifIcon.ni { position: relative; overflow: visible; background: color-mix(in srgb, var(--nc) 22%, transparent); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--nc) 45%, transparent); }
+  .notifIcon.ni img { border-radius: 50%; }
+  .ni-emoji { font-size: 16px; line-height: 1; }
+  .ni-type { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--sheet-bg); }
+  .ni-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); align-self: center; flex-shrink: 0; }
+  #socialContent .notifItem { padding: 10px 6px; }
+  #socialContent .notifItem.unread { background: rgba(var(--accent-rgb),0.07); }
+  /* consiglia a un amico */
+  .rec-btn { width: 100%; margin-top: 14px; padding: 12px; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14px; font-weight: 700; background: rgba(var(--overlay-rgb),0.07); border: 0.5px solid rgba(var(--overlay-rgb),0.14); color: var(--fg); }
+  .rec-box { max-width: 340px; text-align: left; }
+  .rec-box h3, .rec-box p { text-align: center; }
+  .rec-list { max-height: 46vh; overflow-y: auto; margin: 0 -6px 14px; }
+  .rec-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 14px; }
+  .rec-row img, .rec-noimg { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); flex-shrink: 0; }
+  .rec-name { flex: 1; min-width: 0; text-align: left; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec-send { padding: 6px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 800; background: var(--accent); color: var(--accent-ink); }
+  .rec-row.sent .rec-send { background: #30D158; color: #000; }
+  .li-rec { color: var(--gold); }
+  /* pronostici */
+  .pred-card { margin-top: 14px; padding: 13px; border-radius: 18px; background: rgba(191,90,242,0.1); border: 0.5px solid rgba(191,90,242,0.4); }
+  .pred-card .nc-lbl { color: #BF5AF2; }
+  .pred-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pred-ep { font-size: 12px; font-weight: 600; color: rgba(var(--overlay-rgb),0.6); }
+  .pred-ep b { font-size: 15px; color: var(--fg); }
+  .pred-q { font-size: 15px; font-weight: 700; margin: 6px 0 8px; }
+  .pred-input { display: flex; align-items: center; gap: 12px; }
+  .pred-input input { flex: 1; accent-color: #BF5AF2; }
+  .pred-input b { font-size: 30px; font-weight: 700; min-width: 54px; text-align: right; }
+  .pred-send { width: 100%; margin-top: 8px; padding: 10px; border-radius: 14px; background: #BF5AF2; color: #fff; font-weight: 800; font-size: 13.5px; }
+  .pred-friends { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .pf { display: inline-flex; align-items: center; gap: 5px; }
+  .pf img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+  .pf b { font-size: 14px; }
+  .pr-row { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 10px; }
+  .pr-row.me { background: rgba(191,90,242,0.14); }
+  .pr-pos { width: 18px; font-weight: 700; color: rgba(var(--overlay-rgb),0.5); }
+  .pr-row img, .pr-noimg { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: rgba(var(--overlay-rgb),0.12); }
+  .pr-name { flex: 1; min-width: 0; font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pr-guess { font-weight: 700; }
+  .pr-err { font-size: 12px; color: rgba(var(--overlay-rgb),0.55); width: 38px; text-align: right; }
+  .mp-row { width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 4px; border-bottom: 0.5px solid rgba(var(--overlay-rgb),0.08); text-align: left; }
+  .mp-show { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mp-show .num { color: rgba(var(--overlay-rgb),0.5); font-weight: 600; }
+  .mp-guess { font-size: 17px; font-weight: 700; color: #BF5AF2; }
+  .mp-res { font-size: 11.5px; font-weight: 700; padding: 3px 7px; border-radius: 8px; white-space: nowrap; }
+  .mp-res.good { background: rgba(48,209,88,0.16); color: #30D158; }
+  .mp-res.ok { background: rgba(255,214,10,0.16); color: var(--gold); }
+  .mp-res.bad { background: rgba(255,69,58,0.14); color: #FF453A; }
+  .mp-res.wait { background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.6); }
+  /* in comune con un amico */
+  .incommon { margin-bottom: 6px; }
+  .ic-diff { font-weight: 700; }
+  .ic-diff.me { color: #30D158; } .ic-diff.them { color: var(--accent); }
 
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
@@ -3104,6 +3188,7 @@ if (fbAuth) {
       unsubscribeNotifications = fbDb.collection('notifications').where('toUid', '==', user.uid)
         .onSnapshot(snap => {
           remoteNotifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          processIncomingRecommends();
           renderNotifPanel();
         }, err => console.error('notifications onSnapshot', err));
       unsubscribePublicProfile = fbDb.collection('publicProfiles').doc(user.uid)
@@ -3503,6 +3588,8 @@ async function refreshShowTotals(id) {
     const newBackdrop = tmdbImg(show.backdrop_path, 'original') || library[id].backdrop;
     const newNextAirDate = (show.next_episode_to_air && show.next_episode_to_air.air_date) || null;
     const newStatus = show.status || library[id].status || null;
+    // stagione nuova annunciata per una serie che hai finito -> avviso
+    if (checkRenewed(id, show)) { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e) {} }
     const changed = (newTotal && newTotal !== library[id].totalEpisodes) || newSeasons !== library[id].totalSeasons || newRating !== library[id].rating || newBackdrop !== library[id].backdrop || newNextAirDate !== library[id].nextAirDate || newStatus !== library[id].status;
     if (changed) {
       library[id].status = newStatus;
@@ -5517,7 +5604,8 @@ function allNotifications() {
   return getLocalNotifications().concat(remoteNotifications).sort((a, b) => notifMillis(b) - notifMillis(a));
 }
 
-const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️', follow: '👤' };
+const NOTIF_ICONS = { like: '❤️', reply: '💬', episode: '📺', message: '✉️', follow: '👤', mention: '@', recommend: '🎁', renewed: '🎉', reaction: '🔥' };
+const NOTIF_COLORS = { like: '#FF375F', reply: '#0A84FF', episode: 'var(--accent)', message: '#30D158', follow: '#BF5AF2', mention: '#0A84FF', recommend: '#FFD60A', renewed: '#30D158', reaction: '#FF9F0A' };
 
 let notifItemsCache = {};
 
@@ -5547,25 +5635,48 @@ function renderNotifPanel() {
   list.innerHTML = notifListHtml(items);
   if (currentTab === 'social' && socialTab === 'notif') renderSocial();
 }
+// Avvisi divisi per giorno (Oggi, Ieri, Questa settimana, Prima), ognuno con
+// l'icona del suo tipo in un cerchio colorato.
+function notifDayGroup(ms) {
+  if (!ms) return 'Prima';
+  const d = new Date(ms); d.setHours(0,0,0,0);
+  const t = new Date(); t.setHours(0,0,0,0);
+  const diff = Math.round((t - d) / 86400000);
+  return diff <= 0 ? 'Oggi' : diff === 1 ? 'Ieri' : diff < 7 ? 'Questa settimana' : 'Prima';
+}
 function notifListHtml(items) {
   notifItemsCache = {};
   items.forEach(n => { notifItemsCache[n.id] = n; });
-  return items.length
-    ? items.slice(0, 50).map(n => {
-        const isChat = n.type === 'message' && n.fromUid;
-        const isFollow = n.type === 'follow' && n.fromUid;
-        const clickable = !!n.showId || isChat || isFollow;
-        const handler = isChat ? `goToChatNotification('${n.id}')` : isFollow ? `goToFollowNotification('${n.id}')` : `goToCommentNotification('${n.id}')`;
-        const icon = ((isChat || isFollow) && n.fromPhoto) ? `<img src="${n.fromPhoto}" alt="">` : (NOTIF_ICONS[n.type] || '🔔');
-        return `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="${handler}"` : ''}>
-        <div class="notifIcon">${icon}</div>
-        <div class="notifBody">
-          <div class="notifText">${escapeHtml(n.text || '')}</div>
-          <div class="notifTime">${notifMillis(n) ? formatDateIT(new Date(notifMillis(n)).toISOString().slice(0,10)) : ''}</div>
-        </div>
-      </div>`;
-      }).join('')
-    : '<div class="commentsEmpty">Nessuna notifica</div>';
+  if (!items.length) return '<div class="commentsEmpty">Nessuna notifica</div>';
+  let html = '', lastGroup = null;
+  items.slice(0, 60).forEach(n => {
+    const g = notifDayGroup(notifMillis(n));
+    if (g !== lastGroup) { lastGroup = g; html += `<div class="day-head">${g}</div>`; }
+    const isChat = n.type === 'message' && n.fromUid;
+    const isFollow = n.type === 'follow' && n.fromUid;
+    const opensTitle = ['recommend', 'renewed', 'reaction', 'episode'].includes(n.type) && n.showId;
+    const clickable = !!n.showId || isChat || isFollow;
+    const handler = isChat ? `goToChatNotification('${n.id}')` : isFollow ? `goToFollowNotification('${n.id}')` : opensTitle ? `openNotifTitle('${n.id}')` : `goToCommentNotification('${n.id}')`;
+    const photo = (isChat || isFollow || n.type === 'recommend' || n.type === 'reaction') && n.fromPhoto;
+    const icon = photo ? `<img src="${n.fromPhoto}" alt=""><span class="ni-type" style="background:${NOTIF_COLORS[n.type] || '#8E8E93'}">${NOTIF_ICONS[n.type] || '🔔'}</span>`
+      : `<span class="ni-emoji">${NOTIF_ICONS[n.type] || '🔔'}</span>`;
+    const ms = notifMillis(n);
+    html += `<div class="notifItem${n.read ? '' : ' unread'}${clickable ? ' clickable' : ''}"${clickable ? ` onclick="${handler}"` : ''}>
+      <div class="notifIcon ni" style="--nc:${NOTIF_COLORS[n.type] || '#8E8E93'}">${icon}</div>
+      <div class="notifBody">
+        <div class="notifText">${escapeHtml(n.text || '')}</div>
+        <div class="notifTime">${ms ? (g === 'Oggi' || g === 'Ieri' ? new Date(ms).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : formatDateIT(new Date(ms).toISOString().slice(0,10))) : ''}</div>
+      </div>
+      ${n.read ? '' : '<span class="ni-dot"></span>'}
+    </div>`;
+  });
+  return html;
+}
+function openNotifTitle(id) {
+  const n = notifItemsCache[id];
+  if (!n || !n.showId) return;
+  closeNotifPanel();
+  n.kind === 'film' ? openFilm(n.showId) : openShow(n.showId);
 }
 
 async function goToCommentNotification(id) {
@@ -5785,7 +5896,9 @@ function renderListTv(key, s) {
   const inPariNote = cat === 'inpari' ? (isShowEnded(s) ? `<span class="li-next-ended"> · Terminata</span>` : `<span class="li-next-done"> · Continua</span>`) : '';
   const nextLine = (cat === 'continua' && next)
     ? `<div class="li-next">S${next.season}E${next.number} · Episodio ${watched}/${total}</div>`
-    : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
+    : (cat === 'davedere' && s.recommendedBy)
+      ? `<div class="li-next li-rec">Consigliata da ${escapeHtml(s.recommendedBy.name || 'un amico')}</div>`
+      : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
   // swipe-row: si scorre a destra per segnare il prossimo episodio, a sinistra
@@ -6059,7 +6172,8 @@ function renderListFilm(key, f) {
         f.genre ? genreChip(f.genre) : null,
         f.year ? `<span class="chip chip-date">${f.year}</span>` : null
       ].filter(Boolean).join('')}</div>
-      ${f.runtime ? `<div class="li-next li-dur">${fmtHM(f.runtime)}${f.collectionName ? ` · <span class="li-saga">${escapeHtml(sagaName(f.collectionName))}</span>` : ''}</div>` : ''}
+      ${!f.watched && f.recommendedBy ? `<div class="li-next li-rec">Consigliato da ${escapeHtml(f.recommendedBy.name || 'un amico')}</div>`
+        : f.runtime ? `<div class="li-next li-dur">${fmtHM(f.runtime)}${f.collectionName ? ` · <span class="li-saga">${escapeHtml(sagaName(f.collectionName))}</span>` : ''}</div>` : ''}
     </div>
     <div class="lib-actions">${filmCheckBtn(id)}</div>
   </div>`;
@@ -6457,12 +6571,17 @@ function feedItemHtml(a) {
   const onclick = (a.type === 'watched_film' || a.type === 'added_film')
     ? `openFilm(${a.showId})`
     : (a.showId ? `openShow(${a.showId})` : `openPerson('${a.uid}')`);
-  // per un gruppo di episodi l'orario è quello dell'ultimo (il più recente).
-  return `<div class="feed-item" onclick="${onclick}">
+  // Registro: un pallino colorato per tipo (visto, finito, film, aggiunto,
+  // commento) lungo una linea verticale, come il registro attività di Martur.
+  // Per un gruppo di episodi l'orario è quello dell'ultimo (il più recente).
+  const col = FEED_KIND_COLORS[a.type] || '#8E8E93';
+  return `<div class="feed-item log" style="--dot:${col}" onclick="${onclick}">
+    <span class="log-dot"></span>
     <div class="avatar-wrap" style="cursor:pointer" onclick="event.stopPropagation();openPerson('${a.uid}')">${a.photo ? `<img class="fi-avatar" data-level-uid="${a.uid}" src="${a.photo}" alt="">` : `<div class="fi-avatar" data-level-uid="${a.uid}"></div>`}</div>
     <div class="fi-body">
       <div class="fi-text"><span class="online-dot pending" data-presence-uid="${a.uid}"></span><b onclick="event.stopPropagation();openPerson('${a.uid}')">${escapeHtml(a.name||'Utente')}</b> ${feedActionText(a)}</div>
-      <div class="fi-time">${actMillis(a) ? `${formatDateIT(new Date(actMillis(a)).toISOString().slice(0,10))} · ${new Date(actMillis(a)).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
+      <div class="fi-time">${agoLabel(actMillis(a))}</div>
+      ${a.id ? `<div class="fi-react" data-act="${a.id}">${feedReactHtml(a.id)}</div>` : ''}
     </div>
     ${a.image ? `<img class="fi-thumb" src="${a.image}" alt="">` : ''}
   </div>`;
@@ -6476,7 +6595,7 @@ async function fetchFriendFeedItems() {
     fbDb.collection('activity').where('uid', 'in', ch).limit(150).get().catch(() => null)
   ));
   let items = [];
-  snaps.forEach(s => { if (s) s.forEach(d => items.push(d.data())); });
+  snaps.forEach(s => { if (s) s.forEach(d => items.push({ id: d.id, ...d.data() })); });
   // Ordina per data più recente. Alziamo il limite perché ora ogni episodio è
   // un evento: il raggruppamento nel feed poi compatta i binge in un unico
   // elemento, ma servono abbastanza dati grezzi perché non spingano fuori
@@ -6487,12 +6606,12 @@ async function fetchFriendFeedItems() {
 
 // Sezione persone nel profilo: feed di chi segui + amici suggeriti, divisi in due tab.
 let profilePeopleTab = 'feed';
-let profileFeedShown = 5;
+let profileFeedShown = 12;
 let profileFeedItemsCache = [];
 
 function setProfilePeopleTab(tab) {
   profilePeopleTab = tab;
-  profileFeedShown = 5;
+  profileFeedShown = 12;
   document.querySelectorAll('#profilePeopleTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.ptab === tab));
   loadProfilePeople();
 }
@@ -6549,14 +6668,14 @@ function renderProfileFeedBody() {
   if (!profileFeedItemsCache.length) { body.innerHTML = `<div class="wrap-note" style="padding:6px 2px">Ancora nessuna attività dai profili che segui.</div>`; return; }
   const grouped = groupFeedItems(profileFeedItemsCache);
   const shown = grouped.slice(0, profileFeedShown);
-  let html = shown.map(feedItemHtml).join('');
-  if (grouped.length > profileFeedShown || profileFeedShown > 5) {
+  let html = nowWatchingHtml(profileFeedItemsCache) + `<div class="feed-log">${shown.map(feedItemHtml).join('')}</div>`;
+  if (grouped.length > profileFeedShown || profileFeedShown > 12) {
     html += `<div style="display:flex; gap:8px; margin-top:10px">`;
     if (grouped.length > profileFeedShown) {
-      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=5; renderProfileFeedBody()">Mostra altro</button>`;
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown+=10; renderProfileFeedBody()">Mostra altro</button>`;
     }
-    if (profileFeedShown > 5) {
-      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown=5; renderProfileFeedBody()">Mostra meno</button>`;
+    if (profileFeedShown > 12) {
+      html += `<button class="filebtn" style="flex:1" onclick="profileFeedShown=12; renderProfileFeedBody()">Mostra meno</button>`;
     }
     html += `</div>`;
   }
@@ -6564,6 +6683,7 @@ function renderProfileFeedBody() {
   applyPresenceDots(body);
   applyLevelRings(body);
   fetchPresence(shown.map(a => a.uid)).then(() => { applyPresenceDots(body); applyLevelRings(body); });
+  loadFeedReactions(shown.map(a => a.id));
 }
 
 // ---------- scheda Social ----------
@@ -6603,16 +6723,287 @@ function renderSocial() {
   if (socialTab === 'people') {
     c.innerHTML = `<input class="people-search-input" id="peopleSearchInput" placeholder="Cerca per nickname…" autocomplete="off" oninput="onPeopleSearch(this.value)">
       <div id="peopleSearchResults"></div>
+      <div class="sec-head"><span class="sec-title">I tuoi pronostici</span></div>
+      <div id="myPreds"><div class="spinner"></div></div>
       <div class="sec-head"><span class="sec-title">Amici suggeriti</span></div>
       <div id="profilePeopleBody"><div class="spinner"></div></div>`;
     profilePeopleTab = 'suggestions';
     loadProfilePeople();
+    renderMyPredictions();
     return;
   }
   // feed
   c.innerHTML = `<div id="profilePeopleBody"><div class="spinner"></div></div>`;
   profilePeopleTab = 'feed';
   loadProfilePeople();
+}
+
+
+// ---------- feed come registro, con reazioni ----------
+const FEED_KIND_COLORS = { watched_episode: '#0A84FF', finished_show: '#30D158', watched_film: '#FF9F0A', added_show: '#BF5AF2', added_film: '#BF5AF2', commented: '#FF375F' };
+function agoLabel(ms) {
+  if (!ms) return '';
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'adesso';
+  if (m < 60) return `${m} min fa`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h fa`;
+  const d = Math.round(h / 24);
+  if (d === 1) return 'ieri';
+  if (d < 7) return `${d} giorni fa`;
+  return formatDateIT(new Date(ms).toISOString().slice(0, 10));
+}
+const FEED_REACTIONS = ['🔥', '👀', '😭', '❤️'];
+let actReactCache = {};
+function feedReactHtml(actId) {
+  if (!actId) return '';
+  const map = actReactCache[actId] || {};
+  const me = currentUser && currentUser.uid;
+  return FEED_REACTIONS.map(e => {
+    const arr = map[e] || [];
+    return `<button class="fr-btn${arr.includes(me) ? ' on' : ''}" onclick="event.stopPropagation();toggleFeedReaction('${actId}','${e}')">${e}${arr.length ? `<span class="num">${arr.length}</span>` : ''}</button>`;
+  }).join('');
+}
+async function loadFeedReactions(ids) {
+  if (!fbDb) return;
+  await Promise.all(ids.filter(Boolean).map(async id => {
+    try { const d = await fbDb.collection('activityReactions').doc(id).get(); actReactCache[id] = d.exists ? (d.data().reactions || {}) : {}; } catch(e) {}
+  }));
+  document.querySelectorAll('.fi-react[data-act]').forEach(el => { el.innerHTML = feedReactHtml(el.dataset.act); });
+}
+async function toggleFeedReaction(actId, emoji) {
+  if (!currentUser) { showToast('Accedi per reagire'); return; }
+  if (!fbDb) return;
+  const uid = currentUser.uid;
+  const map = actReactCache[actId] || (actReactCache[actId] = {});
+  const arr = map[emoji] || [];
+  const has = arr.includes(uid);
+  map[emoji] = has ? arr.filter(u => u !== uid) : [...arr, uid];
+  document.querySelectorAll(`.fi-react[data-act="${actId}"]`).forEach(el => { el.innerHTML = feedReactHtml(actId); });
+  haptic();
+  const op = has ? firebase.firestore.FieldValue.arrayRemove(uid) : firebase.firestore.FieldValue.arrayUnion(uid);
+  try {
+    await fbDb.collection('activityReactions').doc(actId).set({ actId, reactions: { [emoji]: op } }, { merge: true });
+    if (!has) {
+      const item = profileFeedItemsCache.find(a => a.id === actId);
+      if (item && item.uid && item.uid !== uid) {
+        pushRemoteNotification(item.uid, { type: 'reaction', text: `${commentAuthorName()} ha reagito ${emoji} a "${item.title || 'una tua attività'}"`, fromUid: uid, fromName: commentAuthorName(), fromPhoto: getAvatarUrl() || null, showId: item.showId || null, kind: (item.type === 'watched_film' || item.type === 'added_film') ? 'film' : 'tv' });
+      }
+    }
+  } catch(e) {}
+}
+// "Sta guardando ora": amici che hanno segnato un episodio nell'ultima ora.
+function nowWatchingHtml(items) {
+  const seen = new Set(), now = Date.now(), out = [];
+  items.forEach(a => {
+    if (a.type !== 'watched_episode' || seen.has(a.uid) || (currentUser && a.uid === currentUser.uid)) return;
+    if (now - actMillis(a) > 60 * 60000) return;
+    seen.add(a.uid); out.push(a);
+  });
+  if (!out.length) return '';
+  return `<div class="now-watch">
+    <div class="nw-lbl"><i></i>Stanno guardando ora</div>
+    <div class="nw-list">${out.map(a => `<button class="nw-item" onclick="openShow(${a.showId})">
+      <span class="nw-av">${a.photo ? `<img src="${a.photo}" alt="">` : ''}<span class="nw-live"></span></span>
+      <span class="nw-name">${escapeHtml(a.name || 'Utente')}</span>
+      <span class="nw-what">${escapeHtml(a.title || '')} ${epTag(a)}</span>
+    </button>`).join('')}</div>
+  </div>`;
+}
+
+// ---------- consiglia a un amico ----------
+function openRecommend(kind, id, title, image) {
+  if (!currentUser) { showToast('Accedi per consigliare'); return; }
+  let bg = document.getElementById('recommendBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.className = 'confirmbg'; bg.id = 'recommendBg';
+    bg.innerHTML = `<div class="confirmbox rec-box"><h3>Consiglia a un amico</h3><p id="recSub"></p><div class="rec-list" id="recList"></div><div class="cbrow"><button class="cb-cancel" onclick="closeRecommend()">Fatto</button></div></div>`;
+    bg.addEventListener('click', e => { if (e.target === bg) closeRecommend(); });
+    document.body.appendChild(bg);
+  }
+  bg._rec = { kind, id, title, image };
+  document.getElementById('recSub').textContent = `Gli comparirà ${kind === 'tv' ? 'in In Lista' : 'tra i Da Vedere'} con scritto che glielo consigli tu.`;
+  const list = document.getElementById('recList');
+  list.innerHTML = '<div class="spinner"></div>';
+  bg.classList.add('open');
+  ensureFollowingProfiles().then(profs => {
+    list.innerHTML = profs.length ? profs.map(p => `<button class="rec-row" onclick="sendRecommend('${p.uid}', this)">
+      ${p.photoURL ? `<img src="${p.photoURL}" alt="">` : '<span class="rec-noimg"></span>'}
+      <span class="rec-name">${escapeHtml(p.nickname || p.displayName || 'Utente')}</span><span class="rec-send">Invia</span></button>`).join('')
+      : '<div class="commentsEmpty">Segui qualcuno per poter consigliare.</div>';
+  });
+}
+function closeRecommend() { const bg = document.getElementById('recommendBg'); if (bg) bg.classList.remove('open'); }
+function sendRecommend(uid, btn) {
+  const bg = document.getElementById('recommendBg');
+  const r = bg && bg._rec; if (!r || btn.classList.contains('sent')) return;
+  const me = commentAuthorName();
+  pushRemoteNotification(uid, { type: 'recommend', text: `${me} ti consiglia ${r.title}`, fromUid: currentUser.uid, fromName: me, fromPhoto: getAvatarUrl() || null, showId: Number(r.id), kind: r.kind, title: r.title || '', image: r.image || null });
+  btn.classList.add('sent');
+  btn.querySelector('.rec-send').textContent = '✓ Inviato';
+  haptic();
+}
+// Chi riceve un consiglio se lo ritrova in libreria (In Lista / Da vedere)
+// con il nome di chi l'ha consigliato. Ogni notifica si applica una volta sola.
+function processIncomingRecommends() {
+  let done = [];
+  try { done = JSON.parse(localStorage.getItem('itstracker_rec_done') || '[]'); } catch(e) {}
+  const todo = remoteNotifications.filter(n => n.type === 'recommend' && n.showId && !done.includes(n.id) && (Date.now() - notifMillis(n) < 30 * 86400000 || !notifMillis(n)));
+  if (!todo.length) return;
+  todo.forEach(async n => {
+    done.push(n.id);
+    const by = { name: n.fromName || 'un amico', uid: n.fromUid || null };
+    if (n.kind === 'film') {
+      if (!filmLibrary[n.showId]) await quickAddFilmSilent(n.showId);
+      if (filmLibrary[n.showId] && !filmLibrary[n.showId].recommendedBy) { filmLibrary[n.showId].recommendedBy = by; saveFilmLibrary(); renderFilmLibrary(); }
+    } else {
+      if (!library[n.showId]) await quickAddSilent(n.showId);
+      if (library[n.showId] && !library[n.showId].recommendedBy) { library[n.showId].recommendedBy = by; saveLibrary(); renderLibrary(); }
+    }
+  });
+  try { localStorage.setItem('itstracker_rec_done', JSON.stringify(done.slice(-200))); } catch(e) {}
+}
+async function quickAddFilmSilent(id) {
+  if (!hasTmdbKeySilent()) return;
+  try {
+    const f = await (await fetch(tmdbUrl(`/movie/${id}`, {}))).json();
+    filmLibrary[id] = { id: f.id, title: f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year: f.release_date ? f.release_date.slice(0,4) : '', genre: (f.genres && f.genres[0] && f.genres[0].name) || '', genres: showGenres(f), description: f.overview || '', rating: f.vote_average ? Math.round(f.vote_average*10)/10 : null, voteCount: f.vote_count || 0, runtime: f.runtime || 0, watched: false, addedAt: Date.now() };
+    saveFilmLibrary();
+  } catch(e) {}
+}
+
+// ---------- pronostici ----------
+// Prima che esca il prossimo episodio, ognuno pronostica il voto che avrà su
+// TMDb. Quando esce (e ha abbastanza voti) vince chi ci va piu' vicino.
+function predKey(showId, s, n) { return epCommentKey(showId, s, n); }
+async function loadPredictionsFor(key) {
+  if (!fbDb) return [];
+  try { const snap = await fbDb.collection('predictions').where('epKey', '==', key).get(); return snap.docs.map(d => d.data()); } catch(e) { return []; }
+}
+async function renderPredictionCard(showId) {
+  const box = document.getElementById('predBox');
+  if (!box || !sheetCtx || sheetCtx.show.id != showId) return;
+  const show = sheetCtx.show;
+  const up = show.next_episode_to_air;
+  const last = show.last_episode_to_air;
+  let html = '';
+  // pronostico aperto sul prossimo episodio
+  if (up && up.season_number > 0) {
+    const key = predKey(showId, up.season_number, up.episode_number);
+    const preds = await loadPredictionsFor(key);
+    const mine = currentUser && preds.find(p => p.uid === currentUser.uid);
+    const friends = preds.filter(p => !currentUser || (p.uid !== currentUser.uid && followingList.includes(p.uid)));
+    const val = mine ? mine.guess : 8;
+    html += `<div class="pred-card">
+      <div class="pred-top"><span class="nc-lbl">Pronostico</span><span class="pred-ep num">S${up.season_number}E${up.episode_number}${up.air_date ? ` · esce il ${formatDateIT(up.air_date)}` : ''}</span></div>
+      <div class="pred-q">Che voto prenderà su TMDb?</div>
+      ${currentUser ? `<div class="pred-input"><input type="range" min="1" max="10" step="0.1" value="${val}" id="predRange" oninput="document.getElementById('predVal').textContent=Number(this.value).toFixed(1)"><b class="num" id="predVal">${Number(val).toFixed(1)}</b></div>
+        <button class="pred-send" onclick="sendPrediction(${showId},${up.season_number},${up.episode_number})">${mine ? 'Cambia pronostico' : 'Pronostica'}</button>` : '<div class="wrap-note">Accedi per pronosticare con i tuoi amici.</div>'}
+      ${friends.length ? `<div class="pred-friends">${friends.map(p => `<span class="pf">${p.photo ? `<img src="${p.photo}" alt="">` : ''}<b class="num">${Number(p.guess).toFixed(1)}</b></span>`).join('')}</div>` : ''}
+    </div>`;
+  }
+  // risultato dell'ultimo episodio uscito, se qualcuno l'aveva pronosticato
+  if (last && last.season_number > 0) {
+    const key = predKey(showId, last.season_number, last.episode_number);
+    const preds = (await loadPredictionsFor(key)).filter(p => !currentUser || p.uid === currentUser.uid || followingList.includes(p.uid));
+    const ep = (episodesCache[showId] || []).find(e => e.season === last.season_number && e.number === last.episode_number);
+    if (preds.length && ep && ep.rating > 0 && ep.votes >= 3) {
+      const ranked = preds.map(p => ({ ...p, err: Math.abs(p.guess - ep.rating) })).sort((a, b) => a.err - b.err);
+      html += `<div class="pred-card done">
+        <div class="pred-top"><span class="nc-lbl">Pronostici · S${last.season_number}E${last.episode_number}</span><span class="pred-ep">voto vero <b class="num">${ep.rating.toFixed(1)}</b></span></div>
+        ${ranked.map((p, i) => `<div class="pr-row${currentUser && p.uid === currentUser.uid ? ' me' : ''}"><span class="pr-pos num">${i + 1}</span>${p.photo ? `<img src="${p.photo}" alt="">` : '<span class="pr-noimg"></span>'}<span class="pr-name">${escapeHtml(p.name || 'Utente')}</span><span class="pr-guess num">${Number(p.guess).toFixed(1)}</span><span class="pr-err num">±${p.err.toFixed(1)}</span></div>`).join('')}
+      </div>`;
+    }
+  }
+  if (document.getElementById('predBox') === box) box.innerHTML = html;
+}
+async function sendPrediction(showId, s, n) {
+  if (!currentUser || !fbDb) return;
+  const v = Math.round(Number(document.getElementById('predRange').value) * 10) / 10;
+  const key = predKey(showId, s, n);
+  const show = library[showId] || (sheetCtx && sheetCtx.show) || {};
+  try {
+    await fbDb.collection('predictions').doc(`${key}_${currentUser.uid}`).set({
+      uid: currentUser.uid, name: commentAuthorName(), photo: getAvatarUrl() || null,
+      epKey: key, showId: Number(showId), season: s, number: n, title: show.name || '', guess: v, createdAt: Date.now()
+    });
+    showToast(`Pronostico salvato: ${v.toFixed(1)}`); haptic();
+    renderPredictionCard(showId);
+  } catch(e) { showToast('Pronostico non salvato'); }
+}
+// I tuoi pronostici (scheda Social > Amici), con l'esito quando c'e'.
+async function renderMyPredictions() {
+  const box = document.getElementById('myPreds');
+  if (!box || !fbDb || !currentUser) return;
+  try {
+    const snap = await fbDb.collection('predictions').where('uid', '==', currentUser.uid).limit(30).get();
+    const preds = snap.docs.map(d => d.data()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 10);
+    if (!preds.length) { box.innerHTML = '<div class="wrap-note">Apri una serie che aspetti e pronostica il voto del prossimo episodio.</div>'; return; }
+    const rows = await Promise.all(preds.map(async p => {
+      let res = '';
+      try {
+        const d = await tmdbCachedJson(`ep:${p.showId}:${p.season}x${p.number}`, tmdbUrl(`/tv/${p.showId}/season/${p.season}/episode/${p.number}`, {}));
+        if (d && d.vote_count >= 3 && d.vote_average) {
+          const err = Math.abs(p.guess - d.vote_average);
+          res = `<span class="mp-res ${err <= 0.3 ? 'good' : err <= 1 ? 'ok' : 'bad'}">uscito ${d.vote_average.toFixed(1)} · ±${err.toFixed(1)}</span>`;
+        } else res = '<span class="mp-res wait">in attesa</span>';
+      } catch(e) {}
+      return `<button class="mp-row" onclick="openShow(${p.showId})"><span class="mp-show">${escapeHtml(p.title || 'Serie')} <span class="num">S${p.season}E${p.number}</span></span><span class="mp-guess num">${Number(p.guess).toFixed(1)}</span>${res}</button>`;
+    }));
+    if (document.getElementById('myPreds') === box) box.innerHTML = rows.join('');
+  } catch(e) { box.innerHTML = ''; }
+}
+
+// Pezzo social dentro le schede: consiglia a un amico e (serie) pronostici.
+function renderSheetSocialExtra(id, type) {
+  const box = document.getElementById('sheetSocialExtra');
+  if (!box) return;
+  const isTv = type === 'tv';
+  const item = isTv ? (sheetCtx && sheetCtx.show) : filmLibrary[id];
+  const title = isTv ? (item && item.name) : (item && item.title);
+  const image = isTv ? (library[id] && library[id].image) : (item && item.image);
+  box.innerHTML = `${isTv ? '<div id="predBox"></div>' : ''}
+    ${currentUser ? `<button class="rec-btn" onclick="openRecommend('${isTv ? 'tv' : 'film'}', ${Number(id)}, this.dataset.t, this.dataset.i)" data-t="${escapeHtml(title || '')}" data-i="${escapeHtml(image || '')}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Consiglia a un amico</button>` : ''}`;
+  if (isTv) renderPredictionCard(id);
+}
+
+// ---------- in comune con un amico (scheda persona) ----------
+function inCommonHtml(p) {
+  if (!currentUser || p.uid === currentUser.uid) return '';
+  const name = escapeHtml((p.nickname || p.displayName || 'Utente').split(' ')[0]);
+  const common = (p.shows || []).filter(s => library[s.id]).map(s => {
+    const mine = Object.keys(library[s.id].watched || {}).length;
+    return { s, mine, theirs: s.watched || 0 };
+  }).sort((a, b) => (b.mine + b.theirs) - (a.mine + a.theirs));
+  if (!common.length) return '';
+  return `<div class="sec-head"><span class="sec-title">In comune</span><span class="sec-count num">${common.length}</span></div>
+    <div class="rail incommon">${common.slice(0, 15).map(({ s, mine, theirs }) => {
+      const diff = mine - theirs;
+      const who = diff === 0 ? 'Pari' : diff > 0 ? `Tu +${diff}` : `${name} +${-diff}`;
+      return `<div class="rail-card" onclick="openShowFromPerson(${s.id})"><div class="rail-poster">${s.image ? `<img src="${thumbImg(s.image, 'w342')}" alt="" loading="lazy">` : ''}</div>
+        <div class="rail-title">${escapeHtml(s.name || '')}</div><div class="rail-sub ic-diff ${diff > 0 ? 'me' : diff < 0 ? 'them' : ''}">${who}</div></div>`;
+    }).join('')}</div>`;
+}
+
+// ---------- nuova stagione annunciata ----------
+// Per le serie che hai finito: se su TMDb compare una stagione in piu', avviso.
+function checkRenewed(id, show) {
+  const s = library[id];
+  if (!s || !show || !Array.isArray(show.seasons)) return false;
+  const real = show.seasons.filter(se => se.season_number > 0);
+  if (!real.length) return false;
+  const maxS = Math.max(...real.map(se => se.season_number));
+  const prev = s.maxSeasonSeen;
+  let changed = false;
+  if (prev && maxS > prev && categorizeShow(s) === 'inpari') {
+    const se = real.find(x => x.season_number === maxS);
+    const when = se && se.air_date ? ` (dal ${formatDateIT(se.air_date)})` : '';
+    addLocalNotification({ type: 'renewed', text: `Rinnovata! ${s.name || 'Una tua serie'} avrà la stagione ${maxS}${when}`, showId: Number(id), kind: 'tv' });
+  }
+  if (prev !== maxS) { s.maxSeasonSeen = maxS; changed = true; }
+  return changed;
 }
 
 // ---------- scheda persona ----------
@@ -6704,6 +7095,7 @@ function renderPersonSheet(p) {
       </div>` : ''}
     </div>
     <div class="section" style="padding-top:0">
+      ${inCommonHtml(p)}
       ${shows.length ? `<div class="wrap-sec-title">Serie TV</div>${shows.map(s => {
         const pct = s.total ? Math.min(100, Math.round(s.watched/s.total*100)) : 0;
         const inLib = !!library[s.id];
