@@ -2685,6 +2685,51 @@
   .trophy.shine:nth-child(3n)::after { animation-delay: 3.2s; }
   @media (prefers-reduced-motion: reduce) { .trophy.won .tr-cup, .sk-fire.lit, .pod-step { animation: none; } }
 
+  /* =====================================================================
+     RESTYLING 2026 - STRUMENTI
+     ===================================================================== */
+  /* avviso offline in cima */
+  .offline-bar {
+    position: fixed; left: 12px; right: 12px; top: calc(env(safe-area-inset-top) + 8px); z-index: 600; margin: 0 auto; max-width: 440px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 16px;
+    font-size: 12.5px; font-weight: 700; color: #1a1200; background: #FFD60A; box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+    animation: offIn 0.3s ease;
+  }
+  .offline-bar.back { background: #30D158; color: #00210a; }
+  .offline-bar[hidden] { display: none; }
+  @keyframes offIn { from { transform: translateY(-20px); opacity: 0; } }
+  /* novita' dell'app */
+  .news-box { max-width: 360px; text-align: left; max-height: 84vh; display: flex; flex-direction: column; }
+  .news-box h3 { text-align: left; font-size: calc(22px * var(--title-scale)); }
+  .news-eyebrow { font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
+  .news-list { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 16px; overflow-y: auto; min-height: 0; flex: 1; }
+  .news-item { display: flex; flex-direction: column; gap: 2px; }
+  .news-item b { color: #F7B538; font-size: 14px; }
+  .news-item span { font-size: 12.5px; line-height: 1.45; color: rgba(var(--overlay-rgb),0.7); }
+  .news-ok { background: var(--accent) !important; color: var(--accent-ink) !important; }
+  /* ordine delle sezioni (matita) */
+  .layout-edit-wrap { display: flex; justify-content: center; padding: 10px 16px 4px; }
+  .layout-edit { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700;
+    color: rgba(var(--overlay-rgb),0.7); background: rgba(var(--overlay-rgb),0.06); border: 0.5px dashed rgba(var(--overlay-rgb),0.25); }
+  .layout-box { max-width: 360px; }
+  .lay-list { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 16px; touch-action: none; }
+  .lay-row { display: flex; align-items: center; gap: 10px; padding: 10px 10px; border-radius: 14px; background: rgba(var(--overlay-rgb),0.07); border: 0.5px solid rgba(var(--overlay-rgb),0.1); position: relative; }
+  .lay-row.dragging { z-index: 2; background: rgba(var(--accent-rgb),0.18); border-color: var(--accent); box-shadow: 0 10px 26px rgba(0,0,0,0.4); }
+  .lay-row.off .lay-name { opacity: 0.4; text-decoration: line-through; }
+  .lay-row.off .lay-eye { opacity: 0.35; }
+  .lay-handle { color: rgba(var(--overlay-rgb),0.5); cursor: grab; display: flex; padding: 2px; touch-action: none; }
+  .lay-name { flex: 1; text-align: left; font-weight: 700; font-size: 14px; }
+  .lay-eye { color: var(--fg); display: flex; padding: 4px; }
+  /* la ruota di "cosa guardo stasera" */
+  .wheel-wrap { position: relative; width: 250px; height: 250px; margin: 14px auto 6px; }
+  .wheel { position: absolute; inset: 0; border-radius: 50%; transition: transform 3.2s cubic-bezier(.12,.75,.16,1);
+    background: radial-gradient(circle, rgba(var(--accent-rgb),0.18), transparent 70%); border: 2px solid rgba(var(--overlay-rgb),0.12); }
+  .wheel img { position: absolute; left: 50%; top: 50%; width: 54px; height: 80px; margin: -40px 0 0 -27px; object-fit: cover; border-radius: 9px;
+    transform: rotate(var(--a)) translateY(-82px); box-shadow: 0 6px 14px rgba(0,0,0,0.5); }
+  .wheel-hub { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--sheet-bg); box-shadow: 0 0 0 3px var(--accent); }
+  .wheel-pointer { position: absolute; top: -6px; left: 50%; z-index: 2; transform: translateX(-50%); width: 0; height: 0;
+    border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 20px solid var(--accent); filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5)); }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2751,6 +2796,7 @@
     <div class="splash-by">di Andrea Dellerba</div>
   </div>
 </div>
+<!-- avviso offline: compare quando cade la rete, i dati restano salvati sul telefono --><div class="offline-bar" id="offlineBar" hidden></div>
 <div class="authBanner" id="authBanner">
   <div class="ab-ico">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -3529,7 +3575,12 @@ function showRuntime(show) {
   if (Array.isArray(rt) && rt.length) return Math.round(rt.reduce((a,b)=>a+b,0)/rt.length);
   return 0;
 }
-function haptic() { try { navigator.vibrate && navigator.vibrate(8); } catch(e){} }
+// Vibrazioni diverse: leggera per un episodio, doppia per una stagione, lunga
+// per una serie finita (dove il telefono lo permette; su iPhone il web non vibra).
+function haptic(kind) {
+  const p = kind === 'season' ? [12, 45, 12] : kind === 'show' ? [30, 60, 30, 60, 110] : 8;
+  try { navigator.vibrate && navigator.vibrate(p); } catch(e){}
+}
 
 // ---------- ambient color from poster ----------
 const accentCache = {};
@@ -3881,16 +3932,14 @@ async function quizPickGenre(genreId) {
   document.getElementById('quizBody').innerHTML = `
     <div class="quiz-eyebrow">${escapeHtml(quizState.genreName)}</div>
     <div class="quiz-title">Sto scegliendo…</div>
-    <div class="quiz-dice-big">🎲</div>
-    <div class="quiz-sub">Un attimo di suspense</div>`;
-  const [pick] = await Promise.all([
-    quizFetchPick(quizState.type, genreId),
-    new Promise(r => setTimeout(r, 1100))
-  ]);
+    <div class="spinner"></div>`;
+  const pick = await quizFetchPick(quizState.type, genreId);
   if (!pick) {
     document.getElementById('quizBody').innerHTML = `<div class="quiz-title">Niente trovato</div><div class="quiz-sub">Prova un altro genere</div><button class="quiz-reroll" onclick="quizPickType('${quizState.type}')">Cambia genere</button>`;
     return;
   }
+  // la ruota gira e si ferma sulla locandina scelta, poi la proposta
+  await quizSpinWheel(pick);
   quizShowResult(pick);
 }
 
@@ -3913,6 +3962,7 @@ async function quizFetchPick(type, genreId) {
     const pool = (fresh.length ? fresh : items).slice(0, 12);
     if (!pool.length) return null;
     const pick = pool[Math.floor(Math.random()*pool.length)];
+    pick._pool = pool; // le altre locandine servono alla ruota
     // Stagioni/episodi totali non sono nei risultati di /discover: servono i
     // dettagli della serie (stesso endpoint usato per aggiungerla in libreria).
     if (type === 'tv') {
@@ -3953,7 +4003,7 @@ function quizShowResult(item) {
     <div class="quiz-result-title">${escapeHtml(title||'')}</div>
     <div class="quiz-result-meta">${meta.filter(Boolean).join('  ·  ')}</div>
     <button class="addlibbtn quiz-add-btn" id="quizAddBtn" onclick="quizAdd()">${already ? 'Apri la scheda' : (isTv ? '+ Aggiungi in lista' : '+ Aggiungi ai film')}</button>
-    <button class="quiz-reroll" onclick="quizReroll()">🎲 Gira di nuovo</button>`;
+    <button class="quiz-reroll" onclick="quizReroll()">🎡 Gira di nuovo</button>`;
   if (typeof haptic === 'function') haptic();
 }
 
@@ -4013,7 +4063,7 @@ function celebrateShowComplete(show) {
     layer.appendChild(p);
   }
   document.body.appendChild(layer);
-  haptic();
+  haptic('show');
   setTimeout(() => layer.remove(), 2200);
 
   // "Momento" di completamento: card centrale con poster + messaggio.
@@ -5333,13 +5383,19 @@ function renderProfileBody() {
   </div>`;
   let html = tabs;
   if (profileTab === 'overview') {
-    html += streakCardHtml();
-    html += renderWeekCard();
-    html += recordsHtml(w);
-    if (currentUser && followingList.length) html += `<div class="wrap-card glass lb-card" id="lbCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Classifica amici</span>
-      <div class="mini-seg" id="lbSeg">${[['week','Settimana'],['month','Mese'],['total','Sempre']].map(([k, t]) => `<button data-k="${k}" class="${lbPeriod === k ? 'active' : ''}" onclick="lbPeriod='${k}';renderLbCard()">${t}</button>`).join('')}</div></div>
-      <div id="lbCardBody"><div class="spinner"></div></div></div>`;
-    if (w.hasActivity) { heatmapMonthOffset = 0; html += `<div class="wrap-card glass" style="padding:16px" id="heatmapCard">${renderHeatmap()}</div>`; }
+    // sezioni nell'ordine scelto con la matita, senza quelle nascoste
+    const L = getLayout();
+    const parts = {
+      streak: () => streakCardHtml(),
+      week: () => renderWeekCard(),
+      records: () => recordsHtml(w),
+      leaderboard: () => (currentUser && followingList.length) ? `<div class="wrap-card glass lb-card" id="lbCard"><div class="sec-head" style="margin-top:0"><span class="sec-title">Classifica amici</span>
+        <div class="mini-seg" id="lbSeg">${[['week','Settimana'],['month','Mese'],['total','Sempre']].map(([k, t]) => `<button data-k="${k}" class="${lbPeriod === k ? 'active' : ''}" onclick="lbPeriod='${k}';renderLbCard()">${t}</button>`).join('')}</div></div>
+        <div id="lbCardBody"><div class="spinner"></div></div></div>` : '',
+      heatmap: () => { if (!w.hasActivity) return ''; heatmapMonthOffset = 0; return `<div class="wrap-card glass" style="padding:16px" id="heatmapCard">${renderHeatmap()}</div>`; }
+    };
+    html += L.profile.filter(k => parts[k] && !L.hidden.includes('profile:' + k)).map(k => parts[k]()).join('');
+    html += `<div class="layout-edit-wrap"><button class="layout-edit" onclick="openLayoutEditor('profile')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Ordina le sezioni</button></div>`;
   } else if (profileTab === 'stats') {
     html += monthlyHoursHtml();
     html += genreDonutHtml(w);
@@ -5738,7 +5794,7 @@ function renderTicker() {
   const el = document.getElementById('tvTicker');
   if (!el) return;
   const shows = Object.values(library).filter(s => s.tagline && s.tagline.trim());
-  if (!shows.length) { el.hidden = true; el.dataset.key = ''; return; }
+  if (!shows.length || isSectionHidden('home', 'ticker')) { el.hidden = true; el.dataset.key = ''; return; }
   const rank = s => ({ continua: 0, inpari: 1, davedere: 2 }[categorizeShow(s)] ?? 3);
   shows.sort((a, b) => rank(a) - rank(b) || (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0));
   const key = shows.map(s => s.id + ':' + s.tagline).join('|');
@@ -5887,9 +5943,18 @@ function renderLibrary() {
       <div class="sec-head"><span class="sec-title">Ferme da più di ${STALE_DAYS} giorni</span><span class="sec-count num">${stale.length}</span></div>
       ${stale.map(([k, s]) => staleRowHtml(k, s)).join('')}
     </div>` : '';
-  container.innerHTML = `${rail}<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
+  const listHtml = `<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
     ${items.length === 0 && !stale.length ? catEmptyHtml('Nessuna serie in questa categoria.') : (items.length ? tvItemsHtml(items) : '')}
-  </div>${tvCategory === 'continua' ? '<div id="upcomingSection"></div>' : ''}${staleHtml}`;
+  </div>`;
+  if (tvCategory === 'continua') {
+    // ordine e sezioni nascoste scelti con la matita (vedi openLayoutEditor)
+    const L = getLayout();
+    const parts = { rail, list: listHtml, upcoming: '<div id="upcomingSection"></div>', stale: staleHtml };
+    container.innerHTML = L.home.filter(k => parts[k] !== undefined && !L.hidden.includes('home:' + k)).map(k => parts[k]).join('')
+      + `<div class="layout-edit-wrap"><button class="layout-edit" onclick="openLayoutEditor('home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Ordina le sezioni</button></div>`;
+  } else {
+    container.innerHTML = listHtml;
+  }
   applyCardGlows(container);
   // "In arrivo" non e' piu' una scheda a se': le prossime uscite stanno sotto
   // le serie che stai guardando, cosi' in Continua c'e' tutto.
@@ -7361,6 +7426,7 @@ function openRecommend(kind, id, title, image) {
   if (!bg) {
     bg = document.createElement('div');
     bg.className = 'confirmbg'; bg.id = 'recommendBg';
+    observeOverlay(bg);
     bg.innerHTML = `<div class="confirmbox rec-box"><h3>Consiglia a un amico</h3><p id="recSub"></p><div class="rec-list" id="recList"></div><div class="cbrow"><button class="cb-cancel" onclick="closeRecommend()">Fatto</button></div></div>`;
     bg.addEventListener('click', e => { if (e.target === bg) closeRecommend(); });
     document.body.appendChild(bg);
@@ -9062,7 +9128,7 @@ function applySeasonWatched(showId, season, wasAll) {
     showToast(`Stagione ${season}: episodi rimossi`);
   } else {
     aired.forEach(e => { const k = `${e.season}x${e.number}`; if (!w[k]) w[k] = Date.now(); });
-    showToast(`Stagione ${season} segnata come vista`);
+    showToast(`Stagione ${season} segnata come vista`); haptic('season');
   }
   show.lastWatchedAt = Date.now();
   show.next = computeNextEp(eps, w);
@@ -11023,7 +11089,7 @@ function initAuthBanner() {
 // Ogni volta che un overlay è aperto teniamo una entry extra nella cronologia:
 // il back di sistema fa scattare popstate, che chiude l'overlay in cima invece
 // di uscire dall'app. Le chiusure dalla UI (X/sfondo) consumano l'entry.
-const OVERLAY_IDS = ['sheetBg','actorBg','personBg','chatBg','confirmBg','avatarMenuBg','coverPickerBg','wrappedBg','peopleListBg','quizOverlay','notifPanel','chatListPanel','followPanel'];
+const OVERLAY_IDS = ['newsBg','layoutBg','recommendBg','sheetBg','actorBg','personBg','chatBg','confirmBg','avatarMenuBg','coverPickerBg','wrappedBg','peopleListBg','quizOverlay','notifPanel','chatListPanel','followPanel'];
 let backGuardArmed = false;
 let closingViaBack = false;
 function isOverlayOpen(id) { const el = document.getElementById(id); return !!el && el.classList.contains('open'); }
@@ -11033,6 +11099,7 @@ function armBackGuard() {
 }
 // Chiude l'overlay più in alto (ordine di priorità = z-index/logica). true se ha chiuso.
 function closeTopOverlay() {
+  for (const id of ['newsBg', 'layoutBg', 'recommendBg']) { if (isOverlayOpen(id)) { id === 'layoutBg' ? closeLayoutEditor() : document.getElementById(id).classList.remove('open'); return true; } }
   if (isOverlayOpen('quizOverlay')) { closeQuiz(); return true; }
   if (isOverlayOpen('wrappedBg')) { closeWrapped(); return true; }
   if (isOverlayOpen('coverPickerBg')) { closeCoverPicker(); return true; }
@@ -11045,22 +11112,24 @@ function closeTopOverlay() {
   if (isOverlayOpen('notifPanel') || isOverlayOpen('chatListPanel') || isOverlayOpen('followPanel')) { closeAllHeaderPanels(); return true; }
   return false;
 }
+// Un observer per overlay: arma la guardia all'apertura, la consuma alla
+// chiusura dalla UI (così la cronologia resta allineata). Usato anche per i
+// pannelli creati dopo (novità, ordine sezioni, consiglia a un amico).
+function observeOverlay(el) {
+  if (!el || el._backObserved) return;
+  el._backObserved = true;
+  new MutationObserver(() => {
+    if (el.classList.contains('open')) {
+      armBackGuard();
+    } else if (backGuardArmed && !closingViaBack && !anyOverlayOpen()) {
+      backGuardArmed = false;
+      closingViaBack = true;
+      history.back();
+    }
+  }).observe(el, { attributes: true, attributeFilter: ['class'] });
+}
 function initBackButton() {
-  // Un observer per overlay: arma la guardia all'apertura, la consuma alla
-  // chiusura dalla UI (così la cronologia resta allineata).
-  [...OVERLAY_IDS, 'nicknameOnboardBg'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    new MutationObserver(() => {
-      if (el.classList.contains('open')) {
-        armBackGuard();
-      } else if (backGuardArmed && !closingViaBack && !anyOverlayOpen()) {
-        backGuardArmed = false;
-        closingViaBack = true;
-        history.back();
-      }
-    }).observe(el, { attributes: true, attributeFilter: ['class'] });
-  });
+  [...OVERLAY_IDS, 'nicknameOnboardBg'].forEach(id => observeOverlay(document.getElementById(id)));
   window.addEventListener('popstate', () => {
     if (closingViaBack) { closingViaBack = false; return; }
     // Onboarding nickname: obbligatorio, il back non deve chiuderlo né uscire.
@@ -11075,11 +11144,190 @@ function initBackButton() {
   });
 }
 
+// ---------- avviso offline ----------
+// Senza rete l'app continua a funzionare (tutto resta salvato sul telefono) e
+// la sincronizzazione riparte da sola: meglio dirlo che lasciare errori muti.
+function initOfflineBar() {
+  const bar = document.getElementById('offlineBar');
+  if (!bar) return;
+  let hideT = null;
+  const update = (justBack) => {
+    clearTimeout(hideT);
+    if (!navigator.onLine) {
+      bar.className = 'offline-bar';
+      bar.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 2l20 20"/><path d="M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2-1.5M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8A15 15 0 0 0 11 5"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>Sei offline · salvo tutto qui e sincronizzo appena torna la rete';
+      bar.hidden = false;
+    } else if (justBack) {
+      bar.className = 'offline-bar back';
+      bar.innerHTML = '✓ Di nuovo online';
+      bar.hidden = false;
+      hideT = setTimeout(() => { bar.hidden = true; }, 2200);
+    } else bar.hidden = true;
+  };
+  window.addEventListener('offline', () => update(false));
+  window.addEventListener('online', () => update(true));
+  update(false);
+}
+
+// ---------- novita' dell'app ----------
+// Dopo un aggiornamento, una volta sola: cosa e' cambiato, con i titoletti in oro.
+const APP_VERSION = '2026.10';
+const APP_NEWS = [
+  ['Nuovo aspetto', 'Blu notte, titoli in Anton, logo neon e angoli tondi. In Impostazioni > Aspetto puoi scegliere tema, carattere, logo, angoli, densità e dimensione del testo.'],
+  ['Menu nuovo', 'Una pillola sola in basso: Serie, Film, Ricerca, Profilo e la nuova scheda Social. Puoi anche passare da una scheda all\'altra scorrendo col dito.'],
+  ['Serie più veloci', 'Scorri una riga verso destra per segnare l\'episodio, verso sinistra per toglierla. In cima scorrono le frasi delle tue serie e le serie ferme da tempo hanno il loro gruppo.'],
+  ['Schede rifatte', 'Logo della serie, trailer muto, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
+  ['Film', 'Il tuo voto a mezze stelle, le saghe con i capitoli visti, l\'ora in cui finisce il film se inizi adesso.'],
+  ['Ricerca', 'Serie e film insieme, Top 10 della settimana, consigli in base a cosa guardi e novità per piattaforma.'],
+  ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e pronostici sul voto del prossimo episodio.'],
+  ['Profilo', 'Livelli con barra esperienza, record personali, giorni di fila, statistiche nuove e bacheca dei trofei.']
+];
+function maybeShowNews() {
+  let seen = null;
+  try { seen = localStorage.getItem('itstracker_seen_version'); } catch(e) {}
+  const isNewUser = !seen && !Object.keys(library).length && !Object.keys(filmLibrary).length;
+  try { localStorage.setItem('itstracker_seen_version', APP_VERSION); } catch(e) {}
+  if (seen === APP_VERSION || isNewUser) return;
+  let bg = document.getElementById('newsBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.className = 'confirmbg'; bg.id = 'newsBg';
+    observeOverlay(bg);
+    bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+    document.body.appendChild(bg);
+  }
+  bg.innerHTML = `<div class="confirmbox news-box">
+    <div class="news-eyebrow">Novità</div>
+    <h3>itstracker si è rifatto il look</h3>
+    <div class="news-list">${APP_NEWS.map(([t, d]) => `<div class="news-item"><b>${t}</b><span>${d}</span></div>`).join('')}</div>
+    <div class="cbrow"><button class="cb-confirm news-ok" onclick="document.getElementById('newsBg').classList.remove('open')">Ho capito</button></div>
+  </div>`;
+  setTimeout(() => bg.classList.add('open'), 2800);
+}
+
+// ---------- ordine delle sezioni (la matita) ----------
+// Home (Continua) e Profilo (Panoramica): l'ordine delle sezioni si sceglie
+// trascinandole; l'occhio le nasconde.
+const LAYOUT_SECTIONS = {
+  home: [['rail', 'Riprendi'], ['list', 'Serie in corso'], ['upcoming', 'In arrivo'], ['stale', 'Ferme da tanto'], ['ticker', 'Frasi delle tue serie']],
+  profile: [['streak', 'Giorni di fila'], ['week', 'La tua settimana'], ['records', 'Record personali'], ['leaderboard', 'Classifica amici'], ['heatmap', 'Calendario']]
+};
+function getLayout() {
+  let l = {};
+  try { l = JSON.parse(localStorage.getItem('itstracker_layout') || '{}'); } catch(e) {}
+  const out = { hidden: Array.isArray(l.hidden) ? l.hidden : [] };
+  Object.keys(LAYOUT_SECTIONS).forEach(k => {
+    const all = LAYOUT_SECTIONS[k].map(x => x[0]);
+    const saved = Array.isArray(l[k]) ? l[k].filter(x => all.includes(x)) : [];
+    out[k] = [...saved, ...all.filter(x => !saved.includes(x))];
+  });
+  return out;
+}
+function saveLayout(l) { try { localStorage.setItem('itstracker_layout', JSON.stringify(l)); } catch(e) {} }
+function isSectionHidden(area, key) { return getLayout().hidden.includes(area + ':' + key); }
+function openLayoutEditor(area) {
+  let bg = document.getElementById('layoutBg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.className = 'confirmbg'; bg.id = 'layoutBg';
+    observeOverlay(bg);
+    bg.addEventListener('click', e => { if (e.target === bg) closeLayoutEditor(); });
+    document.body.appendChild(bg);
+  }
+  bg.dataset.area = area;
+  const l = getLayout();
+  const names = Object.fromEntries(LAYOUT_SECTIONS[area]);
+  bg.innerHTML = `<div class="confirmbox layout-box">
+    <h3>${area === 'home' ? 'Sezioni di Continua' : 'Sezioni del Profilo'}</h3>
+    <p>Trascina con la maniglia per cambiare l'ordine, tocca l'occhio per nascondere.</p>
+    <div class="lay-list" id="layList">${l[area].map(k => `<div class="lay-row${l.hidden.includes(area + ':' + k) ? ' off' : ''}" data-k="${k}">
+      <span class="lay-handle" aria-label="Trascina"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+      <span class="lay-name">${names[k]}</span>
+      <button class="lay-eye" onclick="toggleLayoutRow(this)" aria-label="Mostra o nascondi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>`).join('')}</div>
+    <div class="cbrow"><button class="cb-cancel" onclick="resetLayout()">Ripristina</button><button class="cb-confirm news-ok" onclick="closeLayoutEditor()">Fatto</button></div>
+  </div>`;
+  bg.classList.add('open');
+  initLayoutDrag(document.getElementById('layList'));
+}
+function toggleLayoutRow(btn) { btn.closest('.lay-row').classList.toggle('off'); haptic(); }
+function resetLayout() {
+  const area = document.getElementById('layoutBg').dataset.area;
+  const l = getLayout();
+  delete l[area];
+  l.hidden = l.hidden.filter(h => !h.startsWith(area + ':'));
+  saveLayout(l);
+  openLayoutEditor(area);
+}
+function closeLayoutEditor() {
+  const bg = document.getElementById('layoutBg');
+  if (!bg) return;
+  const area = bg.dataset.area;
+  const l = getLayout();
+  const rows = [...document.querySelectorAll('#layList .lay-row')];
+  l[area] = rows.map(r => r.dataset.k);
+  l.hidden = l.hidden.filter(h => !h.startsWith(area + ':')).concat(rows.filter(r => r.classList.contains('off')).map(r => area + ':' + r.dataset.k));
+  saveLayout(l);
+  bg.classList.remove('open');
+  if (area === 'home') { renderTicker(); renderLibrary(); } else renderProfileBody();
+}
+// Trascinamento con il dito (o il mouse) dalla maniglia.
+function initLayoutDrag(list) {
+  let drag = null;
+  list.addEventListener('pointerdown', e => {
+    const h = e.target.closest('.lay-handle');
+    if (!h) return;
+    const row = h.closest('.lay-row');
+    drag = { row, startY: e.clientY, id: e.pointerId };
+    row.classList.add('dragging');
+    h.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  list.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dy = e.clientY - drag.startY;
+    drag.row.style.transform = `translateY(${dy}px)`;
+    const rows = [...list.querySelectorAll('.lay-row')];
+    const i = rows.indexOf(drag.row);
+    const prev = rows[i - 1], next = rows[i + 1];
+    if (next && dy > next.offsetHeight / 2 + 4) { list.insertBefore(next, drag.row); drag.startY += next.offsetHeight + 6; drag.row.style.transform = `translateY(${e.clientY - drag.startY}px)`; haptic(); }
+    else if (prev && dy < -(prev.offsetHeight / 2 + 4)) { list.insertBefore(drag.row, prev); drag.startY -= prev.offsetHeight + 6; drag.row.style.transform = `translateY(${e.clientY - drag.startY}px)`; haptic(); }
+  });
+  const end = () => { if (!drag) return; drag.row.classList.remove('dragging'); drag.row.style.transform = ''; drag = null; };
+  list.addEventListener('pointerup', end);
+  list.addEventListener('pointercancel', end);
+}
+
+// ---------- cosa guardo stasera: la ruota ----------
+// Al posto del dado: otto locandine del genere scelto girano su una ruota e
+// si fermano su quella proposta.
+function quizSpinWheel(pick) {
+  return new Promise(resolve => {
+    const pool = (pick._pool || []).filter(r => r.poster_path && r.id !== pick.id).slice(0, 7);
+    const items = [pick, ...pool];
+    while (items.length < 8 && items.length) items.push(items[items.length % Math.max(1, items.length)]);
+    const n = items.length;
+    const step = 360 / n;
+    document.getElementById('quizBody').innerHTML = `
+      <div class="quiz-eyebrow">${escapeHtml(quizState.genreName)}</div>
+      <div class="quiz-title">Gira la ruota…</div>
+      <div class="wheel-wrap"><span class="wheel-pointer"></span><div class="wheel" id="quizWheel">
+        ${items.map((r, i) => `<img src="${tmdbImg(r.poster_path, 'w185')}" alt="" style="--a:${i * step}deg">`).join('')}
+        <span class="wheel-hub">🎬</span></div></div>`;
+    const wheel = document.getElementById('quizWheel');
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const total = (reduce ? 0 : 360 * 5) + (360 - 0) % 360; // la locandina scelta (indice 0) finisce in alto
+    requestAnimationFrame(() => { wheel.style.transform = `rotate(${total}deg)`; });
+    haptic();
+    setTimeout(resolve, reduce ? 300 : 3400);
+  });
+}
+
 // ===== tutorial primo accesso (una volta per scheda) =====
 const TUT_KEY = 'itstracker_tut_v1';
 function tutSeen() { try { return JSON.parse(localStorage.getItem(TUT_KEY) || '{}'); } catch(e) { return {}; } }
 function tutSetSeen(obj) { try { localStorage.setItem(TUT_KEY, JSON.stringify(obj)); } catch(e) {} }
-function tutSkipAll() { tutSetSeen({ tv:1, film:1, search:1, profile:1, _skip:1 }); closeTutorial(); }
+function tutSkipAll() { tutSetSeen({ tv:1, film:1, search:1, profile:1, social:1, _skip:1 }); closeTutorial(); }
 const TUT_SVG = {
   bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>',
@@ -11100,28 +11348,30 @@ function tutNeutral(svg) { return `<span class="tut-c-neutral">${svg}</span>`; }
 function tutData(tab) {
   const T = {
     tv: { icon: TUT_SVG.tabTv, title: 'Le tue Serie', sub: 'La schermata iniziale: le serie che segui, divise per stato.', steps: [
-      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista. Toccane uno per filtrare. Le prossime uscite stanno in fondo a Continua.' },
-      { vis: `<span class="act-btn act-next">${ICO_ARROW}</span>`, label: 'Segna visto', desc: 'Il cerchio verde segna come visto il prossimo episodio; a serie finita diventa una spunta.' },
-      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Nella vista a griglia il cerchio rosso toglie la serie. Dalla lista, aprila e usa "Rimuovi dalla libreria".' },
-      { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca una serie per episodi, cast, trailer e statistiche.' }
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Continua, In pari, In lista. Le prossime uscite e le serie ferme da tempo stanno in fondo a Continua.' },
+      { vis: `<span class="act-btn act-next">${ICO_ARROW}</span>`, label: 'Segna visto', desc: 'Tocca l\'anello, oppure scorri la riga verso destra, per segnare il prossimo episodio. Verso sinistra la togli.' },
+      { vis: tutNeutral(TUT_SVG.search), label: 'Cerca nella libreria', desc: 'La lente accanto ai filtri trova subito una delle tue serie.' },
+      { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca una serie per episodi, voti, cast, trailer e commenti.' }
     ]},
     film: { icon: TUT_SVG.tabFilm, title: 'I tuoi Film', sub: 'I film che segui, divisi tra Visti e Da vedere.', steps: [
-      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Visti e Da vedere. Toccane uno per filtrare.' },
-      { vis: `<span class="ep-check done">${ICO_V}</span>`, label: 'Visto / Da vedere', desc: 'La spunta verde segna il film come visto, o lo riporta tra i da vedere.' },
-      { vis: `<span class="act-btn act-remove">${ICO_X}</span>`, label: 'Rimuovi', desc: 'Nella vista a griglia il cerchio rosso toglie il film. Dalla lista, aprilo e usa "Rimuovi dalla libreria".' },
-      { vis: tutNeutral(TUT_SVG.hand), label: 'Apri la scheda', desc: 'Tocca un film per trama, cast e trailer.' }
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Filtri di stato', desc: 'In alto: Visti e Da vedere. Le saghe che stai seguendo stanno in cima.' },
+      { vis: `<span class="ep-check done">${ICO_V}</span>`, label: 'Visto / Da vedere', desc: 'La spunta segna il film come visto. Puoi anche scorrere la riga verso destra.' },
+      { vis: tutNeutral(TUT_SVG.hand), label: 'Il tuo voto', desc: 'Nella scheda di un film visto dai il tuo voto a mezze stelle e scrivi una frase.' }
     ]},
-    search: { icon: TUT_SVG.tabSearch, title: 'Cerca e scopri', sub: 'Trova nuove serie e film e aggiungili alla tua libreria.', steps: [
-      { vis: tutNeutral(TUT_SVG.search), label: 'Barra di ricerca', desc: 'Scrivi un titolo per cercarlo tra migliaia di serie e film.' },
-      { vis: tutAccent(TUT_SVG.tabTv), label: 'Serie o Film', desc: 'I bottoni SERIE e FILM scelgono in cosa cercare.' },
-      { vis: tutNeutral(TUT_SVG.dice), label: 'Cosa guardo stasera?', desc: 'Il dado pesca a caso un titolo da guardare, per genere.' },
-      { vis: tutAccent(TUT_SVG.plus), label: 'Aggiungi', desc: 'Il bottone + Aggiungi mette il titolo in libreria. Se ce l\'hai già, trovi Visto/Da vedere e il cerchio rosso.' }
+    search: { icon: TUT_SVG.tabSearch, title: 'Ricerca', sub: 'Trova nuove serie e film e aggiungili alla tua libreria.', steps: [
+      { vis: tutNeutral(TUT_SVG.search), label: 'Serie e film insieme', desc: 'Scrivi un titolo: trovi prima le serie, poi i film.' },
+      { vis: tutAccent(TUT_SVG.plus), label: 'Scopri', desc: 'A ricerca vuota: Top 10 della settimana, consigli per te e novità su ogni piattaforma.' },
+      { vis: tutNeutral(TUT_SVG.dice), label: 'Cosa guardo stasera?', desc: 'Scegli serie o film e un genere: la ruota si ferma su un titolo per te.' }
     ]},
-    profile: { icon: TUT_SVG.tabProfile, title: 'Il tuo Profilo', sub: 'Il tuo spazio: statistiche, amici e impostazioni.', steps: [
-      { vis: tutAccent(TUT_SVG.bell), label: 'Notifiche', desc: 'In alto a sinistra: le tue notifiche.' },
-      { vis: tutAccent(TUT_SVG.chat), label: 'Messaggi', desc: 'In alto a destra: le chat con gli amici.' },
-      { vis: tutNeutral(TUT_SVG.people), label: 'Persone', desc: 'Attività degli amici, amici suggeriti e ricerca di persone da seguire.' },
-      { vis: tutNeutral(TUT_SVG.gear), label: 'Impostazioni', desc: 'Tema, colore, vista, importa/esporta e altro.' }
+    profile: { icon: TUT_SVG.tabProfile, title: 'Il tuo Profilo', sub: 'Il tuo spazio: livello, statistiche e trofei.', steps: [
+      { vis: tutNeutral(TUT_SVG.sliders), label: 'Tre schede', desc: 'Panoramica (giorni di fila, record, classifica), Statistiche e Trofei.' },
+      { vis: tutNeutral(TUT_SVG.hand), label: 'Ordina le sezioni', desc: 'In fondo alla Panoramica la matita sposta e nasconde le sezioni.' },
+      { vis: tutNeutral(TUT_SVG.gear), label: 'Impostazioni', desc: 'In alto a destra: tema, carattere, colore, angoli, importa/esporta e altro.' }
+    ]},
+    social: { icon: TUT_SVG.people, title: 'Social', sub: 'Gli amici, gli avvisi e le chat in un posto solo.', steps: [
+      { vis: tutNeutral(TUT_SVG.people), label: 'Feed', desc: 'Cosa guardano le persone che segui. Reagisci con 🔥 👀 😭 ❤️.' },
+      { vis: tutAccent(TUT_SVG.bell), label: 'Avvisi', desc: 'Like, risposte, nuovi episodi e stagioni annunciate, divisi per giorno.' },
+      { vis: tutAccent(TUT_SVG.chat), label: 'Chat e amici', desc: 'Le tue conversazioni, la ricerca di persone e i tuoi pronostici.' }
     ]}
   };
   return T[tab];
@@ -11191,6 +11441,8 @@ initSheetDock();
 initTopMenu();
 initRowSwipe();
 setTimeout(enrichFilmCollections, 4000);
+initOfflineBar();
+maybeShowNews();
 // tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
 setTimeout(() => maybeShowTutorial('tv'), 2600);
 </script>
