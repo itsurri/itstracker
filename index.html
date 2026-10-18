@@ -1971,6 +1971,7 @@
   :root[data-radius="square"] .set-ico { border-radius: 5px; }
   .settingsrow .st { min-width: 0; }
   .settingsrow .sn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .set-head { display: flex; align-items: center; gap: 10px; }
 
   /* =====================================================================
      RESTYLING 2026 - NAVIGAZIONE
@@ -2113,6 +2114,11 @@
   .cat-tab-corner.active .cat-count { background: rgba(0,0,0,0.78); color: #fff; }
   .cat-tab-label { max-width: none; flex: 0 1 auto; min-width: 0; }
   .cat-tabs .cat-count { flex: none; }
+  @media (max-width: 350px) {
+    .cat-tabs .seasontab { font-size: calc(11px * var(--title-scale)); letter-spacing: 0.02em; padding: 7px 2px; }
+    .cat-tabs .cat-count { margin-left: 3px; min-width: 16px; height: 16px; line-height: 16px; font-size: 10.5px; padding: 0 4px; }
+    .cat-tabs-row { gap: 6px; }
+  }
   .sheet-tabs .seasontab, #socialTabs .seasontab { letter-spacing: 0.02em; padding: 7px 2px; }
   @media (max-width: 380px) { .sheet-tabs .seasontab, #socialTabs .seasontab { font-size: calc(11.5px * var(--title-scale)); } }
 
@@ -2213,6 +2219,8 @@
   .sheet-title { min-height: 30px; }
   .sheet-title .show-logo { display: block; max-width: min(78%, 300px); max-height: 92px; object-fit: contain; object-position: left bottom; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.55)); margin-bottom: 8px; animation: logoIn 0.5s ease both; }
   .sheet-title .show-logo.lighten { filter: brightness(0) invert(1) drop-shadow(0 3px 10px rgba(0,0,0,0.55)); }
+  :root[data-theme="light"] .sheet-title .show-logo.lighten { filter: drop-shadow(0 2px 6px rgba(255,255,255,0.6)); }
+  :root[data-theme="light"] .sheet-title .show-logo.is-light { filter: brightness(0.12) drop-shadow(0 2px 6px rgba(255,255,255,0.7)); }
   .sheet-title.has-logo h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   @keyframes logoIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   .sheet-sub { font-size: 12.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.6); margin: 2px 0 12px; }
@@ -2981,7 +2989,7 @@
       <h2 class="settings-h2">Account</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div>
+          <div class="set-head"><span class="set-ico" style="background:#0A84FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg></span><div class="st"><div class="sn">Nickname</div><div class="sd">Usato per i tuoi commenti</div></div></div>
           <div style="display:flex; gap:8px">
             <input type="text" id="nicknameInput" placeholder="Il tuo nickname" maxlength="24" autocomplete="off"
               style="flex:1; min-width:0; background:rgba(var(--overlay-rgb),0.06); border:0.5px solid rgba(var(--overlay-rgb),0.15); border-radius:12px; padding:10px 12px; color:var(--fg); font-family:inherit; font-size:13px;">
@@ -3003,6 +3011,7 @@
       <h2 class="settings-h2">Libreria</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:10px">
+<div class="set-head"><span class="set-ico" style="background:#FF9F0A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg></span><div class="st"><div class="sn">Backup della libreria</div><div class="sd">Salva o ripristina serie e film in un file</div></div></div>
           <div style="display:flex; gap:8px">
             <button class="filebtn" style="flex:1" onclick="document.getElementById('jsonAllInput').click()">Importa</button>
             <button class="filebtn" style="flex:1" onclick="exportAll()">Esporta</button>
@@ -3016,7 +3025,7 @@
       <h2 class="settings-h2">TMDb</h2>
       <div class="glass settings-group">
         <div class="settingsrow" style="flex-direction:column; align-items:stretch; gap:8px">
-          <div class="st"><div class="sn">API Key</div><div class="sd">Serie, film e locandine provengono da TMDb (The Movie Database).</div></div>
+          <div class="set-head"><span class="set-ico" style="background:#01B4E4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span><div class="st"><div class="sn">Dati da TMDb</div><div class="sd">Serie, film e locandine provengono da TMDb (The Movie Database).</div></div></div>
           <div class="wrap-note" style="padding:0; margin-top:2px">This product uses the TMDb API but is not endorsed or certified by TMDb.</div>
         </div>
       </div>
@@ -8793,17 +8802,18 @@ async function loadShowLogo(type, id) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      let dark = false;
+      let dark = false, light = false;
       try {
         const c = document.createElement('canvas'); c.width = 40; c.height = 16;
         const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, 40, 16);
         const d = ctx.getImageData(0, 0, 40, 16).data; let sum = 0, n = 0;
         for (let i = 0; i < d.length; i += 4) { if (d[i+3] > 120) { sum += (0.2126*d[i] + 0.7152*d[i+1] + 0.0722*d[i+2]); n++; } }
-        dark = n > 0 && sum / n < 125;
+        dark = n > 0 && sum / n < 150;
+        light = n > 0 && sum / n > 175; // logo chiaro: sul tema chiaro va scurito
       } catch(e) {}
       if (document.getElementById('sheetTitle') !== box) return;
       box.classList.add('has-logo');
-      box.insertAdjacentHTML('afterbegin', `<img class="show-logo${dark ? ' lighten' : ''}" src="${src}" alt="">`);
+      box.insertAdjacentHTML('afterbegin', `<img class="show-logo${dark ? ' lighten' : ''}${light ? ' is-light' : ''}" src="${src}" alt="">`);
     };
     img.src = src;
   } catch(e) {}
