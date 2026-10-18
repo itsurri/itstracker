@@ -2059,6 +2059,129 @@
   .sec-title { font-size: calc(15px * var(--title-scale)); text-transform: uppercase; letter-spacing: 0.05em; position: relative; padding-left: 12px; }
   .sec-title::before { content: ''; position: absolute; left: 0; top: 50%; width: 4px; height: 70%; transform: translateY(-50%); border-radius: 2px; background: var(--accent); }
 
+  /* =====================================================================
+     RESTYLING 2026 - HOME SERIE / FILM
+     ===================================================================== */
+  /* Ticker in stile diretta, come quello di Laurera */
+  .ticker {
+    display: flex; align-items: stretch; margin: 2px 16px 0; height: 38px; overflow: hidden;
+    border-radius: 14px; background: color-mix(in srgb, var(--bg) 70%, #0e0f12);
+    border: 1px solid rgba(var(--overlay-rgb),0.12);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .ticker[hidden] { display: none; }
+  :root[data-radius="square"] .ticker { border-radius: 6px; }
+  .tk-label {
+    position: relative; z-index: 2; flex-shrink: 0; display: flex; align-items: center; gap: 7px;
+    padding: 0 12px 0 11px; color: #fff; white-space: nowrap;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #000));
+    box-shadow: 8px 0 18px rgba(0,0,0,0.5);
+  }
+  .tk-label i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: livePulse 1.6s infinite; }
+  .tk-viewport { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
+  .tk-track { display: inline-flex; white-space: nowrap; padding-left: 14px; animation: tickerScroll linear infinite; will-change: transform; }
+  @keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .tk { display: inline-flex; align-items: center; gap: 8px; margin-right: 24px; cursor: pointer;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 15px; letter-spacing: 0.03em; }
+  .tk b { color: var(--fg); font-weight: inherit; text-transform: uppercase; }
+  .tk s { text-decoration: none; color: rgba(var(--overlay-rgb),0.62); font-family: var(--sf, -apple-system, sans-serif); font-size: 12.5px; font-weight: 600; letter-spacing: 0; }
+  .tk::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: rgba(var(--overlay-rgb),0.28); margin-left: 16px; }
+  .ticker:active .tk-track, .ticker:hover .tk-track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .tk-track { animation: none; } .tk-label i { animation: none; } }
+
+  /* Lente accanto ai tab: cerca dentro la tua libreria */
+  .cat-tabs-row { gap: 8px; }
+  .lib-search-btn {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--overlay-rgb),0.06); border: 0.5px solid rgba(var(--overlay-rgb),0.12); color: rgba(var(--overlay-rgb),0.7);
+  }
+  .lib-search-btn.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .lib-search { padding: 0 16px 12px; margin-top: -6px; }
+  .lib-search[hidden] { display: none; }
+  .lib-search input {
+    width: 100%; padding: 11px 16px; border-radius: 16px; font: inherit; font-size: 14.5px; color: var(--fg);
+    background: rgba(var(--overlay-rgb),0.07); border: 0.5px solid rgba(var(--overlay-rgb),0.16); outline: none;
+  }
+  .lib-search input:focus { border-color: rgba(var(--overlay-rgb),0.35); }
+  /* contatori dentro i tab (non piu' sull'angolo) */
+  .cat-tabs .cat-count { margin-left: 5px; }
+  .cat-tab-corner.active .cat-count { background: rgba(0,0,0,0.78); color: #fff; }
+  .cat-tab-label { max-width: calc(100% - 26px); }
+
+  /* Locandina della riga: badge NEW finche' non vedi l'episodio appena uscito */
+  .li-poster { position: relative; display: block; flex-shrink: 0; line-height: 0; }
+  .new-badge {
+    position: absolute; top: 4px; left: 4px; z-index: 2;
+    padding: 2px 5px 1px; border-radius: 5px; line-height: 1;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--font-num); font-weight: 700; font-size: 10px; letter-spacing: 0.06em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+  }
+  .gc-top-center .new-badge { position: static; display: block; }
+
+  /* Card a cascata quando cambi scheda o categoria */
+  .casc .list-item, .casc .gcard, .casc .wall-card { animation: cascIn 0.42s cubic-bezier(.22,.61,.36,1) both; }
+  .casc .list-item:nth-child(2), .casc .gcard:nth-child(2), .casc .wall-card:nth-child(2) { animation-delay: 0.04s; }
+  .casc .list-item:nth-child(3), .casc .gcard:nth-child(3), .casc .wall-card:nth-child(3) { animation-delay: 0.08s; }
+  .casc .list-item:nth-child(4), .casc .gcard:nth-child(4), .casc .wall-card:nth-child(4) { animation-delay: 0.12s; }
+  .casc .list-item:nth-child(5), .casc .gcard:nth-child(5), .casc .wall-card:nth-child(5) { animation-delay: 0.16s; }
+  .casc .list-item:nth-child(6), .casc .gcard:nth-child(6), .casc .wall-card:nth-child(6) { animation-delay: 0.2s; }
+  .casc .list-item:nth-child(n+7), .casc .gcard:nth-child(n+7), .casc .wall-card:nth-child(n+7) { animation-delay: 0.24s; }
+  @keyframes cascIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .casc .list-item, .casc .gcard, .casc .wall-card { animation: none; } }
+
+  /* Swipe sulle righe: sotto la riga compaiono le azioni */
+  .swipe-under {
+    position: absolute; z-index: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; pointer-events: none; overflow: hidden;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(var(--overlay-rgb),0.06); transition: background-color 0.15s ease;
+  }
+  .swipe-under span { opacity: 0.5; transition: opacity 0.15s ease, transform 0.15s ease; }
+  .swipe-under .su-l { display: none; }
+  .swipe-under.dir-l .su-r { display: none; }
+  .swipe-under.dir-l .su-l { display: inline; margin-left: auto; }
+  .swipe-under.dir-r { background: rgba(48,209,88,0.18); color: #30D158; }
+  .swipe-under.dir-l { background: rgba(255,69,58,0.18); color: #FF453A; }
+  .swipe-under.armed span { opacity: 1; transform: scale(1.06); }
+  .swipe-under.armed.dir-r { background: #30D158; color: #000; }
+  .swipe-under.armed.dir-l { background: #FF453A; color: #fff; }
+
+  /* Serie ferme da tanto */
+  .stale-section { padding-top: 4px; }
+  .sec-count { font-size: 14px; font-weight: 700; color: rgba(var(--overlay-rgb),0.45); }
+  .stale-row { margin-bottom: 10px; }
+  .stale-item { margin-bottom: 0; opacity: 0.72; filter: saturate(0.6); }
+  .stale-when { color: rgba(var(--overlay-rgb),0.5); }
+  .stale-actions { display: flex; gap: 8px; justify-content: flex-end; margin: 6px 4px 0; }
+  .stale-btn { padding: 7px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700; }
+  .stale-btn.resume { background: var(--accent); color: var(--accent-ink); }
+  .stale-btn.drop { background: rgba(var(--overlay-rgb),0.08); color: rgba(var(--overlay-rgb),0.75); }
+  :root[data-radius="square"] .stale-btn { border-radius: 6px; }
+
+  /* In arrivo: intestazione di ogni giorno */
+  .day-head { display: flex; align-items: center; gap: 10px; margin: 14px 4px 8px;
+    font-family: var(--font-title); font-weight: var(--title-weight); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgba(var(--overlay-rgb),0.55); }
+  .day-head::after { content: ''; flex: 1; height: 1px; background: rgba(var(--overlay-rgb),0.1); }
+  .day-head.today { color: var(--accent); }
+  #upcomingSection .cat-title + .day-head { margin-top: 0; }
+
+  .emptybtn { background: var(--accent); color: var(--accent-ink); }
+  /* Libreria vuota: titoli di tendenza da aggiungere */
+  .empty-suggest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px auto 4px; max-width: 360px; }
+  .es-card { position: relative; aspect-ratio: 2/3; border-radius: 14px; overflow: hidden; cursor: pointer; background: rgba(var(--overlay-rgb),0.06); }
+  .es-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .es-add {
+    position: absolute; right: 6px; bottom: 6px; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink); font-size: 20px; font-weight: 700; line-height: 1;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2209,17 +2332,22 @@
 
   <!-- SERIE TV -->
   <div class="view active" id="view-tv">
+    <!-- ticker in stile diretta: le frasi di lancio (tagline) delle tue serie -->
+    <div class="ticker" id="tvTicker" hidden></div>
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="tvCatTabs">
-        <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')"><span class="cat-tab-label">Continua</span><span class="tab-count cat-corner-badge" id="tvCount-continua"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')"><span class="cat-tab-label">In Pari</span><span class="tab-count cat-corner-badge" id="tvCount-inpari"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')"><span class="cat-tab-label">In Lista</span><span class="tab-count cat-corner-badge" id="tvCount-davedere"></span></button>
+        <button class="seasontab active cat-tab-corner" data-cat="continua" onclick="setTvCategory('continua')"><span class="cat-tab-label">Continua</span><span class="tab-count cat-count" id="tvCount-continua"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')"><span class="cat-tab-label">In Pari</span><span class="tab-count cat-count" id="tvCount-inpari"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')"><span class="cat-tab-label">In Lista</span><span class="tab-count cat-count" id="tvCount-davedere"></span></button>
       </div>
+      <button class="lib-search-btn" id="tvLibSearchBtn" onclick="toggleLibSearch('tv')" title="Cerca nella tua libreria" aria-label="Cerca nella tua libreria"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     </div>
+    <div class="lib-search" id="tvLibSearch" hidden><input id="tvLibSearchInput" placeholder="Cerca tra le tue serie…" autocomplete="off" oninput="onLibSearch('tv', this.value)"></div>
     <div id="tvContent"></div>
     <div class="empty" id="libraryEmpty" style="display:none">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-      <div>Nessuna serie ancora.</div>
+      <div>Nessuna serie ancora. Inizia da una di queste:</div>
+      <div class="empty-suggest" id="tvEmptySuggest"></div>
       <button class="emptybtn" onclick="goToSearch('tv')">Cerca</button>
     </div>
   </div>
@@ -2228,14 +2356,17 @@
   <div class="view" id="view-film">
     <div class="cat-tabs-row">
       <div class="seasontabs cat-tabs" id="filmCatTabs">
-        <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')"><span class="cat-tab-label">Visti</span><span class="tab-count cat-corner-badge" id="filmCount-visti"></span></button>
-        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')"><span class="cat-tab-label">Da Vedere</span><span class="tab-count cat-corner-badge" id="filmCount-davedere"></span></button>
+        <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')"><span class="cat-tab-label">Visti</span><span class="tab-count cat-count" id="filmCount-visti"></span></button>
+        <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')"><span class="cat-tab-label">Da Vedere</span><span class="tab-count cat-count" id="filmCount-davedere"></span></button>
       </div>
+      <button class="lib-search-btn" id="filmLibSearchBtn" onclick="toggleLibSearch('film')" title="Cerca nei tuoi film" aria-label="Cerca nei tuoi film"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     </div>
+    <div class="lib-search" id="filmLibSearch" hidden><input id="filmLibSearchInput" placeholder="Cerca tra i tuoi film…" autocomplete="off" oninput="onLibSearch('film', this.value)"></div>
     <div id="filmContent"></div>
     <div class="empty" id="filmEmpty" style="display:none">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
-      <div>Nessun film ancora.</div>
+      <div>Nessun film ancora. Inizia da uno di questi:</div>
+      <div class="empty-suggest" id="filmEmptySuggest"></div>
       <button class="emptybtn" onclick="goToSearch('film')">Cerca</button>
     </div>
   </div>
@@ -3215,6 +3346,10 @@ function switchTab(tab) {
   document.getElementById('topbarBack').classList.toggle('show', tab === 'settings');
   if (tab === 'profile') renderProfile();
   if (tab === 'social') renderSocial();
+  if ((tab === 'tv' || tab === 'film') && prevTab !== tab) {
+    cascadeNext = true;
+    tab === 'tv' ? renderLibrary() : renderFilmLibrary();
+  }
   if (tab === 'search') {
     // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
     // un'altra tab, i risultati di ricerca restano vecchi finché non ricambi
@@ -4629,6 +4764,7 @@ function renderProfile() {
 // ---------- render library TV ----------
 function setTvCategory(cat) {
   tvCategory = cat;
+  cascadeNext = true;
   document.querySelectorAll('#tvCatTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
   renderLibrary();
 }
@@ -4640,6 +4776,195 @@ function setTvCategory(cat) {
 let animateProgressBars = true;
 function withoutBarAnim(fn) { animateProgressBars = false; try { fn(); } finally { animateProgressBars = true; } }
 
+// Le righe entrano a cascata solo quando cambi scheda o categoria, non a ogni
+// ridisegno (es. dopo aver segnato un episodio): sarebbe un tremolio continuo.
+let cascadeNext = true;
+// Ricerca dentro la libreria (lente accanto ai tab): con una parola cercata la
+// lista mostra le serie/film che corrispondono, di qualsiasi categoria.
+let libQuery = { tv: '', film: '' };
+function toggleLibSearch(kind) {
+  const box = document.getElementById(kind + 'LibSearch');
+  const btn = document.getElementById(kind + 'LibSearchBtn');
+  const input = document.getElementById(kind + 'LibSearchInput');
+  const open = box.hidden;
+  box.hidden = !open;
+  btn.classList.toggle('active', open);
+  if (open) { input.focus(); }
+  else { input.value = ''; libQuery[kind] = ''; kind === 'tv' ? renderLibrary() : renderFilmLibrary(); }
+}
+function onLibSearch(kind, v) {
+  libQuery[kind] = (v || '').trim().toLowerCase();
+  kind === 'tv' ? renderLibrary() : renderFilmLibrary();
+}
+// Ultima volta che hai segnato qualcosa di una serie.
+function lastShowActivity(s) {
+  let t = s.lastWatchedAt || 0;
+  Object.values(s.watched || {}).forEach(v => { if (typeof v === 'number' && v > t) t = v; });
+  return t;
+}
+const STALE_DAYS = 30;
+function isStaleShow(s) {
+  const t = lastShowActivity(s);
+  return !!t && (Date.now() - t) > STALE_DAYS * 86400000;
+}
+function catEmptyHtml(text) {
+  return `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg><span>${text}</span></div>`;
+}
+function tvItemsHtml(items) {
+  return viewMode === 'grid'
+    ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
+    : viewMode === 'wall'
+      ? `<div class="grid wall-grid">${items.map(([k,s]) => wallCardTv(k,s)).join('')}</div>`
+      : `<div class="lib-list">${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`;
+}
+// Serie ferme da tanto: in fondo a Continua, attenuate, con Riprendi/Abbandona.
+function staleRowHtml(key, s) {
+  const id = validId(s, key);
+  const days = Math.floor((Date.now() - lastShowActivity(s)) / 86400000);
+  const next = s.next ? `S${s.next.season}E${s.next.number}` : '';
+  return `<div class="stale-row">
+    <div class="list-item stale-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
+      ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
+      <div class="li-info">
+        <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
+        <div class="li-next stale-when">Ferma da ${days} giorni${next ? ` · ${next}` : ''}</div>
+      </div>
+    </div>
+    <div class="stale-actions">
+      <button class="stale-btn resume" onclick="openShow(${id})">Riprendi</button>
+      <button class="stale-btn drop" onclick="confirmAbandon(${id})">Abbandona</button>
+    </div>
+  </div>`;
+}
+function confirmAbandon(id) {
+  const name = (library[id] && library[id].name) || 'questa serie';
+  document.getElementById('confirmTitle').textContent = 'Abbandonare la serie?';
+  document.getElementById('confirmMsg').textContent = `“${name}” verrà tolta dalla libreria insieme agli episodi segnati.`;
+  const okBtn = document.getElementById('confirmOk');
+  okBtn.textContent = 'Abbandona';
+  okBtn.onclick = () => { closeConfirm(); doRemoveShow(id); };
+  document.getElementById('confirmBg').classList.add('open');
+}
+
+// Ticker in stile diretta (come Laurera): scorrono le frasi di lancio delle
+// tue serie, prese da TMDb. Si ridisegna solo se cambiano, cosi' lo
+// scorrimento non riparte da capo a ogni aggiornamento della lista.
+function renderTicker() {
+  const el = document.getElementById('tvTicker');
+  if (!el) return;
+  const shows = Object.values(library).filter(s => s.tagline && s.tagline.trim());
+  if (!shows.length) { el.hidden = true; el.dataset.key = ''; return; }
+  const rank = s => ({ continua: 0, inpari: 1, davedere: 2 }[categorizeShow(s)] ?? 3);
+  shows.sort((a, b) => rank(a) - rank(b) || (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0));
+  const key = shows.map(s => s.id + ':' + s.tagline).join('|');
+  if (el.dataset.key === key && !el.hidden) return;
+  el.dataset.key = key;
+  const items = shows.map(s => `<span class="tk" onclick="openShow(${Number(s.id)})"><b>${escapeHtml(s.name || '')}</b><s>«${escapeHtml(s.tagline.trim())}»</s></span>`).join('');
+  const chars = shows.reduce((n, s) => n + (s.name || '').length + s.tagline.length, 0);
+  const dur = Math.max(22, Math.round(chars * 0.22));
+  el.innerHTML = `<div class="tk-label"><i></i>Le tue serie</div>
+    <div class="tk-viewport"><div class="tk-track" style="animation-duration:${dur}s">${items}${items}</div></div>`;
+  el.hidden = false;
+}
+
+// Libreria vuota: invece della sola scritta, sei titoli di tendenza da
+// aggiungere con un tocco.
+async function renderEmptySuggestions(kind) {
+  const box = document.getElementById(kind + 'EmptySuggest');
+  if (!box || !hasTmdbKeySilent()) return;
+  try {
+    const type = kind === 'tv' ? 'tv' : 'movie';
+    const data = await tmdbCachedJson(`trend:${type}`, tmdbUrl(`/trending/${type}/week`, {}));
+    const pick = (data.results || []).filter(r => r.poster_path && !['ja','zh','cn','ko'].includes(r.original_language)).slice(0, 6);
+    box.innerHTML = pick.map(r => `<div class="es-card" onclick="${kind === 'tv' ? `openShow(${r.id}, this)` : `openFilm(${r.id}, this)`}">
+      <img src="${tmdbImg(r.poster_path, 'w342')}" alt="" loading="lazy">
+      <button class="es-add" onclick="event.stopPropagation();${kind === 'tv' ? `quickAdd(${r.id})` : `quickAddFilm(${r.id})`}" aria-label="Aggiungi">+</button>
+    </div>`).join('');
+  } catch(e) { box.innerHTML = ''; }
+}
+
+// Swipe sulle righe delle liste: a destra segna il prossimo episodio (o il
+// film come visto), a sinistra toglie dalla libreria (con conferma).
+const ROW_SWIPE_ACT = 84;
+function initRowSwipe() {
+  ['tvContent', 'filmContent'].forEach(cid => {
+    const box = document.getElementById(cid);
+    if (!box) return;
+    let st = null;
+    box.addEventListener('touchstart', e => {
+      st = null;
+      const row = e.target.closest('.swipe-row');
+      if (!row || e.touches.length !== 1 || e.target.closest('button')) return;
+      const t = e.touches[0];
+      st = { row, x: t.clientX, y: t.clientY, dx: 0, locked: null, under: null, armed: '' };
+    }, { passive: true });
+    box.addEventListener('touchmove', e => {
+      if (!st) return;
+      const t = e.touches[0];
+      const dx = t.clientX - st.x, dy = t.clientY - st.y;
+      if (st.locked === null) {
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        st.locked = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'h' : 'v';
+        if (st.locked === 'h') startRowSwipe(st);
+      }
+      if (st.locked !== 'h') return;
+      e.preventDefault();
+      st.dx = dx;
+      const lim = Math.max(-150, Math.min(150, dx));
+      st.row.style.transform = `translateX(${lim}px)`;
+      const armed = dx > ROW_SWIPE_ACT ? 'r' : dx < -ROW_SWIPE_ACT ? 'l' : '';
+      if (armed !== st.armed) { st.armed = armed; if (armed) haptic(); }
+      st.under.classList.toggle('dir-r', dx > 0);
+      st.under.classList.toggle('dir-l', dx < 0);
+      st.under.classList.toggle('armed', !!armed);
+    }, { passive: false });
+    const end = () => {
+      if (!st) return;
+      const s = st; st = null;
+      if (s.locked !== 'h') return;
+      s.row._swipedAt = Date.now();
+      s.row.style.transition = 'transform 0.25s ease';
+      s.row.style.transform = '';
+      setTimeout(() => { s.row.style.transition = ''; s.row.style.zIndex = ''; if (s.under) s.under.remove(); }, 260);
+      if (s.dx > ROW_SWIPE_ACT) rowSwipeAction(s.row, 'right');
+      else if (s.dx < -ROW_SWIPE_ACT) rowSwipeAction(s.row, 'left');
+    };
+    box.addEventListener('touchend', end);
+    box.addEventListener('touchcancel', end);
+    // il tocco che chiude uno swipe non deve anche aprire la scheda
+    box.addEventListener('click', e => {
+      const row = e.target.closest('.swipe-row');
+      if (row && row._swipedAt && Date.now() - row._swipedAt < 450) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  });
+}
+function startRowSwipe(st) {
+  const row = st.row, kind = row.dataset.kind, id = Number(row.dataset.id);
+  let rightLbl = 'Visto';
+  if (kind === 'tv') {
+    const s = library[id];
+    rightLbl = s && s.next ? `Segna S${s.next.season}E${s.next.number}` : 'In pari';
+  } else {
+    rightLbl = filmLibrary[id] && filmLibrary[id].watched ? 'Da vedere' : 'Visto';
+  }
+  const under = document.createElement('div');
+  under.className = 'swipe-under';
+  under.innerHTML = `<span class="su-r">✓ ${rightLbl}</span><span class="su-l">Rimuovi ✕</span>`;
+  const parent = row.parentElement;
+  if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+  under.style.cssText = `top:${row.offsetTop}px;left:${row.offsetLeft}px;width:${row.offsetWidth}px;height:${row.offsetHeight}px;border-radius:${getComputedStyle(row).borderRadius}`;
+  parent.insertBefore(under, row);
+  row.style.zIndex = '1';
+  st.under = under;
+}
+function rowSwipeAction(row, dir) {
+  const kind = row.dataset.kind, id = Number(row.dataset.id);
+  if (dir === 'left') { confirmRemove(kind, id); return; }
+  if (kind === 'film') { toggleFilmWatchedQuick(id, row); return; }
+  const s = library[id];
+  if (s && s.next) markNext(id, row); else showToast('Sei in pari con questa serie');
+}
+
 function renderLibrary() {
   updateCategoryCounts();
   const container = document.getElementById('tvContent');
@@ -4647,23 +4972,39 @@ function renderLibrary() {
   const entries = Object.entries(library);
   // barra di avanzamento verde solo nella categoria "Pari" (serie in pari)
   container.classList.toggle('cat-inpari', tvCategory === 'inpari');
+  renderTicker();
 
-  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; tvCategoryIds = []; return; }
+  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; tvCategoryIds = []; renderEmptySuggestions('tv'); return; }
   emptyEl.style.display = 'none';
 
-  const items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
+  const casc = cascadeNext; cascadeNext = false;
+  const q = libQuery.tv;
+  if (q) {
+    const found = entries.filter(([k, s]) => (s.name || '').toLowerCase().includes(q));
+    sortTvItems(found);
+    tvCategoryIds = found.map(([k, s]) => validId(s, k));
+    container.innerHTML = `<div class="section" style="padding-top:0">${found.length ? tvItemsHtml(found) : catEmptyHtml('Nessuna serie con questo nome.')}</div>`;
+    applyCardGlows(container);
+    return;
+  }
+
+  let items = entries.filter(([k, s]) => categorizeShow(s) === tvCategory);
   sortTvItems(items);
-  tvCategoryIds = items.map(([k, s]) => validId(s, k));
+  // In Continua le serie ferme da piu' di 30 giorni scendono in un gruppo a parte.
+  let stale = [];
+  if (tvCategory === 'continua') {
+    stale = items.filter(([k, s]) => isStaleShow(s));
+    items = items.filter(([k, s]) => !isStaleShow(s));
+  }
+  tvCategoryIds = items.concat(stale).map(([k, s]) => validId(s, k));
   const rail = tvCategory === 'continua' ? renderResumeRail(items) : '';
-  container.innerHTML = `${rail}<div class="section" style="padding-top:0">
-    ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M17 2l-5 5-5-5"/></svg><span>Nessuna serie in questa categoria.</span></div>` :
-      viewMode === 'grid'
-        ? `<div class="grid">${items.map(([k,s]) => renderCardTv(k,s)).join('')}</div>`
-        : viewMode === 'wall'
-          ? `<div class="grid wall-grid">${items.map(([k,s]) => wallCardTv(k,s)).join('')}</div>`
-          : `<div>${items.map(([k,s]) => renderListTv(k,s)).join('')}</div>`
-    }
-  </div>${tvCategory === 'continua' ? '<div id="upcomingSection"></div>' : ''}`;
+  const staleHtml = stale.length ? `<div class="section stale-section">
+      <div class="sec-head"><span class="sec-title">Ferme da più di ${STALE_DAYS} giorni</span><span class="sec-count num">${stale.length}</span></div>
+      ${stale.map(([k, s]) => staleRowHtml(k, s)).join('')}
+    </div>` : '';
+  container.innerHTML = `${rail}<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
+    ${items.length === 0 && !stale.length ? catEmptyHtml('Nessuna serie in questa categoria.') : (items.length ? tvItemsHtml(items) : '')}
+  </div>${tvCategory === 'continua' ? '<div id="upcomingSection"></div>' : ''}${staleHtml}`;
   applyCardGlows(container);
   // "In arrivo" non e' piu' una scheda a se': le prossime uscite stanno sotto
   // le serie che stai guardando, cosi' in Continua c'e' tutto.
@@ -4676,11 +5017,12 @@ function updateCategoryCounts() {
   Object.values(library).forEach(s => { const c = categorizeShow(s); if (c in counts) counts[c]++; });
   // Le prossime uscite stanno dentro "Continua": il suo contatore le somma.
   counts.continua += upcomingWithin90Days().length;
-  ['continua','inpari','davedere'].forEach(c => { const el = document.getElementById('tvCount-' + c); if (el) el.textContent = counts[c]; });
+  const put = (id, n) => { const el = document.getElementById(id); if (el) { el.textContent = n; el.classList.toggle('show', n > 0); } };
+  ['continua','inpari','davedere'].forEach(c => put('tvCount-' + c, counts[c]));
   let visti = 0, dav = 0;
   Object.values(filmLibrary).forEach(f => { if (f.watched) visti++; else dav++; });
-  const v = document.getElementById('filmCount-visti'); if (v) v.textContent = visti;
-  const d = document.getElementById('filmCount-davedere'); if (d) d.textContent = dav;
+  put('filmCount-visti', visti);
+  put('filmCount-davedere', dav);
 }
 
 // ---------- ordinamento libreria ----------
@@ -4768,10 +5110,13 @@ function renderResumeRail(items) {
     const watched = Object.keys(s.watched || {}).length;
     const total = s.totalEpisodes || 0;
     const pct = total ? Math.min(100, Math.round(watched/total*100)) : 0;
+    // Il fotogramma del prossimo episodio, se lo conosciamo; altrimenti lo
+    // sfondo della serie. (Le immagini degli episodi sono gia' w300.)
+    const still = n.image || null;
     const bg = s.backdrop || s.image;
     const epMeta = [`S${n.season}E${n.number}`, n.name ? escapeHtml(n.name) : ''].filter(Boolean).join(' · ');
     return `<div class="resume-card" onclick="openShow(${id}, this)" data-poster="${bg ? thumbImg(bg,'w92') : ''}">
-      ${bg ? `<img src="${thumbImg(bg,'w500')}" alt="" loading="lazy" decoding="async">` : ''}
+      ${still ? `<img src="${still}" alt="" loading="lazy" decoding="async">` : (bg ? `<img src="${thumbImg(bg,'w500')}" alt="" loading="lazy" decoding="async">` : '')}
       <div class="rc-shade"></div>
       <div class="rc-top">
         <button class="ep-ring act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna come visto" aria-label="Segna come visto">${epRingSvg(pct)}<span class="epr-ico">${ICO_ARROW}</span></button>
@@ -4785,7 +5130,30 @@ function renderResumeRail(items) {
       <span class="rc-bar" style="--pct:${pct}%"></span>
     </div>`;
   }).join('');
+  setTimeout(() => fillResumeStills(cards.map(([key, s]) => validId(s, key))), 0);
   return `<div class="resume-rail">${inner}</div>`;
+}
+// Le serie salvate prima di questa versione non hanno il fotogramma del
+// prossimo episodio: lo chiediamo a TMDb (una volta) e lo mettiamo al posto
+// dello sfondo generico della serie.
+async function fillResumeStills(ids) {
+  if (!hasTmdbKeySilent()) return;
+  let changed = false;
+  await Promise.all(ids.map(async id => {
+    const s = library[id];
+    if (!s || !s.next || s.next.image !== undefined) return;
+    try {
+      const d = await tmdbCachedJson(`ep:${id}:${s.next.season}x${s.next.number}`, tmdbUrl(`/tv/${id}/season/${s.next.season}/episode/${s.next.number}`, {}));
+      if (!library[id] || !library[id].next) return;
+      library[id].next.image = d && d.still_path ? tmdbImg(d.still_path, 'w300') : null;
+      changed = true;
+      const img = document.querySelector(`.resume-card .act-next[data-show-id="${id}"]`);
+      const card = img && img.closest('.resume-card');
+      const pic = card && card.querySelector(':scope > img');
+      if (pic && library[id].next.image) pic.src = library[id].next.image;
+    } catch(e) {}
+  }));
+  if (changed) { try { localStorage.setItem('serietracker_library', JSON.stringify(library)); } catch(e) {} }
 }
 
 // ---------- In arrivo (prossime uscite) ----------
@@ -4818,10 +5186,15 @@ async function ensureUpcomingCache() {
   if (upcomingCache && now - upcomingCacheAt <= 6 * 3600 * 1000) return upcomingCache;
   if (!hasTmdbKey()) return upcomingCache || [];
   const ids = Object.keys(library);
+  let taglineChanged = false;
   const results = await Promise.all(ids.map(async id => {
     try {
       const r = await fetch(tmdbUrl(`/tv/${id}`, {}));
       const s = await r.json();
+      // frase di lancio per il ticker (gia' che la scheda e' qui, costa zero)
+      if (library[id] && typeof s.tagline === 'string' && (library[id].tagline || '') !== s.tagline) {
+        library[id].tagline = s.tagline; taglineChanged = true;
+      }
       const ne = s.next_episode_to_air;
       if (ne && ne.air_date) return {
         id, name: library[id] && library[id].name || s.name,
@@ -4833,6 +5206,7 @@ async function ensureUpcomingCache() {
   }));
   upcomingCache = results.filter(Boolean).sort((a,b) => a.date.localeCompare(b.date));
   upcomingCacheAt = now;
+  if (taglineChanged) { saveLibrary(); renderTicker(); }
   updateUpcomingBadge();
   checkAiredEpisodeNotifications(upcomingCache);
   return upcomingCache;
@@ -5067,10 +5441,26 @@ async function renderUpcoming(container) {
       </div>
       <div class="up-days${isWord ? ' up-days-word' : ''}" title="${daysLabel}">${isWord ? 'Oggi' : '-' + daysLeft}</div>
     </div>`;
-  }).join('');
-  container.innerHTML = viewMode === 'grid'
-    ? `<div class="section">${UP_TITLE}<div class="grid">${rows}</div></div>`
-    : `<div class="section">${UP_TITLE}${rows}</div>`;
+  }).join(viewMode === 'grid' ? '' : '<!--row-->');
+  if (viewMode === 'grid') {
+    container.innerHTML = `<div class="section">${UP_TITLE}<div class="grid">${rows}</div></div>`;
+  } else {
+    // In lista: uscite raggruppate per giorno, come le giornate di un calendario.
+    const DOW = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+    const rowList = upcoming90.map((u, i) => ({ u, html: rows.split('<!--row-->')[i] }));
+    let html = '', lastKey = null;
+    rowList.forEach(({ u, html: r }) => {
+      if (u.date !== lastKey) {
+        lastKey = u.date;
+        const d = new Date(u.date + 'T00:00:00');
+        const diff = Math.round((d - today) / 86400000);
+        const lbl = diff <= 0 ? 'Oggi' : diff === 1 ? 'Domani' : `${DOW[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+        html += `<div class="day-head${diff <= 0 ? ' today' : ''}"><span>${lbl}</span></div>`;
+      }
+      html += r;
+    });
+    container.innerHTML = `<div class="section">${UP_TITLE}${html}</div>`;
+  }
   // la tinta dall'artwork va applicata qui: questa sezione viene disegnata
   // dopo l'applyCardGlows di renderLibrary()
   applyCardGlows(container);
@@ -5090,7 +5480,7 @@ function renderCardTv(key, s) {
   // prossimo da vedere adesso", quindi non deve mascherare il badge Terminata/Continua.
   const nextIsAired = !s.next || (s.next.airdate && !isFutureDateStr(s.next.airdate));
   const topLeft = s.rating ? `<span class="grating">★ ${fmtRating(s.rating)}</span>` : '';
-  const topCenter = hasNewEp(s) ? `<span class="airing-dot" title="Nuovo episodio"></span>` : '';
+  const topCenter = hasNewEp(s) ? `<span class="new-badge">NEW</span>` : '';
   const topRight = total ? `<span class="grating ${pctTier(pct)}">${pct}%</span>` : '';
   const bottomLeft = s.totalSeasons ? `<span class="grating">S${s.totalSeasons}</span>` : '';
   // Serie in pari: "Terminata" (rosso) solo se davvero conclusa (Ended/Canceled
@@ -5143,10 +5533,13 @@ function renderListTv(key, s) {
     : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
   // data-poster: da qui applyCardGlows() ricava il colore dominante della
   // locandina e lo mette in --art, che tinge la riga e riempie l'anello.
-  return `<div class="list-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
-    ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}
+  // swipe-row: si scorre a destra per segnare il prossimo episodio, a sinistra
+  // per togliere la serie (vedi initRowSwipe). Badge NEW sulla locandina
+  // finche' non vedi l'episodio appena uscito.
+  return `<div class="list-item swipe-row" data-kind="tv" data-id="${id}" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
+    <span class="li-poster">${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>`}${hasNewEp(s) ? `<span class="new-badge">NEW</span>` : ''}</span>
     <div class="li-info">
-      <div class="li-name">${escapeHtml(s.name||'Senza nome')}${hasNewEp(s) ? `<span class="new-ep-dot" title="Nuovo episodio"></span>` : ''}</div>
+      <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-chips">${chips}</div>
       ${nextLine}
     </div>
@@ -5357,6 +5750,7 @@ async function refreshCurrentTab() {
 // ---------- render library FILM ----------
 function setFilmCategory(cat) {
   filmCategory = cat;
+  cascadeNext = true;
   document.querySelectorAll('#filmCatTabs .seasontab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
   renderFilmLibrary();
 }
@@ -5366,13 +5760,17 @@ function renderFilmLibrary() {
   const container = document.getElementById('filmContent');
   const emptyEl = document.getElementById('filmEmpty');
   const entries = Object.entries(filmLibrary);
-  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; filmCategoryIds = []; return; }
+  if (!entries.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; filmCategoryIds = []; renderEmptySuggestions('film'); return; }
   emptyEl.style.display = 'none';
 
-  const items = entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
+  const casc = cascadeNext; cascadeNext = false;
+  const q = libQuery.film;
+  const items = q
+    ? entries.filter(([,f]) => (f.title || '').toLowerCase().includes(q))
+    : entries.filter(([,f]) => filmCategory === 'visti' ? f.watched : !f.watched);
   sortFilmItems(items);
   filmCategoryIds = items.map(([k, f]) => validId(f, k));
-  container.innerHTML = `<div class="section" style="padding-top:0">
+  container.innerHTML = `<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
     ${items.length === 0 ? `<div class="cat-empty-ill"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg><span>Nessun film in questa categoria.</span></div>` :
       viewMode === 'grid'
         ? `<div class="grid">${items.map(([k,f]) => renderCardFilm(k,f)).join('')}</div>`
@@ -5400,7 +5798,7 @@ function renderCardFilm(key, f) {
 
 function renderListFilm(key, f) {
   const id = validId(f, key);
-  return `<div class="list-item" onclick="openFilm(${id}, this)"${f.image ? ` data-poster="${thumbImg(f.image,'w92')}"` : ''}>
+  return `<div class="list-item swipe-row" data-kind="film" data-id="${id}" onclick="openFilm(${id}, this)"${f.image ? ` data-poster="${thumbImg(f.image,'w92')}"` : ''}>
     ${f.image ? `<img src="${thumbImg(f.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>`}
     <div class="li-info">
       <div class="li-name">${escapeHtml(f.title||'Senza titolo')}</div>
@@ -6656,7 +7054,8 @@ function vtOpenSheet(originEl, doOpen) {
 function computeNextEp(episodes, watched) {
   const sorted = episodes.slice().sort((a,b) => a.season - b.season || a.number - b.number);
   for (const e of sorted) {
-    if (!watched[`${e.season}x${e.number}`]) return { season: e.season, number: e.number, name: e.name || '', airdate: e.airdate || null };
+    // image: il fotogramma dell'episodio, usato dalla striscia "Riprendi"
+    if (!watched[`${e.season}x${e.number}`]) return { season: e.season, number: e.number, name: e.name || '', airdate: e.airdate || null, image: e.image || null };
   }
   return null;
 }
@@ -8967,6 +9366,7 @@ initHeaderShrink();
 initTabSwipe();
 initSheetDock();
 initTopMenu();
+initRowSwipe();
 // tutorial della schermata iniziale (Serie), dopo che lo splash e' sparito
 setTimeout(() => maybeShowTutorial('tv'), 2600);
 </script>
