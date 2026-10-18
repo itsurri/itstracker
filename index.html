@@ -2385,6 +2385,58 @@
   .sc-prog b { color: var(--accent); font-size: 15px; }
   .saga-card .saga-bar { margin: 0; height: 4px; }
 
+  /* =====================================================================
+     RESTYLING 2026 - RICERCA E SCOPRI
+     ===================================================================== */
+  .searchbar { height: 40px; border-radius: 20px; }
+  .search-dice { width: 40px; height: 40px; }
+  .search-clear { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(var(--overlay-rgb),0.18); color: var(--fg); }
+  .search-clear[hidden] { display: none; }
+  :root[data-radius="square"] .searchbar { border-radius: 8px; }
+  .recent-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 10px; }
+  .recent-chips:empty { display: none; }
+  .recent-chips::-webkit-scrollbar { display: none; }
+  .rchip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+    background: rgba(var(--overlay-rgb),0.07); border: 0.5px solid rgba(var(--overlay-rgb),0.12); color: rgba(var(--overlay-rgb),0.85); }
+  .rchip svg { opacity: 0.55; }
+  .rchip-clear { flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--accent); padding: 6px 6px; }
+  #searchResults > .sec-head:first-child, #discoverBox > div:first-child .sec-head { margin-top: 8px; }
+  #discoverBox[hidden], #searchResults[hidden] { display: none; }
+  .mini-seg { display: flex; padding: 3px; gap: 2px; border-radius: 12px; background: rgba(var(--overlay-rgb),0.07); }
+  .mini-seg button { padding: 5px 12px; border-radius: 9px; font-family: var(--font-title); font-weight: var(--title-weight); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(var(--overlay-rgb),0.6); }
+  .mini-seg button.active { background: var(--accent); color: var(--accent-ink); }
+  /* strisce orizzontali di locandine */
+  .rail { display: flex; gap: 11px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 6px; scroll-snap-type: x proximity; scroll-padding-inline: 16px; }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail-card { flex-shrink: 0; width: 108px; cursor: pointer; scroll-snap-align: start; }
+  .rail-poster { position: relative; width: 100%; aspect-ratio: 2/3; border-radius: 14px; overflow: hidden; background: rgba(var(--overlay-rgb),0.07); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+  .rail-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .rail-add, .rail-in { position: absolute; right: 6px; bottom: 6px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: 0 3px 10px rgba(0,0,0,0.45); }
+  .rail-add { background: var(--accent); color: var(--accent-ink); font-size: 19px; line-height: 1; }
+  .rail-in { display: none; background: #30D158; color: #000; font-size: 13px; }
+  .rail-card.in-lib .rail-add { display: none; }
+  .rail-card.in-lib .rail-in { display: flex; }
+  .rail-title { font-size: 12.5px; font-weight: 700; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rail-sub { font-size: 11px; color: rgba(var(--overlay-rgb),0.55); margin-top: 1px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rail-sub b { color: rgba(var(--overlay-rgb),0.85); font-weight: 700; }
+  :root[data-radius="square"] .rail-poster { border-radius: 6px; }
+  /* Top 10 con i numeri giganti dietro la locandina */
+  .top10 { gap: 4px; }
+  .t10 { flex-shrink: 0; display: flex; align-items: flex-end; scroll-snap-align: start; }
+  .t10-n {
+    font-family: "Anton", var(--font-title), sans-serif; font-size: 112px; line-height: 0.78; letter-spacing: -0.04em;
+    color: var(--bg); -webkit-text-stroke: 2px rgba(var(--overlay-rgb),0.55);
+    margin-right: -16px; position: relative; z-index: 0; padding-bottom: 30px;
+  }
+  .t10:first-child .t10-n { -webkit-text-stroke-color: var(--accent); }
+  .t10 .rail-card { position: relative; z-index: 1; width: 98px; }
+  /* novita' per piattaforma: loghi da scegliere */
+  .prov-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 0 2px 10px; }
+  .prov-chips::-webkit-scrollbar { display: none; }
+  .prov-chip { flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px; overflow: hidden; opacity: 0.45; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.12); font-size: 10px; font-weight: 700; }
+  .prov-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .prov-chip.active { opacity: 1; transform: scale(1.06); box-shadow: 0 0 0 2px var(--accent); }
+
   /* ---------- vista tablet/desktop ----------
      Tutto qui dentro si attiva SOLO da 900px in su: sotto quella soglia
      (qualsiasi telefono) nessuna di queste regole si applica, quindi la
@@ -2574,24 +2626,26 @@
     </div>
   </div>
 
-  <!-- CERCA -->
+  <!-- RICERCA: serie e film insieme. A ricerca vuota: ricerche recenti, Top 10,
+       consigli in base a cosa guardi, novità per piattaforma e i popolari. -->
   <div class="view" id="view-search">
     <div class="searchwrap">
       <div class="searchrow">
         <div class="searchbar glass">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input id="searchInput" placeholder="" autocomplete="off" />
+          <input id="searchInput" placeholder="Serie, film…" autocomplete="off" enterkeyhint="search" />
+          <button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Cancella" hidden><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
-        <button class="mode-btn active-view" id="modeTvBtn" onclick="setSearchMode('tv')">SERIE</button>
-        <button class="mode-btn" id="modeFilmBtn" onclick="setSearchMode('film')">FILM</button>
         <button class="search-dice" title="Cosa guardo stasera?" onclick="whatToWatch(this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor" stroke="none"/></svg>
         </button>
       </div>
+      <div class="recent-chips" id="searchRecent"></div>
     </div>
-    <div class="section" style="padding-top:14px">
+    <div class="section" style="padding-top:8px">
       <div id="searchResults"></div>
-      <div class="empty" id="searchEmpty">
+      <div id="discoverBox"></div>
+      <div class="empty" id="searchEmpty" style="display:none">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <div>Cerca tra migliaia di titoli,<br>aggiornati in automatico.</div>
       </div>
@@ -3493,7 +3547,7 @@ function setView(mode) {
   renderFilmLibrary();
   if (currentTab === 'search' && searchMode !== 'people') {
     const q = document.getElementById('searchInput').value.trim();
-    if (q) { searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q); } else { loadPopular(searchMode); }
+    if (q) doSearchAll(q); else loadPopular(searchMode);
   }
 }
 
@@ -3556,13 +3610,9 @@ function switchTab(tab) {
     tab === 'tv' ? renderLibrary() : renderFilmLibrary();
   }
   if (tab === 'search') {
-    // Se la griglia/lista è stata cambiata dalle Impostazioni mentre eri su
-    // un'altra tab, i risultati di ricerca restano vecchi finché non ricambi
-    // TV/Film: qui li ridisegniamo sempre dalla cache (nessuna chiamata di
-    // rete) così riflettono subito il viewMode corrente.
-    const hasCache = searchMode === 'tv' ? lastTvResults.length : lastFilmResults.length;
-    if (hasCache) { searchMode === 'tv' ? renderTvResultsFromCache() : renderFilmResultsFromCache(); }
-    else if (!document.getElementById('searchInput').value.trim()) { loadPopular(searchMode); }
+    // Ricerca vuota: pagina Scopri (Top 10, consigli, novità, popolari).
+    if (!document.getElementById('searchInput').value.trim()) buildDiscover();
+    else renderRecentSearches();
   }
   // tutorial primo accesso della scheda (dopo che la transizione e' partita)
   setTimeout(() => maybeShowTutorial(tab), 280);
@@ -5940,11 +5990,7 @@ async function refreshCurrentTab() {
       renderFilmLibrary();
     } else if (currentTab === 'search') {
       const q = document.getElementById('searchInput').value.trim();
-      if (q) {
-        await (searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q));
-      } else {
-        await loadPopular(searchMode);
-      }
+      if (q) doSearchAll(q); else { discoverBuilt = false; buildDiscover(); }
     } else if (currentTab === 'profile') {
       renderProfile();
     }
@@ -6025,21 +6071,21 @@ function validId(obj, key) {
   return isNaN(n) ? key : n;
 }
 
-// ---------- search ----------
+// ---------- ricerca ----------
+// I renderer dei risultati (serie e film) scrivono nel contenitore indicato
+// qui: le due sezioni dei risultati quando si cerca, la griglia dei Popolari
+// quando la ricerca e' vuota.
+let tvResultsTarget = 'popularGrid', filmResultsTarget = 'popularGrid';
 function goToSearch(mode) {
   switchTab('search');
   if (mode) setSearchMode(mode);
   document.getElementById('searchInput').focus();
 }
-
+// searchMode ora riguarda solo la griglia Popolari (Serie | Film).
 function setSearchMode(mode) {
   searchMode = mode;
-  document.getElementById('modeTvBtn').classList.toggle('active-view', mode === 'tv');
-  document.getElementById('modeFilmBtn').classList.toggle('active-view', mode === 'film');
-  document.getElementById('searchInput').placeholder = '';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchEmpty').querySelector('div').innerHTML = 'Cerca tra migliaia di titoli,<br>aggiornati in automatico.';
-  loadPopular(mode);
+  document.querySelectorAll('#popularSeg button').forEach(b => b.classList.toggle('active', b.dataset.m === mode));
+  if (!document.getElementById('searchInput').value.trim()) loadPopular(mode);
 }
 
 function searchSkeletonGrid(n) {
@@ -6049,11 +6095,147 @@ function searchSkeletonGrid(n) {
   return `<div class="grid">${cards}</div>`;
 }
 
-// Titoli popolari non ancora in libreria, mostrati quando la ricerca è vuota.
+// ---- ricerche recenti ----
+function getRecentSearches() { try { return JSON.parse(localStorage.getItem('itstracker_recent_searches') || '[]'); } catch(e) { return []; } }
+function addRecentSearch(q) {
+  q = (q || '').trim(); if (q.length < 2) return;
+  const list = [q, ...getRecentSearches().filter(x => x.toLowerCase() !== q.toLowerCase())].slice(0, 8);
+  try { localStorage.setItem('itstracker_recent_searches', JSON.stringify(list)); } catch(e) {}
+}
+function clearRecentSearches() { try { localStorage.removeItem('itstracker_recent_searches'); } catch(e) {} renderRecentSearches(); }
+function renderRecentSearches() {
+  const box = document.getElementById('searchRecent');
+  if (!box) return;
+  const list = getRecentSearches();
+  const show = list.length && !document.getElementById('searchInput').value.trim();
+  box.innerHTML = show ? `${list.map(q => `<button class="rchip" onclick="useRecentSearch(this.dataset.q)" data-q="${escapeHtml(q)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>${escapeHtml(q)}</button>`).join('')}<button class="rchip-clear" onclick="clearRecentSearches()">Cancella</button>` : '';
+}
+function useRecentSearch(q) {
+  const input = document.getElementById('searchInput');
+  input.value = q;
+  input.dispatchEvent(new Event('input'));
+}
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  input.dispatchEvent(new Event('input'));
+  input.focus();
+}
+
+// ---- pagina Scopri (ricerca vuota) ----
+let discoverBuilt = false;
+function showDiscover(on) {
+  document.getElementById('discoverBox').hidden = !on;
+  document.getElementById('searchResults').hidden = on;
+  renderRecentSearches();
+  const clr = document.getElementById('searchClear'); if (clr) clr.hidden = on;
+}
+function buildDiscover() {
+  const box = document.getElementById('discoverBox');
+  if (!box) return;
+  if (!discoverBuilt) {
+    discoverBuilt = true;
+    box.innerHTML = `
+      <div id="top10Tv"></div>
+      <div id="forYou"></div>
+      <div id="provNew"></div>
+      <div id="top10Film"></div>
+      <div class="sec-head"><span class="sec-title">Popolari</span>
+        <div class="mini-seg" id="popularSeg"><button data-m="tv" class="${searchMode === 'tv' ? 'active' : ''}" onclick="setSearchMode('tv')">Serie</button><button data-m="film" class="${searchMode === 'film' ? 'active' : ''}" onclick="setSearchMode('film')">Film</button></div>
+      </div>
+      <div id="popularGrid"></div>`;
+    loadTop10('tv'); loadTop10('movie'); loadForYou(); loadProviderNew();
+  }
+  showDiscover(true);
+  loadPopular(searchMode);
+}
+// Card di una striscia orizzontale: locandina, + per aggiungere, ✓ se ce l'hai.
+function railCard(kind, r, caption) {
+  const id = r.id;
+  const inLib = kind === 'tv' ? !!library[id] : !!filmLibrary[id];
+  const open = kind === 'tv' ? `openShow(${id}, this)` : `openFilm(${id}, this)`;
+  const add = kind === 'tv' ? `quickAdd(${id})` : `quickAddFilm(${id})`;
+  return `<div class="rail-card${inLib ? ' in-lib' : ''}" data-kind="${kind}" data-id="${id}" onclick="${open}">
+    <div class="rail-poster"><img src="${tmdbImg(r.poster_path, 'w342')}" alt="" loading="lazy" decoding="async">
+      <button class="rail-add" onclick="event.stopPropagation();${add}" aria-label="Aggiungi">+</button><span class="rail-in">✓</span></div>
+    <div class="rail-title">${escapeHtml(r.name || r.title || '')}</div>
+    ${caption ? `<div class="rail-sub">${caption}</div>` : ''}
+  </div>`;
+}
+function updateRailStates() {
+  document.querySelectorAll('.rail-card[data-kind]').forEach(el => {
+    const lib = el.dataset.kind === 'tv' ? library : filmLibrary;
+    el.classList.toggle('in-lib', !!lib[el.dataset.id]);
+  });
+}
+const NOT_SUGGESTED_LANGS = ['ja', 'zh', 'cn'];
+// Top 10 della settimana con i numeri giganti dietro le locandine.
+async function loadTop10(type) {
+  const box = document.getElementById(type === 'tv' ? 'top10Tv' : 'top10Film');
+  if (!box || !hasTmdbKeySilent()) return;
+  try {
+    const d = await tmdbCachedJson(`top10:${type}`, tmdbUrl(`/trending/${type}/week`, {}));
+    const items = (d.results || []).filter(r => r.poster_path && !NOT_SUGGESTED_LANGS.includes(r.original_language)).slice(0, 10);
+    if (!items.length) return;
+    const kind = type === 'tv' ? 'tv' : 'film';
+    box.innerHTML = `<div class="sec-head"><span class="sec-title">Top 10 ${type === 'tv' ? 'serie' : 'film'} della settimana</span></div>
+      <div class="rail top10">${items.map((r, i) => `<div class="t10"><span class="t10-n">${i + 1}</span>${railCard(kind, r, '')}</div>`).join('')}</div>`;
+  } catch(e) {}
+}
+// "Perche' ti piacera'": consigli TMDb a partire dalle serie che hai guardato
+// di recente, con scritto da quale arrivano.
+async function loadForYou() {
+  const box = document.getElementById('forYou');
+  if (!box || !hasTmdbKeySilent()) return;
+  const sources = Object.values(library).filter(s => Object.keys(s.watched || {}).length)
+    .sort((a, b) => (b.lastWatchedAt || 0) - (a.lastWatchedAt || 0)).slice(0, 3);
+  if (!sources.length) { box.innerHTML = ''; return; }
+  try {
+    const lists = await Promise.all(sources.map(s => tmdbCachedJson(`rec:tv:${s.id}`, tmdbUrl(`/tv/${s.id}/recommendations`, {})).then(d => (d.results || []).map(r => ({ r, from: s.name }))).catch(() => [])));
+    const seen = new Set(), out = [];
+    for (let i = 0; out.length < 15 && i < 20; i++) lists.forEach(l => {
+      const x = l[i];
+      if (x && x.r.poster_path && !library[x.r.id] && !seen.has(x.r.id) && !NOT_SUGGESTED_LANGS.includes(x.r.original_language)) { seen.add(x.r.id); out.push(x); }
+    });
+    if (!out.length) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="sec-head"><span class="sec-title">Perché ti piacerà</span></div>
+      <div class="rail">${out.map(x => railCard('tv', x.r, `Perché hai visto <b>${escapeHtml(x.from || '')}</b>`)).join('')}</div>`;
+  } catch(e) {}
+}
+// Novita' per piattaforma: le uscite piu' recenti (serie e film) disponibili
+// in abbonamento su Netflix, Prime Video, Disney+...
+const PROVIDERS_IT = [ { id: 8, n: 'Netflix' }, { id: 119, n: 'Prime Video' }, { id: 337, n: 'Disney+' }, { id: 350, n: 'Apple TV+' }, { id: 39, n: 'NOW' }, { id: 531, n: 'Paramount+' } ];
+let provSel = 8;
+async function loadProviderNew(pid) {
+  const box = document.getElementById('provNew');
+  if (!box || !hasTmdbKeySilent()) return;
+  if (pid) provSel = pid;
+  try {
+    const logosData = await tmdbCachedJson('provlogos:tv', tmdbUrl('/watch/providers/tv', { watch_region: 'IT' }));
+    const logo = id => { const p = (logosData.results || []).find(x => x.provider_id === id); return p ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : ''; };
+    const today = new Date().toISOString().slice(0, 10);
+    const common = { with_watch_providers: provSel, watch_region: 'IT', with_watch_monetization_types: 'flatrate' };
+    const [tv, mv] = await Promise.all([
+      tmdbCachedJson(`provnew:tv:${provSel}`, tmdbUrl('/discover/tv', Object.assign({ sort_by: 'first_air_date.desc', 'first_air_date.lte': today, 'vote_count.gte': 8 }, common))),
+      tmdbCachedJson(`provnew:mv:${provSel}`, tmdbUrl('/discover/movie', Object.assign({ sort_by: 'primary_release_date.desc', 'primary_release_date.lte': today, 'vote_count.gte': 20 }, common)))
+    ]);
+    const items = [
+      ...(tv.results || []).map(r => ({ kind: 'tv', r, d: r.first_air_date || '' })),
+      ...(mv.results || []).map(r => ({ kind: 'film', r, d: r.release_date || '' }))
+    ].filter(x => x.r.poster_path && !NOT_SUGGESTED_LANGS.includes(x.r.original_language)).sort((a, b) => b.d.localeCompare(a.d)).slice(0, 14);
+    const name = (PROVIDERS_IT.find(p => p.id === provSel) || {}).n || '';
+    box.innerHTML = `<div class="sec-head"><span class="sec-title">Nuovo su ${escapeHtml(name)}</span></div>
+      <div class="prov-chips">${PROVIDERS_IT.map(p => `<button class="prov-chip${p.id === provSel ? ' active' : ''}" onclick="loadProviderNew(${p.id})" title="${p.n}" aria-label="${p.n}">${logo(p.id) ? `<img src="${logo(p.id)}" alt="">` : p.n}</button>`).join('')}</div>
+      ${items.length ? `<div class="rail">${items.map(x => railCard(x.kind, x.r, `${x.kind === 'tv' ? 'Serie' : 'Film'} · ${x.d.slice(0, 4)}`)).join('')}</div>` : '<div class="wrap-note">Niente di nuovo da mostrare qui.</div>'}`;
+  } catch(e) {}
+}
+
+// Popolari (griglia in fondo alla pagina Scopri), con filtro per genere.
 async function loadPopular(mode) {
-  const c = document.getElementById('searchResults');
-  if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
-  document.getElementById('searchEmpty').style.display = 'none';
+  tvResultsTarget = filmResultsTarget = 'popularGrid';
+  const c = document.getElementById('popularGrid');
+  if (!c) { buildDiscover(); return; }
+  if (!hasTmdbKey()) { c.innerHTML = ''; return; }
   try {
     const type = mode === 'tv' ? 'tv' : 'movie';
     const map = await ensureGenreMap(type);
@@ -6074,8 +6256,7 @@ async function loadPopular(mode) {
       const seen = new Set();
       // Niente titoli giapponesi/cinesi tra i consigliati: restano cercabili
       // esplicitamente, ma non vengono proposti in automatico.
-      const excludedLangs = ['ja', 'zh', 'cn'];
-      const items = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); if (excludedLangs.includes(r.original_language)) return false; return true; });
+      const items = all.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); if (NOT_SUGGESTED_LANGS.includes(r.original_language)) return false; return true; });
       pool = { items, at: Date.now() };
       popularPool[cacheKey] = pool;
     }
@@ -6090,15 +6271,24 @@ async function loadPopular(mode) {
 function setTvPopularGenre(g) { tvSearchGenreFilter = g || null; loadPopular('tv'); }
 function setFilmPopularGenre(g) { filmSearchGenreFilter = g || null; loadPopular('film'); }
 
+// Ricerca: serie e film insieme, prima le serie poi i film.
+function doSearchAll(q) {
+  const box = document.getElementById('searchResults');
+  box.innerHTML = `<div class="sec-head"><span class="sec-title">Serie</span></div><div id="searchResultsTv">${searchSkeletonGrid(3)}</div>
+    <div class="sec-head"><span class="sec-title">Film</span></div><div id="searchResultsFilm">${searchSkeletonGrid(3)}</div>`;
+  tvResultsTarget = 'searchResultsTv'; filmResultsTarget = 'searchResultsFilm';
+  doSearchTv(q); doSearchFilm(q);
+}
 let searchTimer = null;
 document.getElementById('searchInput').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const q = document.getElementById('searchInput').value.trim();
-  if (!q) { loadPopular(searchMode); return; }
-  document.getElementById('searchEmpty').style.display = 'none';
-  document.getElementById('searchResults').innerHTML = searchSkeletonGrid();
-  searchTimer = setTimeout(() => searchMode === 'tv' ? doSearchTv(q) : doSearchFilm(q), 350);
+  if (!q) { buildDiscover(); return; }
+  showDiscover(false);
+  searchTimer = setTimeout(() => doSearchAll(q), 350);
 });
+document.getElementById('searchInput').addEventListener('change', e => addRecentSearch(e.target.value));
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') { addRecentSearch(e.target.value); e.target.blur(); } });
 
 // ---------- segui / feed amici ----------
 let followingList = [];
@@ -6854,10 +7044,10 @@ function closeChatListPanel() {
 }
 
 async function doSearchTv(q) {
-  const c = document.getElementById('searchResults');
-  if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
-  c.innerHTML = searchSkeletonGrid();
-  document.getElementById('searchEmpty').style.display = 'none';
+  const c = document.getElementById(tvResultsTarget);
+  if (!c) return;
+  if (!hasTmdbKey()) { c.innerHTML = ''; return; }
+  c.innerHTML = searchSkeletonGrid(3);
   try {
     const res = await fetch(tmdbUrl('/search/tv', { query: q }));
     const data = await res.json();
@@ -6866,10 +7056,10 @@ async function doSearchTv(q) {
 }
 
 async function renderTvResults(results, chips) {
-  const c = document.getElementById('searchResults');
+  const c = document.getElementById(tvResultsTarget);
+  if (!c) return;
   lastTvResultsChips = chips || null;
-  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun risultato.</div>'; lastTvResults = []; return; }
-  document.getElementById('searchEmpty').style.display = 'none';
+  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessuna serie trovata.</div>'; lastTvResults = []; return; }
 
   // Sezione "popolari/consigliati" (chips presenti): mantieni l'ordine di
   // popolarità di TMDB. Ricerca per query: riordina per rilevanza (voti).
@@ -6898,7 +7088,8 @@ async function renderTvResults(results, chips) {
 function setTvSearchGenreFilter(g) { tvSearchGenreFilter = g || null; renderTvResultsFromCache(); }
 
 function renderTvResultsFromCache() {
-  const c = document.getElementById('searchResults');
+  const c = document.getElementById(tvResultsTarget);
+  if (!c) return;
   const all = lastTvResults;
   if (!all.length) return;
   let chips, enriched;
@@ -6917,7 +7108,7 @@ function renderTvResultsFromCache() {
     chips = renderGenreChips(genres, tvSearchGenreFilter, 'setTvSearchGenreFilter');
   }
 
-  if (!enriched.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
+  if (!enriched.length) { c.innerHTML = chips + '<div class="empty">Nessuna serie trovata.</div>'; return; }
 
   if (viewMode === 'list') {
     c.innerHTML = chips + `<div>${enriched.map(s => {
@@ -6961,10 +7152,10 @@ function renderTvResultsFromCache() {
 }
 
 async function doSearchFilm(q) {
-  const c = document.getElementById('searchResults');
-  if (!hasTmdbKey()) { c.innerHTML = ''; document.getElementById('searchEmpty').style.display = 'block'; return; }
-  c.innerHTML = searchSkeletonGrid();
-  document.getElementById('searchEmpty').style.display = 'none';
+  const c = document.getElementById(filmResultsTarget);
+  if (!c) return;
+  if (!hasTmdbKey()) { c.innerHTML = ''; return; }
+  c.innerHTML = searchSkeletonGrid(3);
   try {
     const res = await fetch(tmdbUrl('/search/movie', { query: q }));
     const data = await res.json();
@@ -6973,10 +7164,10 @@ async function doSearchFilm(q) {
 }
 
 async function renderFilmResults(results, chips) {
-  const c = document.getElementById('searchResults');
+  const c = document.getElementById(filmResultsTarget);
+  if (!c) return;
   lastFilmResultsChips = chips || null;
-  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun risultato.</div>'; lastFilmResults = []; return; }
-  document.getElementById('searchEmpty').style.display = 'none';
+  if (!results.length) { c.innerHTML = (chips||'') + '<div class="empty">Nessun film trovato.</div>'; lastFilmResults = []; return; }
 
   await ensureGenreMap('movie');
   lastFilmResults = chips
@@ -6988,7 +7179,8 @@ async function renderFilmResults(results, chips) {
 function setFilmSearchGenreFilter(g) { filmSearchGenreFilter = g || null; renderFilmResultsFromCache(); }
 
 function renderFilmResultsFromCache() {
-  const c = document.getElementById('searchResults');
+  const c = document.getElementById(filmResultsTarget);
+  if (!c) return;
   const all = lastFilmResults;
   if (!all.length) return;
   let chips, ranked;
@@ -7004,7 +7196,7 @@ function renderFilmResultsFromCache() {
     chips = renderGenreChips(genres, filmSearchGenreFilter, 'setFilmSearchGenreFilter');
   }
 
-  if (!ranked.length) { c.innerHTML = chips + '<div class="empty">Nessun risultato.</div>'; return; }
+  if (!ranked.length) { c.innerHTML = chips + '<div class="empty">Nessun film trovato.</div>'; return; }
 
   if (viewMode === 'list') {
     c.innerHTML = chips + `<div>${ranked.map(f => {
@@ -7200,7 +7392,7 @@ async function quickAdd(id) {
     const res = await fetch(tmdbUrl(`/tv/${id}`, {}));
     const show = await res.json();
     library[id] = { id: show.id, name: show.name, image: tmdbImg(show.poster_path, 'original'), backdrop: tmdbImg(show.backdrop_path, 'original'), watched:{}, genres: showGenres(show), runtime: showRuntime(show), rating: show.vote_average?Math.round(show.vote_average*10)/10:null, totalSeasons: (show.seasons||[]).filter(se=>se.season_number>0).length || (show.number_of_seasons||0), totalEpisodes: show.number_of_episodes || 0, nextAirDate: (show.next_episode_to_air && show.next_episode_to_air.air_date) || null, status: show.status || null };
-    saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`);
+    saveLibrary(); renderLibrary(); showToast(`${show.name} aggiunta`); updateRailStates();
     logActivity({ type: 'added_show', showId: Number(id), title: show.name || '', image: library[id].image || null });
     refreshShowTotals(id).then(ch => { if (ch) withoutBarAnim(renderLibrary); }); // conteggio preciso (solo episodi usciti)
     renderTvResultsFromCache();
@@ -7220,7 +7412,7 @@ async function quickAddFilm(id) {
     const res = await fetch(tmdbUrl(`/movie/${id}`, {}));
     const f = await res.json();
     filmLibrary[id] = { id:f.id, title:f.title, image: tmdbImg(f.poster_path, 'original'), backdrop: tmdbImg(f.backdrop_path, 'original'), year:f.release_date?f.release_date.slice(0,4):'', genre:(f.genres&&f.genres[0]&&f.genres[0].name)||'', genres:showGenres(f), description:f.overview||'', rating: f.vote_average?Math.round(f.vote_average*10)/10:null, voteCount: f.vote_count||0, runtime: f.runtime||0, watched:false, addedAt: Date.now() };
-    saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`);
+    saveFilmLibrary(); renderFilmLibrary(); showToast(`${f.title} aggiunto`); updateRailStates();
     logActivity({ type: 'added_film', showId: Number(id), title: f.title || '', image: filmLibrary[id].image || null });
     renderFilmResultsFromCache();
     if (currentPersonProfile) renderPersonSheet(currentPersonProfile);
