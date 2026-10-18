@@ -48,8 +48,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@800&family=Anton&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <!-- Gli altri caratteri per i titoli (Bebas Neue, Oswald, Unbounded, Fraunces)
      si caricano solo se scelti in Impostazioni: vedi loadTitleFont(). -->
-<link rel="icon" href="logo.png?v=2">
-<link rel="apple-touch-icon" href="logo.png?v=2">
+<link rel="icon" href="logo.png?v=3">
+<link rel="apple-touch-icon" href="logo.png?v=3">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" id="metaThemeColor" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2713,6 +2713,10 @@
   .news-item b { color: #F7B538; font-size: 14px; }
   .news-item span { font-size: 12.5px; line-height: 1.45; color: rgba(var(--overlay-rgb),0.7); }
   .news-ok { background: var(--accent) !important; color: var(--accent-ink) !important; }
+  .news-set { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 4px; padding: 13px 14px; border-radius: 16px; background: rgba(var(--accent-rgb),0.12); border: 1px solid rgba(var(--accent-rgb),0.45); }
+  .news-set b { font-size: 14.5px; color: var(--fg); }
+  .news-set span { font-size: 12.5px; line-height: 1.45; color: rgba(var(--overlay-rgb),0.75); }
+  .news-set button { align-self: flex-start; margin-top: 4px; padding: 9px 14px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 800; font-size: 13px; }
   /* ordine delle sezioni (matita) */
   .layout-edit-wrap { display: flex; justify-content: center; padding: 10px 16px 4px; }
   .layout-edit { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 700;
@@ -2819,6 +2823,7 @@
   .ios-note { font-size: 12.5px; line-height: 1.4; color: rgba(var(--overlay-rgb),0.45); margin: 7px 16px 0; }
   .theme-chips { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 6px 6px 6px; }
   .theme-chips::-webkit-scrollbar { display: none; }
+  @media (min-width: 900px) { .theme-chips { flex-wrap: wrap; overflow: visible; } }
   .theme-chip { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.7); }
   .tc-dot { position: relative; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.2); }
   .tc-dot i { position: absolute; right: 0; bottom: 0; width: 50%; height: 50%; border-top-left-radius: 100%; }
@@ -2872,7 +2877,7 @@
     .topbar .tabbar-wrap {
       position: static; margin: 0 0 0 auto; width: auto; max-width: none;
     }
-    .tabbar { box-shadow: none; background: rgba(var(--overlay-rgb),0.06); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .tabbar { box-shadow: none; background: none; border: 0; padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
     .tabbar::before { display: none; }
     .pill-main .tabbtn, .pill-main .tabbtn.active { flex: 0 0 auto; padding: 9px 15px; gap: 8px; }
     .pill-main .tabbtn svg { width: 19px; height: 19px; }
@@ -2895,7 +2900,8 @@
     }
     .lib-list .list-item, #upcomingSection .list-item, .stale-section .list-item { margin-bottom: 0; }
     #upcomingSection .cat-title, #upcomingSection .day-head, .stale-section .sec-head, #upcomingSection .up-skel-list { grid-column: 1 / -1; }
-    #upcomingSection .day-head { margin: 4px 4px -2px; }
+    #upcomingSection .day-head { margin: 4px 4px 0 !important; }
+    #upcomingSection .day-head:first-child { margin-top: 6px !important; }
     #upcomingSection .cat-title { margin-top: 6px; margin-bottom: 0; }
     .stale-section .sec-head { margin-bottom: 0; }
     /* Profilo: i riquadri su due colonne; Social piu stretto e centrato (si legge come una conversazione) */
@@ -2974,6 +2980,23 @@
     html:has(.sheetbg.open), html:has(.confirmbg.open), html:has(.sheetbg.open) body, html:has(.confirmbg.open) body { overflow: hidden; }
   }
   .confirmbg { overscroll-behavior: contain; }
+
+  /* Tab: resta solo la lineetta luminosa della scheda aperta, niente riga sotto */
+  .cat-tabs, .sheet-tabs, .trophy-seg { border-bottom: 0 !important; }
+  /* Intestazioni "Riprendi" e date di "In arrivo": stesso stile, riga fino in fondo */
+  .day-head.resume-head { margin: -11px 4px 12px; }
+  #upcomingSection .day-head { margin-bottom: 12px; }
+  #upcomingSection .day-head:first-child { margin-top: 12px; }
+  /* Pallino notifiche del menu: in fondo alla scritta (o dopo l'icona), mai sopra */
+  .pill-main .tabbtn .tab-badge-pulse, .pill-main .tabbtn.active .tab-badge-pulse {
+    position: static; left: auto; right: auto; top: auto; flex: none; margin-left: -2px;
+    min-width: 17px; height: 17px; line-height: 17px; font-size: 11px; padding: 0 4px; box-shadow: none;
+  }
+  .pill-main .tabbtn.active .tab-badge-pulse { background: #111; color: var(--tc); }
+  /* Centratura ottica misurata: il logo (tutto x-height e aste in su, niente
+     discendenti) stava 3,5-4 px sopra il centro della pillola. */
+  .topbar-logo { position: relative; top: 0.18em; }
+  @media (min-width: 900px) { .topbar .tab-lbl { position: relative; top: 1.5px; } }
 </style>
 </head>
 <body>
@@ -4012,7 +4035,15 @@ function moveTabIndicator(btn) {
 // ordine visivo delle tab, per decidere il verso dello swipe al cambio
 const TAB_ORDER = { tv: 0, film: 1, search: 2, profile: 3, social: 4, settings: 5 };
 const SWIPE_TABS = ['tv', 'film', 'search', 'profile', 'social'];
+// Impostazioni aperte dal Profilo: se vai su un'altra scheda e torni su
+// Profilo, ritrovi le Impostazioni (si chiudono con la freccia o ritoccando Profilo).
+let settingsOpen = false;
 function switchTab(tab) {
+  if (tab === 'settings') settingsOpen = true;
+  else if (tab === 'profile') {
+    if (currentTab === 'settings') settingsOpen = false;
+    else if (settingsOpen) tab = 'settings';
+  }
   // Chiudi eventuali pannelli header aperti (notifiche/messaggi/follower), così
   // toccando Impostazioni (o un'altra tab) non restano aperti a coprire la vista.
   closeAllHeaderPanels();
@@ -4020,7 +4051,7 @@ function switchTab(tab) {
   currentTab = tab;
   let activeBtn = null;
   document.querySelectorAll('.tabbtn').forEach(b => {
-    const isActive = b.dataset.tab === tab;
+    const isActive = b.dataset.tab === (tab === 'settings' ? 'profile' : tab);
     b.classList.toggle('active', isActive);
     if (isActive) {
       activeBtn = b;
@@ -6222,7 +6253,7 @@ function renderLibrary() {
       ${stale.map(([k, s]) => staleRowHtml(k, s)).join('')}
     </div>` : '';
   const listHtml = `<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
-    ${tvCategory === 'continua' && items.length ? `<div class="cat-title resume-title" style="justify-content:center"><span class="dot" style="background:var(--accent)"></span>Riprendi</div>` : ''}
+    ${tvCategory === 'continua' && items.length ? `<div class="day-head resume-head"><span>Riprendi</span></div>` : ''}
     ${items.length === 0 && !stale.length ? catEmptyHtml('Nessuna serie in questa categoria.') : (items.length ? tvItemsHtml(items) : '')}
   </div>`;
   if (tvCategory === 'continua') {
@@ -6662,7 +6693,7 @@ function upNextLine(u) {
 // Sotto-sezione di "Continua": se non c'e' nulla in arrivo non lascia buchi,
 // semplicemente non disegna niente (prima era una scheda a se' e mostrava uno
 // stato vuoto a tutta pagina).
-const UP_TITLE = `<div class="cat-title" style="justify-content:center"><span class="dot" style="background:var(--accent)"></span>In arrivo</div>`;
+const UP_TITLE = ''; // niente titolo: bastano le date, come "Riprendi"
 async function renderUpcoming(container) {
   if (!container) return;
   if (!upcomingCache && !hasTmdbKey()) { container.innerHTML = ''; return; }
@@ -11649,16 +11680,16 @@ function initOfflineBar() {
 
 // ---------- novita' dell'app ----------
 // Dopo un aggiornamento, una volta sola: cosa e' cambiato, con i titoletti in oro.
-const APP_VERSION = '2026.10';
+const APP_VERSION = '2026.10b';
 const APP_NEWS = [
-  ['Nuovo aspetto', 'Blu notte, titoli in Anton, logo nuovo e angoli tondi. In Impostazioni > Aspetto scegli tema, sfondo, colore principale, carattere, angoli e notizie del ticker.'],
-  ['Menu nuovo', 'Una pillola sola in basso: Serie, Film, Ricerca, Profilo e la nuova scheda Social. Puoi anche passare da una scheda all\'altra scorrendo col dito.'],
-  ['Serie più veloci', 'Scorri una riga verso destra per segnare l\'episodio, verso sinistra per toglierla. In alto il ticker con uscite, episodi nuovi e rinnovi; le serie ferme da tempo hanno il loro gruppo.'],
-  ['Schede rifatte', 'Logo della serie, dove guardarla, previsione di fine, voti di ogni episodio, cast con la filmografia di ogni attore.'],
-  ['Film', 'Il tuo voto a mezze stelle, le saghe con i capitoli visti, l\'ora in cui finisce il film se inizi adesso.'],
-  ['Ricerca', 'Serie e film insieme, Top 10 della settimana, consigli in base a cosa guardi e novità per piattaforma.'],
-  ['Social', 'Feed con reazioni, chi sta guardando ora, consigli agli amici e classifica.'],
-  ['Profilo', 'Livelli con barra esperienza, record personali, giorni di fila, statistiche nuove e bacheca dei trofei.']
+  ['Logo e intestazione nuovi', 'Logo in minuscolo e una sola pillola in alto con il ticker: uscite di oggi e domani, episodi nuovi da vedere, rinnovi. Se non c\'è niente, le prossime uscite con la data.'],
+  ['Card nuove', 'Serie e film hanno l\'immagine della serie come sfondo, il voto, le stagioni e l\'episodio a cui sei. Nel cerchio quanti episodi ti mancano: toccalo per segnare il prossimo.'],
+  ['Continua più ordinata', 'In cima "Riprendi" con le serie che stai guardando, poi le uscite divise per giorno e in fondo le serie ferme da più di 30 giorni, con Riprendi o Rimuovi.'],
+  ['Menu e PC', 'Una pillola sola in basso: Serie, Film, Ricerca, Profilo, Social. Scorri col dito per cambiare scheda. Su computer il menu sta in alto e l\'app usa tutto lo schermo.'],
+  ['Schede di serie e film', 'Episodi, Info, Cast e Commenti in schede separate, dove guardarla, quando la finisci al tuo ritmo, voti di ogni episodio e cast che si apre a richiesta.'],
+  ['Social', 'Amici con la classifica, Feed con le reazioni, Avvisi e Chat. Puoi consigliare una serie o un film a un amico dalla sua scheda.'],
+  ['Profilo', 'Livello accanto al nome, giorni di fila, record, statistiche, i 4 attori che vedi di più fra tutte le tue serie e la bacheca dei trofei.'],
+  ['Più veloce e stabile', 'Segnare centinaia di episodi insieme non blocca più l\'app e lo scorrimento nelle schede è più fluido.']
 ];
 function closeNews(forever) {
   try {
@@ -11684,7 +11715,7 @@ function maybeShowNews() {
     const onTap = e => {
       if (e.target === bg) return closeNews(false);
       const b = e.target.closest('[data-news]');
-      if (b) { e.preventDefault(); closeNews(b.dataset.news === 'forever'); }
+      if (b) { e.preventDefault(); closeNews(b.dataset.news === 'forever'); if (b.dataset.news === 'settings') switchTab('settings'); }
     };
     bg.addEventListener('click', onTap);
     bg.addEventListener('pointerup', onTap);
@@ -11693,7 +11724,8 @@ function maybeShowNews() {
   bg.innerHTML = `<div class="confirmbox news-box">
     <button class="news-x" data-news="close" aria-label="Chiudi">✕</button>
     <div class="news-eyebrow">Novità</div>
-    <h3>itstracker si è rifatto il look</h3>
+    <h3>Cosa c'è di nuovo</h3>
+    <div class="news-set"><b>Personalizza tutto come vuoi tu</b><span>In Impostazioni trovi temi pronti, sfondo e colore principale con l'anteprima, carattere dei titoli, angoli, densità, grandezza del testo, vista a lista o griglia e le notizie del ticker. Vai a provarle!</span><button data-news="settings">Apri le Impostazioni</button></div>
     <div class="news-list">${APP_NEWS.map(([t, d]) => `<div class="news-item"><b>${t}</b><span>${d}</span></div>`).join('')}</div>
     <div class="cbrow"><button class="cb-cancel" data-news="forever">Non mostrare più</button><button class="cb-confirm news-ok" data-news="close">Chiudi</button></div>
   </div>`;
