@@ -1585,7 +1585,8 @@
   .up-days.up-days-word { font-size: 11px; }
   /* stacco identico sopra e sotto il titolo "In arrivo" */
   #upcomingSection .section { padding-top: 0; }
-  #upcomingSection .cat-title, .resume-title { margin-top: 16px; margin-bottom: 16px; }
+  #upcomingSection .cat-title { margin-top: 16px; margin-bottom: 16px; }
+  .resume-title { margin-top: 4px; margin-bottom: 12px; }
   .up-grid-card .badge.up-badge { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .up-grid-card .badge .ud-days-mini { color: #0A84FF; font-weight: 800; }
   .up-grid-card.up-soon .badge .ud-days-mini { color: #FF9F0A; }
@@ -2523,7 +2524,7 @@
      RESTYLING 2026 - PROFILO
      ===================================================================== */
   .profile-card { padding: 0; overflow: hidden; margin-bottom: 14px; text-align: left; }
-  .profile-cover { aspect-ratio: auto; height: 132px; }
+  .profile-cover { aspect-ratio: auto; height: clamp(170px, 48vw, 230px); }
   .fig-tools { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; gap: 6px; }
   .fig-tools .profile-settings-btn { background: rgba(0,0,0,0.45); color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .cover-edit { left: 10px; right: auto; top: 10px; bottom: auto; }
@@ -2816,7 +2817,7 @@
   .ios-inline input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 0.5px solid rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.06); color: var(--fg); font: inherit; font-size: 15px; }
   .ios-btn { padding: 0 16px; border-radius: 12px; font-weight: 700; font-size: 15px; color: var(--accent); background: rgba(var(--overlay-rgb),0.06); }
   .ios-note { font-size: 12.5px; line-height: 1.4; color: rgba(var(--overlay-rgb),0.45); margin: 7px 16px 0; }
-  .theme-chips { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 4px; }
+  .theme-chips { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 6px 6px 6px; }
   .theme-chips::-webkit-scrollbar { display: none; }
   .theme-chip { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: rgba(var(--overlay-rgb),0.7); }
   .tc-dot { position: relative; width: 44px; height: 44px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px rgba(var(--overlay-rgb),0.2); }
@@ -2914,15 +2915,17 @@
   }
   :root .list-item.li-frame img.li-bd {
     position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; z-index: -2;
-    object-fit: cover; object-position: center 30%; opacity: 0.6; background: none;
+    object-fit: cover; object-position: center 18%; opacity: 0.7; background: none;
   }
   :root .list-item.li-frame img.li-bd.is-poster { object-position: center 20%; filter: blur(2px); opacity: 0.45; }
   .list-item.li-frame::before {
     content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background: linear-gradient(90deg, var(--panel-bg) 24%, color-mix(in srgb, var(--panel-bg) 72%, transparent) 58%, color-mix(in srgb, var(--panel-bg) 20%, transparent));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--panel-bg) 68%, transparent), transparent 55%);
   }
   .list-item.li-frame .li-name { font-size: calc(19px * var(--title-scale)); line-height: 1.1; }
-  .list-item.li-frame .li-next { color: rgba(var(--overlay-rgb),0.62); font-weight: 600; font-size: 12.5px; margin-top: 4px; }
+  .list-item.li-frame .li-next { color: #0A84FF; font-weight: 800; font-size: 13px; margin-top: 3px; }
+  .list-item.li-frame .li-info { text-shadow: 0 1px 6px rgba(0,0,0,0.55); }
+  :root[data-theme="light"] .list-item.li-frame .li-info { text-shadow: 0 1px 6px rgba(255,255,255,0.7); }
   .list-item.li-frame .li-next b { color: var(--fg); font-weight: 800; }
   .list-item.li-frame .li-next.li-rec { color: #0A84FF; font-weight: 700; }
   .list-item.li-frame .li-new { color: var(--accent); font-weight: 800; }
@@ -2935,6 +2938,18 @@
   :root[data-density="compact"] .list-item.li-frame { min-height: 84px; padding: 8px 12px 8px 14px; }
   :root[data-density="airy"] .list-item.li-frame { min-height: 104px; padding: 14px 16px 14px 18px; }
   :root[data-theme="light"] .list-item.li-frame img.li-bd { opacity: 0.75; }
+  :root .list-item.li-frame.stale-item img.li-bd { filter: saturate(0.45) brightness(0.8); }
+  .list-item.li-frame .stale-when { color: rgba(var(--overlay-rgb),0.65); font-weight: 700; }
+  .list-item.li-frame .up-days { background: color-mix(in srgb, var(--panel-bg) 55%, transparent); }
+  .sheet-tabs { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--sheet-bg); }
+
+  /* Pannelli aperti: lo scorrimento resta dentro il pannello e la pagina dietro
+     non si muove (su iPhone prima "rubava" il gesto dopo un rimbalzo). */
+  .sheet, .news-list, .cs-body, .confirmbox { overscroll-behavior: contain; }
+  @media (max-width: 1099px) {
+    html:has(.sheetbg.open), html:has(.confirmbg.open), html:has(.sheetbg.open) body, html:has(.confirmbg.open) body { overflow: hidden; }
+  }
+  .confirmbg { overscroll-behavior: contain; }
 </style>
 </head>
 <body>
@@ -5920,8 +5935,8 @@ function staleRowHtml(key, s) {
   const next = s.next ? `S${s.next.season}E${s.next.number}` : '';
   // Riprendi / Abbandona dentro la card, a destra e centrati, come testo: il
   // titolo, se lungo, sfuma prima di toccarli.
-  return `<div class="list-item stale-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
-    ${s.image ? `<img src="${thumbImg(s.image,'w185')}" alt="" loading="lazy" decoding="async">` : `<div class="noimg-s"></div>`}
+  return `<div class="list-item li-frame stale-item" onclick="openShow(${id}, this)"${s.image ? ` data-poster="${thumbImg(s.image,'w92')}"` : ''}>
+    ${(s.backdrop || s.image) ? `<img class="li-bd${s.backdrop ? '' : ' is-poster'}" src="${thumbImg(s.backdrop || s.image, s.backdrop ? 'w780' : 'w342')}" alt="" loading="lazy" decoding="async">` : ''}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
       <div class="li-next stale-when">Ferma da ${days} giorni${next ? ` · ${next}` : ''}</div>
@@ -6617,7 +6632,7 @@ function upNextLine(u) {
   const s = library[u.id] || {};
   const watched = Object.keys(s.watched || {}).length;
   const total = s.totalEpisodes || 0;
-  return `<div class="li-next">S${u.season}E${u.number} · Episodio ${watched}/${total}</div>`;
+  return `<div class="li-next">S${u.season}E${u.number} · Ep ${watched}/${total}</div>`;
 }
 
 // Sotto-sezione di "Continua": se non c'e' nulla in arrivo non lascia buchi,
@@ -6648,10 +6663,12 @@ async function renderUpcoming(container) {
       </div>`;
     }
     const isWord = daysLeft <= 0;
-    return `<div class="up-item" onclick="openShow(${u.id}, this)"${u.image ? ` data-poster="${thumbImg(u.image,'w92')}"` : ''}>
-      ${u.image ? `<img src="${u.image}" alt="">` : `<div class="noimg-s"></div>`}
-      <div class="up-info">
-        <div class="up-name">${escapeHtml(u.name)}</div>
+    const ub = (library[u.id] && library[u.id].backdrop) || u.image;
+    const ubIsBd = !!(library[u.id] && library[u.id].backdrop);
+    return `<div class="list-item li-frame up-row" onclick="openShow(${u.id}, this)"${u.image ? ` data-poster="${thumbImg(u.image,'w92')}"` : ''}>
+      ${ub ? `<img class="li-bd${ubIsBd ? '' : ' is-poster'}" src="${thumbImg(ub, ubIsBd ? 'w780' : 'w342')}" alt="" loading="lazy" decoding="async">` : ''}
+      <div class="li-info">
+        <div class="li-name">${escapeHtml(u.name)}</div>
         <div class="li-chips">${upMetaChips(u)}</div>
         ${upNextLine(u)}
       </div>
@@ -6740,7 +6757,7 @@ function renderListTv(key, s) {
   const epLine = (cat === 'davedere' && s.recommendedBy)
     ? `<div class="li-next li-rec">Consigliata da ${escapeHtml(s.recommendedBy.name || 'un amico')}</div>`
     : (cat !== 'inpari' && next)
-      ? `<div class="li-next"><b>S${next.season}E${next.number}</b>${next.name ? ` · ${escapeHtml(next.name)}` : ''}${isNew ? ' <span class="li-new">· Nuovo</span>' : ''}</div>`
+      ? `<div class="li-next">S${next.season}E${next.number} · Ep ${watched}/${total}${isNew ? ' <span class="li-new">· Nuovo</span>' : ''}</div>`
       : (total ? `<div class="li-next">${total} ${total === 1 ? 'Episodio' : 'Episodi'}${inPariNote}</div>` : '');
   const meta = [
     s.rating ? `<span class="chip chip-star">★ ${fmtRating(s.rating)}</span>` : null,
@@ -6748,7 +6765,7 @@ function renderListTv(key, s) {
   ].filter(Boolean).join('');
   const bd = s.backdrop || s.image;
   const ring = isDone ? ringDoneBtn(id)
-    : left ? `<button class="ep-ring act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna il prossimo episodio" aria-label="Segna il prossimo episodio · ne mancano ${left}">${epRingSvg(pct)}<span class="epr-num">-${left}</span></button>`
+    : left ? `<button class="ep-ring act-next" data-show-id="${id}" onclick="event.stopPropagation();markNext(${id}, this)" title="Segna il prossimo episodio" aria-label="Segna il prossimo episodio · ne mancano ${left}">${epRingSvg(pct)}<span class="epr-num">${left}</span></button>`
     : ringNextBtn(id, pct);
   // data-poster: da qui applyCardGlows() ricava il colore della locandina per
   // l'anello. swipe-row: a destra segna il prossimo episodio, a sinistra toglie.
@@ -6756,8 +6773,8 @@ function renderListTv(key, s) {
     ${bd ? `<img class="li-bd${s.backdrop ? '' : ' is-poster'}" src="${thumbImg(bd, s.backdrop ? 'w780' : 'w342')}" alt="" loading="lazy" decoding="async">` : ''}
     <div class="li-info">
       <div class="li-name">${escapeHtml(s.name||'Senza nome')}</div>
-      ${epLine}
       ${meta ? `<div class="li-chips">${meta}</div>` : ''}
+      ${epLine}
     </div>
     <div class="lib-actions">${ring}</div>
   </div>`;
