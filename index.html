@@ -597,7 +597,7 @@
     will-change: transform, opacity;
   }
   .sheetbg.open .sheet { transform: translateY(0); }
-  .hero { position: relative; height: 230px; overflow: hidden; z-index: 0; isolation: isolate; }
+  .hero { position: relative; height: clamp(240px, 62vw, 340px); overflow: hidden; z-index: 0; isolation: isolate; }
   .sheetbg > .closebtn {
     position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 14px; z-index: 101;
     width: 32px; height: 32px; border-radius: 50%; border: none;
@@ -607,8 +607,8 @@
   }
   .sheetbg.open > .closebtn { opacity: 1; pointer-events: auto; }
   .sheetbg > .closebtn.plain { background: rgba(var(--overlay-rgb),0.12); color: var(--fg); }
-  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: top center; will-change: transform; }
-  .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, var(--sheet-bg) 100%); }
+  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; will-change: transform; }
+  .hero .fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 62%, color-mix(in srgb, var(--sheet-bg) 70%, transparent) 86%, var(--sheet-bg) 100%); }
   /* riflesso di luce che attraversa la copertina all'apertura della scheda */
   .hero .hero-sheen {
     position: absolute; top: 0; left: -60%; width: 45%; height: 100%; pointer-events: none; z-index: 1;
@@ -1461,7 +1461,7 @@
   /* Il gradiente parte da trasparente (non da un colore pieno) così non c'è un
      bordo netto dove il tint incontra la foto della copertina. */
   .sheet-tint {
-    position: absolute; left: 0; right: 0; top: 150px; height: 780px; z-index: 0; pointer-events: none;
+    position: absolute; left: 0; right: 0; top: calc(clamp(240px, 62vw, 340px) - 80px); height: 780px; z-index: 0; pointer-events: none;
     background: linear-gradient(180deg,
       transparent 0%,
       color-mix(in srgb, var(--tint, var(--accent, transparent)) 34%, transparent) 12%,
@@ -1520,7 +1520,7 @@
   @keyframes shimmer { 100% { transform: translateX(100%); } }
   @keyframes skelPulse { 0%, 100% { background: rgba(var(--overlay-rgb),0.07); } 50% { background: rgba(var(--overlay-rgb),0.1); } }
   .sheet-skel { padding: 0; }
-  .sheet-skel .sk-hero { height: 230px; border-radius: 0; }
+  .sheet-skel .sk-hero { height: clamp(240px, 62vw, 340px); border-radius: 0; }
   .sheet-skel .sk-hero-img { background-size: cover; background-position: top center; background-color: rgba(var(--overlay-rgb),0.08); }
   .sheet-skel .sk-body { padding: 20px; }
   .sheet-skel .sk-line { height: 14px; margin-bottom: 10px; }
@@ -1877,8 +1877,8 @@
   .topbar-logo .tw-its, #splashLogo .tw-its { color: var(--fg); text-shadow: none; }
   .topbar-logo .tw-tracker, #splashLogo .tw-tracker { color: var(--accent); text-shadow: none; }
   .topbar-logo::after, #splashLogo::after { content: '.'; color: var(--accent); }
-  .topbar-logo { font-size: 19px; top: 0; line-height: 1; }
-  @media (min-width: 1000px) { .topbar-logo { font-size: 22px; } }
+  .topbar-logo { font-size: 17.5px; top: 0; line-height: 1; } /* "i" e "t" alti come le maiuscole del ticker (13px) */
+  @media (min-width: 1000px) { .topbar-logo { font-size: 17.5px; } }
   #splashLogo { font-size: clamp(40px, 13vw, 54px); }
 
   /* --- splash: titoli di testa in dissolvenza --- */
@@ -2899,7 +2899,7 @@
       display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); column-gap: 12px; row-gap: 12px; align-items: start;
     }
     .lib-list .list-item, #upcomingSection .list-item, .stale-section .list-item { margin-bottom: 0; }
-    #upcomingSection .cat-title, #upcomingSection .day-head, .stale-section .sec-head, #upcomingSection .up-skel-list { grid-column: 1 / -1; }
+    #upcomingSection .cat-title, #upcomingSection .day-head, .stale-section .sec-head, .stale-section .day-head, #upcomingSection .up-skel-list { grid-column: 1 / -1; }
     #upcomingSection .day-head { margin: 4px 4px 0 !important; }
     #upcomingSection .day-head:first-child { margin-top: 6px !important; }
     #upcomingSection .cat-title { margin-top: 6px; margin-bottom: 0; }
@@ -2997,6 +2997,37 @@
      discendenti) stava 3,5-4 px sopra il centro della pillola. */
   .topbar-logo { position: relative; top: 0.18em; }
   @media (min-width: 900px) { .topbar .tab-lbl { position: relative; top: 1.5px; } }
+  /* Intestazioni a riga (Riprendi, date, Le tue saghe): scritta al centro, riga da entrambi i lati */
+  .day-head { justify-content: center; }
+  .day-head::before { content: ''; flex: 1; height: 1px; background: rgba(var(--overlay-rgb),0.1); }
+  /* Schede in alto centrate (con margini automatici: se non ci stanno scorrono senza tagliare l'inizio) */
+  .cat-tabs { justify-content: flex-start !important; }
+  .cat-tabs > :first-child { margin-left: auto; }
+  .cat-tabs > :last-child { margin-right: auto; }
+  .cat-tabs-row { justify-content: center; }
+  /* Generi (Popolari, ricerca): come le schede Continua / In pari, testo con lineetta, niente badge */
+  .genre-chips.cat-tabs { gap: 18px; margin-bottom: 14px; padding-bottom: 0; }
+  .genre-chips.cat-tabs .seasontab { padding: 6px 0 11px; font-size: calc(13.5px * var(--title-scale)); }
+  /* KPI del profilo: niente colori di categoria, solo bianco/nero del tema;
+     restano verdi o rosse solo le percentuali di confronto */
+  .kpi.kpi-b, .kpi.kpi-g, .kpi.kpi-p, .kpi.kpi-o { background: rgba(var(--overlay-rgb),0.05); border-color: rgba(var(--overlay-rgb),0.1); }
+  .kpi.kpi-b .v, .kpi.kpi-g .v, .kpi.kpi-p .v, .kpi.kpi-o .v { color: var(--fg); }
+  .kpi.kpi-b::before, .kpi.kpi-g::before, .kpi.kpi-p::before, .kpi.kpi-o::before { display: none; }
+  /* Schede: Rimuovi accanto a Visto/Da vedere (film) o allo stato "Pari" (serie), stessi bottoni */
+  .sheet-acts { display: flex; gap: 8px; margin: 0 0 12px; }
+  .sheet-acts > * {
+    flex: 1 1 0; min-width: 0; height: 46px; border-radius: 15px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    font: inherit; font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px; border: 1px solid transparent;
+  }
+  .sheet-acts .sa-remove { background: rgba(255,69,58,0.12); color: #FF453A; border-color: rgba(255,69,58,0.32); }
+  .sheet-acts .sa-pari { background: rgba(48,209,88,0.12); color: #30D158; border-color: rgba(48,209,88,0.32); }
+  .sheet-acts .sa-todo { background: rgba(var(--overlay-rgb),0.08); color: var(--fg); border-color: rgba(var(--overlay-rgb),0.16); }
+  .sheet-acts .sa-seen { background: var(--accent); color: var(--accent-ink); }
+  .sheet-acts .film-watch-btn { width: auto; margin: 0; }
+  .sheet:has(.sheet-acts .sa-remove) .removebtn { display: none; }
+  .day-head.stale-head { margin: 12px 4px 12px; }
+  @media (min-width: 900px) { .day-head.stale-head { margin: 0 4px; } }
+  @media (max-width: 899px) { .stale-section { padding-top: 0; } .day-head.stale-head { margin-top: 4px; } }
 </style>
 </head>
 <body>
@@ -3102,7 +3133,6 @@
         <button class="seasontab cat-tab-corner" data-cat="inpari" onclick="setTvCategory('inpari')"><span class="cat-tab-label">In Pari</span><span class="tab-count cat-count" id="tvCount-inpari"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setTvCategory('davedere')"><span class="cat-tab-label">In Lista</span><span class="tab-count cat-count" id="tvCount-davedere"></span></button>
       </div>
-      <button class="lib-search-btn" id="tvLibSearchBtn" onclick="toggleLibSearch('tv')" title="Cerca nella tua libreria" aria-label="Cerca nella tua libreria"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     </div>
     <div class="lib-search" id="tvLibSearch" hidden><input id="tvLibSearchInput" placeholder="Cerca tra le tue serie…" autocomplete="off" oninput="onLibSearch('tv', this.value)"></div>
     <div id="tvContent"></div>
@@ -3121,7 +3151,6 @@
         <button class="seasontab active cat-tab-corner" data-cat="visti" onclick="setFilmCategory('visti')"><span class="cat-tab-label">Visti</span><span class="tab-count cat-count" id="filmCount-visti"></span></button>
         <button class="seasontab cat-tab-corner" data-cat="davedere" onclick="setFilmCategory('davedere')"><span class="cat-tab-label">Da Vedere</span><span class="tab-count cat-count" id="filmCount-davedere"></span></button>
       </div>
-      <button class="lib-search-btn" id="filmLibSearchBtn" onclick="toggleLibSearch('film')" title="Cerca nei tuoi film" aria-label="Cerca nei tuoi film"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
     </div>
     <div class="lib-search" id="filmLibSearch" hidden><input id="filmLibSearchInput" placeholder="Cerca tra i tuoi film…" autocomplete="off" oninput="onLibSearch('film', this.value)"></div>
     <div id="filmContent"></div>
@@ -6249,7 +6278,7 @@ function renderLibrary() {
   tvCategoryIds = items.concat(stale).map(([k, s]) => validId(s, k));
   const rail = tvCategory === 'continua' ? renderResumeRail(items) : '';
   const staleHtml = stale.length ? `<div class="section stale-section">
-      <div class="sec-head"><span class="sec-title">Ferme da più di ${STALE_DAYS} giorni</span><span class="sec-count num">${stale.length}</span></div>
+      <div class="day-head stale-head"><span>Ferme da più di ${STALE_DAYS} giorni</span></div>
       ${stale.map(([k, s]) => staleRowHtml(k, s)).join('')}
     </div>` : '';
   const listHtml = `<div class="section${casc ? ' casc' : ''}" style="padding-top:0">
@@ -6319,7 +6348,7 @@ function wallCardFilm(key, f) {
 function renderGenreChips(genres, active, handlerName) {
   if (genres.length < 2) return '';
   const chips = [{ label: 'Tutti', val: null }, ...genres.map(g => ({ label: g, val: g }))];
-  return `<div class="seasontabs genre-chips">${chips.map(c => {
+  return `<div class="seasontabs cat-tabs genre-chips">${chips.map(c => {
     const isActive = active ? active === c.val : c.val === null;
     const arg = c.val === null ? 'null' : `'${c.val.replace(/'/g, "\\'")}'`;
     return `<button class="seasontab${isActive ? ' active' : ''}" onclick="${handlerName}(${arg})">${escapeHtml(c.label)}</button>`;
@@ -7232,7 +7261,7 @@ async function loadForYou() {
       if (x && x.r.poster_path && !library[x.r.id] && !seen.has(x.r.id) && !NOT_SUGGESTED_LANGS.includes(x.r.original_language)) { seen.add(x.r.id); out.push(x); }
     });
     if (!out.length) { box.innerHTML = ''; return; }
-    box.innerHTML = `<div class="sec-head"><span class="sec-title">Perché ti piacerà</span></div>
+    box.innerHTML = `<div class="sec-head"><span class="sec-title">Ti piacerà perché…</span></div>
       <div class="rail">${out.map(x => railCard('tv', x.r, `Perché hai visto <b>${escapeHtml(x.from || '')}</b>`)).join('')}</div>`;
   } catch(e) {}
 }
@@ -9007,7 +9036,8 @@ function sheetNextHtml(showId, show, episodes) {
       const days = Math.round((new Date(up.air_date + 'T00:00:00') - new Date().setHours(0,0,0,0)) / 86400000);
       when = days <= 0 ? 'oggi' : days === 1 ? 'domani' : `tra ${days} giorni`;
     }
-    return `<div class="next-card done"><div class="nc-top"><span class="nc-lbl">Sei in pari</span>${when ? `<span class="nc-when">S${up.season_number}E${up.episode_number} esce ${when}</span>` : ''}</div></div>`;
+    // In pari: "Rimuovi" e lo stato sulla stessa riga, stessi bottoni.
+    return `<div class="sheet-acts"><button class="sa-remove" onclick="removeShow(${showId})">Rimuovi</button><span class="sa-pari" title="${when ? `S${up.season_number}E${up.episode_number} esce ${when}` : 'Sei in pari'}">${when ? `Pari · ${when}` : 'Sei in pari'}</span></div>`;
   }
   const mins = remaining * showRuntimeMins(show, episodes);
   const pace = watchPacePerDay(showId);
@@ -9250,8 +9280,11 @@ async function openActor(personId) {
         <span class="af-sub num">${year}${c.character ? ` · ${escapeHtml(c.character)}` : ''}</span>
       </button>`;
     };
-    const tv = items.filter(c => c.media_type === 'tv');
-    const mv = items.filter(c => c.media_type === 'movie');
+    // Prima quello che hai gia' visto di lui (serie con almeno un episodio, film visti), poi il resto.
+    const seenByMe = c => c.media_type === 'tv' ? !!(library[c.id] && Object.keys(library[c.id].watched || {}).length) : !!(filmLibrary[c.id] && filmLibrary[c.id].watched);
+    const watchedItems = items.filter(seenByMe);
+    const tv = items.filter(c => c.media_type === 'tv' && !seenByMe(c));
+    const mv = items.filter(c => c.media_type === 'movie' && !seenByMe(c));
     const mine = items.filter(c => status(c)).length;
     const born = p.birthday ? new Date(p.birthday + 'T00:00:00').getFullYear() : null;
     sh.innerHTML = `<div class="actor-head">
@@ -9263,6 +9296,7 @@ async function openActor(personId) {
         </div>
       </div>
       <div class="section" style="padding-top:4px">
+        ${watchedItems.length ? `<div class="sec-head"><span class="sec-title">Visti da te</span><span class="sec-count num">${watchedItems.length}</span></div><div class="af-grid">${watchedItems.map(card).join('')}</div>` : ''}
         ${tv.length ? `<div class="sec-head"><span class="sec-title">Serie</span><span class="sec-count num">${tv.length}</span></div><div class="af-grid">${tv.slice(0, 30).map(card).join('')}</div>` : ''}
         ${mv.length ? `<div class="sec-head"><span class="sec-title">Film</span><span class="sec-count num">${mv.length}</span></div><div class="af-grid">${mv.slice(0, 30).map(card).join('')}</div>` : ''}
       </div>`;
@@ -10529,7 +10563,7 @@ async function renderFilmSheet(f, inLib) {
       ${f.runtime ? `<div class="next-card film-time" id="filmTime">${filmTimeHtml(f)}</div>` : ''}
       ${!inLib
         ? `<button class="addlibbtn" onclick="addFilmFromSheet(${f.id})">+ Aggiungi alla libreria</button>`
-        : `<button class="${f.watched?'markallbtn danger':'addlibbtn'} film-watch-btn" onclick="toggleFilmWatched(${f.id})">${f.watched?'Segna come da vedere':'✓ Segna come visto'}</button>`}
+        : `<div class="sheet-acts"><button class="sa-remove" onclick="removeFilm(${f.id})">Rimuovi</button><button class="${f.watched ? 'sa-todo' : 'sa-seen'} film-watch-btn" onclick="toggleFilmWatched(${f.id})">${f.watched ? 'Da vedere' : '✓ Visto'}</button></div>`}
       ${inLib && f.watched ? `<div id="myRating">${myRatingHtml(f)}</div>` : ''}
       <div id="filmSaga"></div>
       <div class="sec-head"><span class="sec-title">Trama</span></div>
@@ -10538,7 +10572,7 @@ async function renderFilmSheet(f, inLib) {
       <div id="sheetSocialExtra"></div>
       <div class="sec-head"><span class="sec-title">Cast</span></div>
       <div id="castSec"><div class="spinner"></div></div>
-      ${inLib ? `<button class="removebtn" onclick="removeFilm(${f.id})">Rimuovi dalla libreria</button>` : ''}
+      <!-- Rimuovi sta in alto, accanto a Visto / Da vedere -->
     </div>`;
   if (f.backdrop||f.image) posterAccent(f.backdrop||f.image).then(col => {
     if (!col) return;
@@ -10656,7 +10690,7 @@ async function renderSagaRail() {
         <span class="saga-bar"><i style="width:${Math.round(seen/parts.length*100)}%"></i></span>
       </button>`;
     }).filter(Boolean);
-    box.innerHTML = cards.length ? `<div class="section" style="padding-top:0"><div class="sec-head" style="margin-top:0"><span class="sec-title">Le tue saghe</span></div><div class="saga-rail">${cards.join('')}</div></div>` : '';
+    box.innerHTML = cards.length ? `<div class="section" style="padding-top:0"><div class="day-head resume-head"><span>Le tue saghe</span></div><div class="saga-rail">${cards.join('')}</div></div>` : '';
   } catch(e) {}
 }
 // I film salvati prima di questa versione non sanno a quale saga appartengono:
@@ -11116,9 +11150,48 @@ function applyAccent(c) {
   document.documentElement.style.setProperty('--accent-ink', accentInk(c));
   document.documentElement.style.setProperty('--accent-rgb', accentRgb(c));
 }
+// Colori delle voci del menu: Serie usa il colore principale; le altre hanno il
+// loro. Se il colore principale (o un'altra voce) e' troppo simile, la voce
+// prende un colore a caso fra quelli ben distinti, e lo tiene.
+const MENU_TABS = [['film', '#FF9F0A'], ['search', '#38BDF8'], ['profile', '#A78BFA'], ['social', '#22C55E']];
+const MENU_POOL = ['#FF9F0A', '#38BDF8', '#A78BFA', '#22C55E', '#F472B6', '#FACC15', '#2DD4BF', '#FB7185', '#818CF8', '#A3E635', '#F97316', '#E879F9', '#60A5FA', '#34D399'];
+function hexHsl(hex) {
+  const h = (hex || '').replace('#', ''); if (h.length < 6) return [0, 0, 0];
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  if (!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  let hu = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(hu * 60 + 360) % 360, s, l];
+}
+function colorsTooClose(a, b) {
+  const [h1, s1, l1] = hexHsl(a), [h2, s2, l2] = hexHsl(b);
+  if (s1 < 0.25 || s2 < 0.25) return s1 < 0.25 && s2 < 0.25 && Math.abs(l1 - l2) < 0.25; // grigi/bianchi
+  const dh = Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2));
+  return dh < 22;
+}
+function applyMenuColors() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('itstracker_menu_colors') || '{}'); } catch(e) {}
+  const used = [currentAccent()];
+  let changed = false;
+  MENU_TABS.forEach(([tab, def]) => {
+    let c = saved[tab] || def;
+    if (used.some(u => colorsTooClose(u, c))) {
+      // prima prova il suo colore di sempre, poi uno a caso fra quelli liberi
+      const free = MENU_POOL.filter(p => !used.some(u => colorsTooClose(u, p)));
+      c = !used.some(u => colorsTooClose(u, def)) ? def : (free[Math.floor(Math.random() * free.length)] || def);
+      saved[tab] = c; changed = true;
+    }
+    used.push(c);
+    document.querySelectorAll(`.tabbtn[data-tab="${tab}"]`).forEach(b => b.style.setProperty('--tc', c));
+  });
+  if (changed) try { localStorage.setItem('itstracker_menu_colors', JSON.stringify(saved)); } catch(e) {}
+}
 function setAccent(c) {
   applyAccent(c);
   try { localStorage.setItem('itstracker_accent', c); } catch(e) {}
+  applyMenuColors();
   renderAccentControl();
   if (typeof haptic === 'function') haptic();
 }
@@ -11932,6 +12005,7 @@ loadLibrary();
 normalizeLibrary();
 normalizeFilmLibrary();
 applyAccent(currentAccent());
+applyMenuColors();
 loadTitleFont(getPref('font'));
 renderAppearanceSettings();
 updateLogo();
@@ -11952,7 +12026,7 @@ refreshInPariShows();
 checkAchievements(false);
 checkIncomingCompare();
 ensureUpcomingCache();
-initPullToRefresh();
+// initPullToRefresh(); // tolto: tirando giu si confondeva con lo scorrimento
 initSheetSwipe();
 initInstallBanner();
 initAuthBanner();
