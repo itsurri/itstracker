@@ -6099,11 +6099,16 @@ function tickerItems() {
   const tk = (onclick, html) => out.push(`<span class="tk" onclick="${onclick}">${html}</span>`);
   const today = new Date(); today.setHours(0,0,0,0);
   if (src.includes('out') && upcomingCache) {
+    // le prossime uscite delle tue serie (fino a 6, entro 30 giorni): Oggi, Domani o la data
+    let n = 0;
     upcomingCache.forEach(u => {
-      if (!library[u.id]) return;
-      const diff = Math.round((new Date(u.date + 'T00:00:00') - today) / 86400000);
-      if (diff < 0 || diff > 1) return;
-      tk(`openShow(${u.id})`, `<em>${diff === 0 ? 'Oggi' : 'Domani'}</em><b>${escapeHtml(library[u.id].name || u.name || '')} ${u.season}x${String(u.number).padStart(2,'0')}</b>`);
+      if (!library[u.id] || n >= 6) return;
+      const d = new Date(u.date + 'T00:00:00');
+      const diff = Math.round((d - today) / 86400000);
+      if (diff < 0 || diff > 30) return;
+      const when = diff === 0 ? 'Oggi' : diff === 1 ? 'Domani' : d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+      tk(`openShow(${u.id})`, `<em>${escapeHtml(when)}</em><b>${escapeHtml(library[u.id].name || u.name || '')} ${u.season}x${String(u.number).padStart(2,'0')}</b>`);
+      n++;
     });
   }
   if (src.includes('new')) {
@@ -6191,6 +6196,15 @@ function renderTicker() {
   el.innerHTML = `<div class="tk-label"><i></i>Notizie</div>
     <div class="tk-viewport"><div class="tk-track" style="animation-duration:${dur}s">${html}${html}</div></div>`;
   el.hidden = false;
+  // velocita' costante (55 px al secondo), qualunque sia la lunghezza delle notizie
+  const track = el.querySelector('.tk-track');
+  {
+    const vw = el.querySelector('.tk-viewport').clientWidth;
+    let half = track.scrollWidth / 2;
+    // poche notizie corte: si ripetono finche' il nastro non riempie la barra, niente buchi
+    if (half > 0 && half < vw) { const k = Math.ceil(vw / half); track.innerHTML = html.repeat(k * 2); half = track.scrollWidth / 2; }
+    if (half > 0) track.style.animationDuration = Math.max(4, half / 55).toFixed(1) + 's';
+  }
 }
 
 // Libreria vuota: invece della sola scritta, sei titoli di tendenza da
@@ -11113,7 +11127,7 @@ function openFontPicker() {
 }
 // Quali notizie scorrono nel ticker dell'intestazione.
 const TICKER_LABELS = [
-  ['out', 'Uscite di oggi e domani', 'Gli episodi delle tue serie che escono'],
+  ['out', 'Prossime uscite', 'Gli episodi delle tue serie in uscita nei prossimi 30 giorni'],
   ['new', 'Episodi nuovi da vedere', 'Usciti negli ultimi 7 giorni e non ancora visti'],
   ['renew', 'Rinnovi e nuove stagioni', 'Quando una serie che hai finito torna'],
   ['left', 'Quanto ti manca', 'Il tempo per finire le serie in corso'],
